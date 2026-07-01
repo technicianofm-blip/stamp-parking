@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stamp Parking — ระบบบันทึกข้อมูลที่จอดรถ</title>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-dark: #1243af;
+    --primary-light: #e8f0fe;
+    --success: #059669;
+    --danger: #dc2626;
+    --warning: #d97706;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--gray-50);color:var(--gray-800);min-height:100vh;
+  }
+
+  /* ===== Navbar ===== */
+  .navbar{
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;padding:0 24px;display:flex;align-items:center;height:64px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);position:sticky;top:0;z-index:100;
+  }
+  .navbar-brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;letter-spacing:-.3px;}
+  .navbar-brand svg{flex-shrink:0;}
+  .nav-tabs{display:flex;margin-left:auto;gap:4px;}
+  .nav-tab{
+    padding:8px 20px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;font-weight:500;
+    color:rgba(255,255,255,.7);background:transparent;border:none;transition:all .2s;
+  }
+  .nav-tab:hover{color:#fff;background:rgba(255,255,255,.1);}
+  .nav-tab.active{color:var(--primary);background:#fff;font-weight:600;}
+  .nav-tab .badge{
+    display:inline-block;background:var(--danger);color:#fff;font-size:11px;font-weight:700;
+    padding:1px 7px;border-radius:10px;margin-left:4px;vertical-align:middle;
+  }
+  .nav-tab.active .badge{background:var(--danger);}
+
+  /* ===== Container ===== */
+  .container{max-width:1100px;margin:0 auto;padding:24px 16px;}
+
+  /* ===== Pages ===== */
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* ===== Card ===== */
+  .card{
+    background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:24px;margin-bottom:20px;border:1px solid var(--gray-200);
+  }
+  .card-title{font-size:18px;font-weight:600;color:var(--gray-800);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+
+  /* ===== Form ===== */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-group.full{grid-column:1/-1;}
+  .form-group label{font-size:14px;font-weight:500;color:var(--gray-700);}
+  .form-group label .required{color:var(--danger);margin-left:2px;}
+  .form-control{
+    padding:10px 14px;border:1.5px solid var(--gray-300);border-radius:8px;
+    font-size:14px;transition:border-color .2s,box-shadow .2s;outline:none;background:#fff;
+  }
+  .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.15);}
+  .form-control.error{border-color:var(--danger);}
+  .form-control:disabled{background:var(--gray-100);cursor:not-allowed;}
+  select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+  .error-text{font-size:12px;color:var(--danger);display:none;}
+  .error-text.show{display:block;}
+  .help-text{font-size:12px;color:var(--gray-400);margin-top:2px;}
+
+  /* ===== Photo ===== */
+  .photo-section{margin-top:8px;}
+  .photo-dropzone{
+    border:2px dashed var(--gray-300);border-radius:var(--radius);padding:20px;
+    text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-50);
+  }
+  .photo-dropzone:hover{border-color:var(--primary);background:var(--primary-light);}
+  .photo-dropzone.has-photo{border-style:solid;border-color:var(--success);padding:8px;}
+  .photo-dropzone img{max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto;}
+  .photo-dropzone .placeholder{color:var(--gray-400);}
+  .photo-dropzone .placeholder svg{margin-bottom:8px;}
+  .photo-dropzone .placeholder p{font-size:14px;}
+  .photo-actions{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+  .photo-input{display:none;}
+
+  /* ===== Buttons ===== */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;
+    border:none;cursor:pointer;transition:all .2s;text-decoration:none;
+  }
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:var(--shadow);}
+  .btn-success{background:var(--success);color:#fff;}
+  .btn-success:hover{background:#047857;transform:translateY(-1px);box-shadow:var(--shadow);}
+  .btn-danger{background:#fff;color:var(--danger);border:1.5px solid var(--danger);}
+  .btn-danger:hover{background:#fef2f2;}
+  .btn-outline{background:#fff;color:var(--gray-600);border:1.5px solid var(--gray-300);}
+  .btn-outline:hover{background:var(--gray-50);border-color:var(--gray-400);}
+  .btn-sm{padding:6px 12px;font-size:12px;}
+  .btn-xs{padding:4px 8px;font-size:11px;border-radius:6px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+
+  /* ===== Stats ===== */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+  .stat-card{
+    background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);
+    padding:16px;text-align:center;
+  }
+  .stat-card .stat-value{font-size:28px;font-weight:700;color:var(--primary);}
+  .stat-card .stat-label{font-size:13px;color:var(--gray-500);margin-top:2px;}
+  .stat-card.green .stat-value{color:var(--success);}
+  .stat-card.orange .stat-value{color:var(--warning);}
+  .stat-card.purple .stat-value{color:#7c3aed;}
+  .stat-card.red .stat-value{color:var(--danger);}
+
+  /* ===== Table ===== */
+  .table-toolbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .table-toolbar .search-box{
+    flex:1;min-width:180px;position:relative;
+  }
+  .table-toolbar .search-box input{padding-left:36px;width:100%;}
+  .table-toolbar .search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-400);}
+  .table-toolbar .filter-select{padding:10px 32px 10px 14px;border:1.5px solid var(--gray-300);border-radius:8px;font-size:14px;background:#fff;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;}
+
+  .table-wrapper{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--gray-200);}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead{background:var(--gray-50);}
+  th{padding:12px 10px;text-align:left;font-weight:600;color:var(--gray-600);font-size:13px;white-space:nowrap;border-bottom:2px solid var(--gray-200);}
+  td{padding:10px;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
+  tr:hover td{background:var(--gray-50);}
+  .empty-row td{padding:40px 10px;text-align:center;color:var(--gray-400);font-size:15px;}
+
+  /* ===== Badge ===== */
+  .badge{
+    display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:500;
+  }
+  .badge-ofm{background:#dbeafe;color:#1e40af;}
+  .badge-pcs{background:#fce7f3;color:#9d174d;}
+  .badge-in{background:#d1fae5;color:#065f46;}
+  .badge-out{background:#fef3c7;color:#92400e;}
+  .badge-bike{background:#e0e7ff;color:#3730a3;}
+  .badge-car{background:#f3e8ff;color:#6b21a8;}
+
+  /* ===== Modal ===== */
+  .modal-overlay{
+    display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,.6);z-index:200;justify-content:center;align-items:center;padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-content{
+    background:#fff;border-radius:var(--radius);max-width:600px;width:100%;
+    max-height:90vh;overflow:auto;box-shadow:var(--shadow-lg);position:relative;
+  }
+  .modal-header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 20px;border-bottom:1px solid var(--gray-200);
+  }
+  .modal-header h3{font-size:16px;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-400);padding:0 4px;}
+  .modal-close:hover{color:var(--gray-600);}
+  .modal-body{padding:20px;}
+  .modal-body img{width:100%;border-radius:8px;}
+
+  /* ===== Toast ===== */
+  .toast-container{position:fixed;top:80px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px;}
+  .toast{
+    padding:14px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;
+    box-shadow:var(--shadow-lg);animation:slideIn .3s ease;display:flex;align-items:center;gap:10px;
+    min-width:260px;max-width:400px;
+  }
+  .toast.success{background:var(--success);}
+  .toast.error{background:var(--danger);}
+  .toast.info{background:var(--primary);}
+  @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  @keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
+
+  /* ===== Confirm Dialog ===== */
+  .confirm-body{text-align:center;padding:10px 0;}
+  .confirm-body p{font-size:15px;color:var(--gray-600);margin-bottom:20px;}
+  .confirm-actions{display:flex;gap:10px;justify-content:center;}
+
+  /* ===== Empty State ===== */
+  .empty-state{text-align:center;padding:40px 20px;color:var(--gray-400);}
+  .empty-state svg{margin-bottom:12px;}
+  .empty-state p{font-size:15px;}
+
+  /* ===== Responsive ===== */
+  @media(max-width:640px){
+    .navbar{padding:0 12px;}
+    .navbar-brand{font-size:16px;}
+    .nav-tab{padding:8px 12px;font-size:13px;}
+    .card{padding:16px;}
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .table-toolbar{flex-direction:column;}
+    .table-toolbar .search-box{min-width:100%;}
+    .modal-content{margin:10px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Navbar ===== -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+    Stamp Parking
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="form" onclick="switchPage('form')">
+      📝 บันทึกข้อมูล
+    </button>
+    <button class="nav-tab" data-page="dashboard" onclick="switchPage('dashboard')">
+      📊 Dashboard <span class="badge" id="totalBadge">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ==================== PAGE: FORM ==================== -->
+<div class="page active" id="page-form">
+  <div class="card">
+    <div class="card-title">📋 ฟอร์มบันทึกข้อมูล Stamp Parking</div>
+
+    <form id="stampForm" onsubmit="saveRecord(event)">
+      <div class="form-grid">
+
+        <!-- ชื่อ-นามสกุล -->
+        <div class="form-group">
+          <label>ชื่อ-นามสกุล <span class="required">*</span></label>
+          <input type="text" class="form-control" id="name" placeholder="เช่น สมชาย ใจดี" required>
+          <div class="error-text" id="nameError">กรุณากรอกชื่อ-นามสกุล</div>
+        </div>
+
+        <!-- ชื่อเล่น -->
+        <div class="form-group">
+          <label>ชื่อเล่น</label>
+          <input type="text" class="form-control" id="nickname" placeholder="เช่น ชาย">
+        </div>
+
+        <!-- เบอร์ติดต่อ -->
+        <div class="form-group">
+          <label>เบอร์ติดต่อ</label>
+          <input type="tel" class="form-control" id="phone" placeholder="เช่น 0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <div class="error-text" id="phoneError">เบอร์โทรศัพท์ต้องมี 10 หลัก</div>
+        </div>
+
+        <!-- หน่วยงาน -->
+        <div class="form-group">
+          <label>หน่วยงาน <span class="required">*</span></label>
+          <select class="form-control" id="department" required>
+            <option value="">เลือกหน่วยงาน</option>
+            <option value="OFM">OFM</option>
+            <option value="PCS">PCS</option>
+          </select>
+          <div class="error-text" id="deptError">กรุณาเลือกหน่วยงาน</div>
+        </div>
+
+        <!-- ประเภทการลงเวลา -->
+        <div class="form-group">
+          <label>ประเภทการลงเวลา <span class="required">*</span></label>
+          <select class="form-control" id="timeType" required>
+            <option value="">เลือกประเภท</option>
+            <option value="เข้างาน">เข้างาน (Check In)</option>
+            <option value="ออกงาน">ออกงาน (Check Out)</option>
+          </select>
+          <div class="error-text" id="timeError">กรุณาเลือกประเภทการลงเวลา</div>
+        </div>
+
+        <!-- ยานพาหนะ -->
+        <div class="form-group">
+          <label>ยานพาหนะ <span class="required">*</span></label>
+          <select class="form-control" id="vehicleType" required>
+            <option value="">เลือกยานพาหนะ</option>
+            <option value="รถจักรยานยนต์">🏍 รถจักรยานยนต์</option>
+            <option value="รถยนต์">🚗 รถยนต์</option>
+          </select>
+          <div class="error-text" id="vehicleError">กรุณาเลือกยานพาหนะ</div>
+        </div>
+
+        <!-- เลขบัตรจอดรถ -->
+        <div class="form-group full">
+          <label>เลขบัตรจอดรถ (หมายเลข Ticket) <span class="required">*</span></label>
+          <input type="text" class="form-control" id="ticketNo" placeholder="กรอกเลขบัตรจอดรถ 17 หลัก" maxlength="17" required
+                 oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
+          <div class="error-text" id="ticketError">กรุณากรอกเลขบัตรจอดรถให้ครบ 17 หลัก</div>
+          <div class="help-text" id="ticketHelp">🆔 หมายเลข Ticket 17 หลัก (ตัวเลขและตัวอักษร)</div>
+        </div>
+
+      </div>
+
+      <!-- ถ่ายรูป -->
+      <div class="photo-section full">
+        <label style="font-size:14px;font-weight:500;color:var(--gray-700);display:block;margin-bottom:6px;">📸 ถ่ายรูป <span style="color:var(--gray-400);font-weight:400;">(ไม่บังคับ)</span></label>
+        <div class="photo-dropzone" id="photoDropzone" onclick="document.getElementById('photoInput').click()">
+          <div class="placeholder" id="photoPlaceholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>คลิกเพื่อถ่ายรูปหรือเลือกรูปภาพ</p>
+          </div>
+          <img id="photoPreview" style="display:none;" alt="รูปตัวอย่าง">
+        </div>
+        <div class="photo-actions" id="photoActions" style="display:none;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('photoInput').click()">เปลี่ยนรูป</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="clearPhoto()">ลบรูป</button>
+        </div>
+        <input type="file" class="photo-input" id="photoInput" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)">
+      </div>
+
+      <!-- Submit -->
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="submit" class="btn btn-success" id="submitBtn">
+          💾 บันทึกข้อมูล
+        </button>
+        <button type="button" class="btn btn-outline" onclick="resetForm()">↻ ล้างฟอร์ม</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==================== PAGE: DASHBOARD ==================== -->
+<div class="page" id="page-dashboard">
+
+  <!-- Stats -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">📋 รายการทั้งหมด</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-value" id="statOFM">0</div>
+      <div class="stat-label">🏢 OFM</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-value" id="statPCS">0</div>
+      <div class="stat-label">🏢 PCS</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-value" id="statBike">0</div>
+      <div class="stat-label">🏍 รถจักรยานยนต์</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-value" id="statCar">0</div>
+      <div class="stat-label">🚗 รถยนต์</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statToday">0</div>
+      <div class="stat-label">📅 วันนี้</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-title">📋 รายการข้อมูลทั้งหมด</div>
+
+    <div class="table-toolbar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อ-นามสกุล, ชื่อเล่น, เบอร์โทร..." oninput="renderTable()">
+      </div>
+      <select class="filter-select" id="filterDept" onchange="renderTable()">
+        <option value="">ทั้งหมด (หน่วยงาน)</option>
+        <option value="OFM">OFM</option>
+        <option value="PCS">PCS</option>
+      </select>
+      <select class="filter-select" id="filterVehicle" onchange="renderTable()">
+        <option value="">ทั้งหมด (ยานพาหนะ)</option>
+        <option value="รถจักรยานยนต์">🏍 รถจักรยานยนต์</option>
+        <option value="รถยนต์">🚗 รถยนต์</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="ดาวน์โหลด CSV">📥 CSV</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>ชื่อ-นามสกุล</th>
+            <th>ชื่อเล่น</th>
+            <th>เบอร์ติดต่อ</th>
+            <th>หน่วยงาน</th>
+            <th>ลงเวลา</th>
+            <th>ยานพาหนะ</th>
+            <th>Ticket No.</th>
+            <th>รูป</th>
+            <th>วันที่</th>
+            <th style="width:50px;">ลบ</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ===== Modal: Photo ===== -->
+<div class="modal-overlay" id="photoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📸 รูปภาพ</h3>
+      <button class="modal-close" onclick="closePhotoModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <img id="modalPhotoImg" src="" alt="รูปภาพ">
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Confirm Delete ===== -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-content" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>⚠️ ยืนยันการลบ</h3>
+      <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-body">
+        <p>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</p>
+        <div class="confirm-actions">
+          <button class="btn btn-outline" onclick="closeConfirmModal()">ยกเลิก</button>
+          <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">ลบรายการ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toast Container ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================
+// DATA LAYER
+// ============================
+const STORAGE_KEY = 'stamp_parking_records';
+
+function getRecords() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch { return []; }
+}
+
+function saveRecords(records) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// ============================
+// FORM
+// ============================
+function handlePhotoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    showPhotoPreview(ev.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPhotoPreview(dataUrl) {
+  const img = document.getElementById('photoPreview');
+  const placeholder = document.getElementById('photoPlaceholder');
+  const dropzone = document.getElementById('photoDropzone');
+  const actions = document.getElementById('photoActions');
+  img.src = dataUrl;
+  img.style.display = 'block';
+  placeholder.style.display = 'none';
+  dropzone.classList.add('has-photo');
+  actions.style.display = 'flex';
+}
+
+function clearPhoto() {
+  const img = document.getElementById('photoPreview');
+  const placeholder = document.getElementById('photoPlaceholder');
+  const dropzone = document.getElementById('photoDropzone');
+  const actions = document.getElementById('photoActions');
+  const input = document.getElementById('photoInput');
+  img.src = '';
+  img.style.display = 'none';
+  placeholder.style.display = 'block';
+  dropzone.classList.remove('has-photo');
+  actions.style.display = 'none';
+  input.value = '';
+}
+
+function resetForm() {
+  document.getElementById('stampForm').reset();
+  clearPhoto();
+  document.querySelectorAll('.form-control').forEach(el => el.classList.remove('error'));
+  document.querySelectorAll('.error-text').forEach(el => el.classList.remove('show'));
+}
+
+function showError(id) {
+  document.getElementById(id).classList.add('show');
+  document.getElementById(id.replace('Error','')).classList.add('error');
+}
+
+function hideError(id) {
+  document.getElementById(id).classList.remove('show');
+  document.getElementById(id.replace('Error','')).classList.remove('error');
+}
+
+function saveRecord(e) {
+  e.preventDefault();
+
+  // Clear errors
+  document.querySelectorAll('.error-text').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.form-control').forEach(el => el.classList.remove('error'));
+
+  const name = document.getElementById('name').value.trim();
+  const nickname = document.getElementById('nickname').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const department = document.getElementById('department').value;
+  const timeType = document.getElementById('timeType').value;
+  const vehicleType = document.getElementById('vehicleType').value;
+  const ticketNo = document.getElementById('ticketNo').value.trim();
+  const photoDataUrl = document.getElementById('photoPreview').src || null;
+
+  let valid = true;
+
+  if (!name) { showError('nameError'); valid = false; }
+  else { hideError('nameError'); }
+
+  if (phone && phone.length !== 10) { showError('phoneError'); valid = false; }
+  else { hideError('phoneError'); }
+
+  if (!department) { showError('deptError'); valid = false; }
+  else { hideError('deptError'); }
+
+  if (!timeType) { showError('timeError'); valid = false; }
+  else { hideError('timeError'); }
+
+  if (!vehicleType) { showError('vehicleError'); valid = false; }
+  else { hideError('vehicleError'); }
+
+  if (!ticketNo || ticketNo.length !== 17) { showError('ticketError'); valid = false; }
+  else { hideError('ticketError'); }
+
+  if (!valid) {
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+    return;
+  }
+
+  const record = {
+    id: generateId(),
+    name,
+    nickname,
+    phone,
+    department,
+    timeType,
+    vehicleType,
+    ticketNo,
+    photo: photoDataUrl,
+    createdAt: new Date().toISOString()
+  };
+
+  const records = getRecords();
+  records.unshift(record);
+  saveRecords(records);
+
+  showToast('✅ บันทึกข้อมูลสำเร็จ!', 'success');
+  resetForm();
+  updateBadge();
+  renderTable();
+  renderStats();
+}
+
+// ============================
+// DASHBOARD — STATS
+// ============================
+function renderStats() {
+  const records = getRecords();
+  const total = records.length;
+  const ofm = records.filter(r => r.department === 'OFM').length;
+  const pcs = records.filter(r => r.department === 'PCS').length;
+  const bike = records.filter(r => r.vehicleType === 'รถจักรยานยนต์').length;
+  const car = records.filter(r => r.vehicleType === 'รถยนต์').length;
+  const today = records.filter(r => {
+    const d = new Date(r.createdAt);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() &&
+           d.getMonth() === now.getMonth() &&
+           d.getDate() === now.getDate();
+  }).length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statOFM').textContent = ofm;
+  document.getElementById('statPCS').textContent = pcs;
+  document.getElementById('statBike').textContent = bike;
+  document.getElementById('statCar').textContent = car;
+  document.getElementById('statToday').textContent = today;
+}
+
+// ============================
+// DASHBOARD — TABLE
+// ============================
+function renderTable() {
+  let records = getRecords();
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filterDept = document.getElementById('filterDept').value;
+  const filterVehicle = document.getElementById('filterVehicle').value;
+
+  if (search) {
+    records = records.filter(r =>
+      r.name.toLowerCase().includes(search) ||
+      (r.nickname && r.nickname.toLowerCase().includes(search)) ||
+      (r.phone && r.phone.includes(search)) ||
+      r.ticketNo.toLowerCase().includes(search)
+    );
+  }
+  if (filterDept) records = records.filter(r => r.department === filterDept);
+  if (filterVehicle) records = records.filter(r => r.vehicleType === filterVehicle);
+
+  const tbody = document.getElementById('tableBody');
+
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">📭 ไม่พบข้อมูล</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = records.map((r, i) => {
+    const date = new Date(r.createdAt);
+    const dateStr = date.toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit',year:'numeric'});
+    const timeStr = date.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+    const deptBadge = r.department === 'OFM' ? 'badge-ofm' : 'badge-pcs';
+    const timeBadge = r.timeType === 'เข้างาน' ? 'badge-in' : 'badge-out';
+    const vehicleBadge = r.vehicleType === 'รถจักรยานยนต์' ? 'badge-bike' : 'badge-car';
+    const hasPhoto = r.photo ? `<button class="btn btn-outline btn-xs" onclick="viewPhoto('${r.id}')">📷 ดูรูป</button>` : '—';
+
+    return `<tr>
+      <td>${i + 1}</td>
+      <td><strong>${escHtml(r.name)}</strong></td>
+      <td>${escHtml(r.nickname) || '—'}</td>
+      <td>${escHtml(r.phone) || '—'}</td>
+      <td><span class="badge ${deptBadge}">${r.department}</span></td>
+      <td><span class="badge ${timeBadge}">${r.timeType}</span></td>
+      <td><span class="badge ${vehicleBadge}">${r.vehicleType}</span></td>
+      <td style="font-family:monospace;font-size:13px;">${escHtml(r.ticketNo)}</td>
+      <td>${hasPhoto}</td>
+      <td style="font-size:12px;white-space:nowrap;">${dateStr}<br><span style="color:var(--gray-400)">${timeStr}</span></td>
+      <td><button class="btn btn-danger btn-xs" onclick="promptDelete('${r.id}')" title="ลบ">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ============================
+// PHOTO MODAL
+// ============================
+function viewPhoto(id) {
+  const records = getRecords();
+  const r = records.find(rec => rec.id === id);
+  if (!r || !r.photo) return;
+  document.getElementById('modalPhotoImg').src = r.photo;
+  document.getElementById('photoModal').classList.add('show');
+}
+
+function closePhotoModal() {
+  document.getElementById('photoModal').classList.remove('show');
+}
+
+// ============================
+// CONFIRM DELETE
+// ============================
+let deleteTargetId = null;
+
+function promptDelete(id) {
+  deleteTargetId = id;
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('show');
+  deleteTargetId = null;
+}
+
+function confirmDelete() {
+  if (!deleteTargetId) return;
+  let records = getRecords();
+  records = records.filter(r => r.id !== deleteTargetId);
+  saveRecords(records);
+  closeConfirmModal();
+  deleteTargetId = null;
+  showToast('🗑 ลบรายการเรียบร้อย', 'info');
+  updateBadge();
+  renderStats();
+  renderTable();
+}
+
+// ============================
+// BADGE
+// ============================
+function updateBadge() {
+  const records = getRecords();
+  document.getElementById('totalBadge').textContent = records.length;
+}
+
+// ============================
+// NAVIGATION
+// ============================
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.nav-tab[data-page="${page}"]`).classList.add('active');
+  if (page === 'dashboard') {
+    renderStats();
+    renderTable();
+  }
+}
+
+// ============================
+// EXPORT CSV
+// ============================
+function exportCSV() {
+  const records = getRecords();
+  if (!records.length) {
+    showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
+    return;
+  }
+  const header = 'ชื่อ-นามสกุล,ชื่อเล่น,เบอร์ติดต่อ,หน่วยงาน,ประเภทการลงเวลา,ยานพาหนะ,เลขบัตรจอดรถ,วันที่';
+  const rows = records.map(r => {
+    const date = new Date(r.createdAt).toLocaleString('th-TH');
+    return `"${r.name}","${r.nickname||''}","${r.phone||''}","${r.department}","${r.timeType}","${r.vehicleType}","${r.ticketNo}","${date}"`;
+  });
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Thai chars
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `stamp-parking-${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast('📥 ดาวน์โหลด CSV เรียบร้อย', 'success');
+}
+
+// ============================
+// TOAST
+// ============================
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOut .3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ============================
+// CLOSE MODALS ON OVERLAY CLICK
+// ============================
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('show');
+      deleteTargetId = null;
+    }
+  });
+});
+
+// ============================
+// KEYBOARD SHORTCUT
+// ============================
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closePhotoModal();
+    closeConfirmModal();
+  }
+});
+
+// ============================
+// INIT
+// ============================
+updateBadge();
+renderStats();
+renderTable();
+</script>
+
+</body>
+</html>

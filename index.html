@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stamp Parking</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --p:#2563eb;--pd:#1d4ed8;--pl:#eff6ff;
+  --s:#059669;--d:#dc2626;--w:#d97706;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;
+  --g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;
+  --g600:#4b5563;--g700:#374151;--g800:#1f2937;
+  --r:12px;--sh:0 1px 3px rgba(0,0,0,.08);
+  --shl:0 4px 20px rgba(0,0,0,.12);
+  --nav-h:56px;--bottom-h:64px;--sidebar-w:220px;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--g50);color:var(--g700);min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ============================================================
+   LAYOUT — Desktop (>= 768px)
+   ============================================================ */
+.desktop-layout{display:none}
+.mobile-layout{display:block}
+
+@media(min-width:768px){
+  .mobile-layout{display:none}
+  .desktop-layout{display:flex;min-height:100vh}
+}
+
+/* ============================================================
+   DESKTOP — Sidebar Navigation
+   ============================================================ */
+@media(min-width:768px){
+  .sidebar{
+    width:var(--sidebar-w);background:linear-gradient(180deg,#1e3a5f,#0f2440);
+    color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;
+    height:100vh;z-index:100;padding:0;flex-shrink:0;
+  }
+  .sidebar-logo{
+    padding:20px 16px;font-size:17px;font-weight:700;
+    display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);
+    cursor:pointer;transition:background .2s;user-select:none;
+  }
+  .sidebar-logo:hover{background:rgba(255,255,255,.05)}
+  .sidebar-logo .logo-icon{flex-shrink:0;width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 6px rgba(59,130,246,.4)}
+  .sidebar-logo .logo-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .sidebar-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+  .sidebar-item{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;
+    border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;
+    color:rgba(255,255,255,.65);transition:.2s;border:none;background:transparent;width:100%;text-align:left;
+  }
+  .sidebar-item:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .sidebar-item.active{color:#fff;background:rgba(255,255,255,.15);font-weight:600}
+  .sidebar-item .badge{
+    margin-left:auto;background:var(--d);color:#fff;font-size:10px;font-weight:700;
+    padding:1px 7px;border-radius:8px;
+  }
+  .sidebar-conn{
+    padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .sidebar-conn .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .sidebar-conn .dot.on{background:#4ade80}
+  .sidebar-conn .dot.off{background:#f87171}
+
+  .main-content{margin-left:var(--sidebar-w);flex:1;padding:24px;max-width:calc(100vw - var(--sidebar-w))}
+  .page-header{font-size:20px;font-weight:700;color:var(--g800);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+}
+
+/* ============================================================
+   MOBILE — Bottom Tab Bar
+   ============================================================ */
+@media(max-width:767px){
+  .mobile-header{
+    display:flex;align-items:center;padding:0 12px;height:var(--nav-h);
+    background:linear-gradient(135deg,var(--p),#1e40af);color:#fff;
+    position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  .mobile-header .logo{
+    font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;
+    cursor:pointer;user-select:none;padding:4px 0;
+  }
+  .mobile-header .logo:active{opacity:.8}
+  .mobile-header .logo .logo-icon{
+    flex-shrink:0;width:28px;height:28px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    border-radius:7px;display:flex;align-items:center;justify-content:center;
+    color:#fff;box-shadow:0 2px 6px rgba(59,130,246,.4);
+  }
+  .mobile-header .logo .logo-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .mobile-header .conn-dot{width:7px;height:7px;border-radius:50%;margin-left:6px;display:inline-block}
+  .mobile-header .conn-dot.on{background:#4ade80}
+  .mobile-header .conn-dot.off{background:#f87171}
+
+  .mobile-content{padding:12px 12px 76px;max-width:100%;overflow-x:hidden}
+  .offline-bar{
+    display:none;background:var(--d);color:#fff;text-align:center;
+    padding:5px;font-size:11px;font-weight:500;
+  }
+  .offline-bar.show{display:block}
+
+  .bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;height:var(--bottom-h);
+    background:#fff;border-top:1px solid var(--g200);
+    display:flex;z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,.08);
+    padding-bottom:env(safe-area-inset-bottom,0);
+  }
+  .bottom-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;border:none;background:transparent;cursor:pointer;padding:6px 0;
+    color:var(--g400);font-size:10px;font-weight:500;transition:.2s;
+  }
+  .bottom-item.active{color:var(--p)}
+  .bottom-item svg{width:22px;height:22px}
+  .bottom-item .badge{
+    position:absolute;top:4px;right:50%;margin-right:-18px;
+    background:var(--d);color:#fff;font-size:9px;font-weight:700;
+    padding:1px 5px;border-radius:7px;min-width:16px;text-align:center;
+  }
+  .bottom-item-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+}
+
+/* ============================================================
+   COMMON STYLES — ทั้ง Mobile และ Desktop
+   ============================================================ */
+.page{display:none}.page.active{display:block}
+
+.card{
+  background:#fff;border-radius:var(--r);box-shadow:var(--sh);
+  padding:18px;margin-bottom:14px;border:1px solid var(--g200)
+}
+.card-title{
+  font-size:15px;font-weight:600;color:var(--g800);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px
+}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:3px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:13px;font-weight:500;color:var(--g600)}
+.form-group label .req{color:var(--d);margin-left:2px}
+.form-control{
+  padding:10px 12px;border:1.5px solid var(--g300);border-radius:8px;
+  font-size:14px;transition:border-color .2s;outline:none;background:#fff;width:100%
+}
+.form-control:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.form-control.err{border-color:var(--d)}
+select.form-control{
+  appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:32px
+}
+.err-msg{font-size:12px;color:var(--d);display:none}
+.err-msg.show{display:block}
+.help{font-size:12px;color:var(--g400);margin-top:2px}
+
+/* Photo */
+.dropzone{
+  border:2px dashed var(--g300);border-radius:var(--r);padding:16px;
+  text-align:center;cursor:pointer;transition:.2s;background:var(--g50)
+}
+.dropzone:hover{border-color:var(--p);background:var(--pl)}
+.dropzone.has-photo{border-style:solid;border-color:var(--s);padding:6px}
+.dropzone img{max-width:100%;max-height:200px;border-radius:8px;display:block;margin:0 auto}
+.dropzone .ph{color:var(--g400);font-size:14px}
+.dropzone .ph svg{margin-bottom:6px}
+.photo-actions{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+#photoInput{display:none}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;
+  border:none;cursor:pointer;transition:.2s;text-decoration:none
+}
+.btn-p{background:var(--p);color:#fff}.btn-p:hover{background:var(--pd);box-shadow:var(--sh)}
+.btn-s{background:var(--s);color:#fff}.btn-s:hover{background:#047857;box-shadow:var(--sh)}
+.btn-d{background:#fff;color:var(--d);border:1.5px solid var(--d)}.btn-d:hover{background:#fef2f2}
+.btn-o{background:#fff;color:var(--g600);border:1.5px solid var(--g300)}.btn-o:hover{background:var(--g50)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* Spinner */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:s .6s linear infinite;vertical-align:middle}
+@keyframes s{to{transform:rotate(360deg)}}
+.overlay{
+  display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:150;
+  justify-content:center;align-items:center;flex-direction:column;gap:10px
+}
+.overlay.show{display:flex}
+.overlay .sp{width:36px;height:36px;border:4px solid var(--g200);border-top-color:var(--p);border-radius:50%;animation:s .8s linear infinite}
+.overlay p{font-size:14px;color:var(--g600)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr);gap:8px}}
+.stat{
+  background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--g200);
+  padding:12px;text-align:center
+}
+.stat .v{font-size:24px;font-weight:700;color:var(--p)}
+.stat .l{font-size:12px;color:var(--g500);margin-top:2px}
+.stat.green .v{color:var(--s)}.stat.orange .v{color:var(--w)}
+.stat.purple .v{color:#7c3aed}.stat.red .v{color:var(--d)}
+
+/* Table */
+.toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.toolbar .search{flex:1;min-width:160px;position:relative}
+.toolbar .search input{padding-left:30px}
+.toolbar .search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--g400)}
+.toolbar select{
+  padding:7px 24px 7px 10px;border:1.5px solid var(--g300);border-radius:8px;font-size:12px;
+  background:#fff;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 7px center;cursor:pointer
+}
+.wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--g200)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:var(--g50)}
+th{padding:9px 7px;text-align:left;font-weight:600;color:var(--g600);font-size:12px;white-space:nowrap;border-bottom:2px solid var(--g200)}
+td{padding:7px;border-bottom:1px solid var(--g100);vertical-align:middle}
+tr:hover td{background:var(--g50)}
+.empty td{padding:32px 7px;text-align:center;color:var(--g400);font-size:14px}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.badge-ofm{background:#dbeafe;color:#1e40af}.badge-pcs{background:#fce7f3;color:#9d174d}
+.badge-in{background:#d1fae5;color:#065f46}.badge-out{background:#fef3c7;color:#92400e}
+.badge-bike{background:#e0e7ff;color:#3730a3}.badge-car{background:#f3e8ff;color:#6b21a8}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-approved{background:#d1fae5;color:#065f46}
+.badge-rejected{background:#fce4ec;color:#b71c1c}
+.status-select{padding:3px 6px;border:1px solid var(--g300);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;width:96px}
+.status-select:focus{outline:none;border-color:var(--p)}
+
+/* Setup */
+.setup-banner{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:none}
+.setup-banner.show{display:block}
+.setup-banner h4{color:#92400e;font-size:13px;margin-bottom:3px}
+.setup-banner p{color:#b45309;font-size:12px;line-height:1.4}
+.setup-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.setup-row input{flex:1;min-width:180px}
+
+/* Sync bar */
+.sync-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.sync-bar .sync-text{font-size:12px;color:var(--g400)}
+.sync-bar .sync-actions{display:flex;gap:6px}
+
+/* Modal */
+.modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;
+  justify-content:center;align-items:center;padding:16px
+}
+.modal.show{display:flex}
+.modal-box{
+  background:#fff;border-radius:var(--r);max-width:500px;width:100%;
+  max-height:85vh;overflow:auto;box-shadow:var(--shl)
+}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--g200)}
+.modal-hd h3{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--g400);padding:0 4px;line-height:1}
+.modal-close:hover{color:var(--g600)}
+.modal-bd{padding:16px}
+.modal-bd img{width:100%;border-radius:8px}
+.confirm-actions{display:flex;gap:10px;justify-content:center;margin-top:14px}
+
+/* Toast */
+#toasts{position:fixed;top:64px;right:12px;z-index:300;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{
+  padding:12px 16px;border-radius:8px;color:#fff;font-size:13px;font-weight:500;
+  box-shadow:var(--shl);animation:si .25s ease;display:flex;align-items:center;gap:8px;
+  min-width:200px;max-width:360px;pointer-events:auto
+}
+.toast.s{background:var(--s)}.toast.e{background:var(--d)}.toast.i{background:var(--p)}
+@keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes so{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* Desktop table enhancements */
+@media(min-width:768px){
+  .stats{grid-template-columns:repeat(6,1fr)}
+  .toolbar select{font-size:13px;padding:8px 28px 8px 12px}
+  th,td{padding:10px 10px;font-size:13px}
+  .status-select{width:110px;font-size:12px}
+}
+
+/* Bell notification */
+.bell-btn{position:relative;background:none;border:none;font-size:20px;cursor:pointer;padding:2px 8px;border-radius:8px;transition:background .2s}
+.bell-btn:hover{background:var(--g100)}
+.bell-badge{display:none;position:absolute;top:-2px;right:-2px;background:var(--d);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.bell-badge.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     DESKTOP LAYOUT
+     ============================================================ -->
+<div class="desktop-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo" onclick="go('form')" title="กลับหน้าแรก">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2v-3l2-5h10l3 5h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2"/><circle cx="7" cy="15" r="2"/><circle cx="17" cy="15" r="2"/><path d="M5 10h10"/></svg></div>
+      Stamp Parking
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item active" data-page="form" onclick="go('form')">
+        📝 บันทึกข้อมูล
+      </button>
+      <button class="sidebar-item" data-page="dash" onclick="go('dash')">
+        📊 Dashboard <span class="badge" id="deskBadge">0</span>
+      </button>
+      <div style="flex:1"></div>
+      <button class="sidebar-item" data-page="setup" onclick="go('setup')">
+        ⚙️ ตั้งค่า
+      </button>
+    </nav>
+    <div class="sidebar-conn">
+      <span class="dot" id="deskConnDot"></span>
+      <span id="deskConnText">กำลังเชื่อมต่อ...</span>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Setup Page -->
+    <div class="page" id="desk-page-setup">
+      <div class="page-header">⚙️ ตั้งค่า</div>
+      <div class="card">
+        <div class="card-title">🌐 Web App URL</div>
+        <div class="setup-banner show" id="deskSetupBanner">
+          <h4>ยังไม่ได้ตั้งค่า Web App URL</h4>
+          <p>หลังจาก Deploy Google Apps Script แล้ว วาง URL ที่นี่</p>
+        </div>
+        <div class="setup-row">
+          <input type="url" class="form-control" id="deskGasUrl" placeholder="https://script.google.com/macros/s/...">
+          <button class="btn btn-p" onclick="saveUrl()">💾 บันทึก</button>
+          <button class="btn btn-o btn-sm" id="deskTestBtn" onclick="testConn()">📡 ทดสอบ</button>
+        </div>
+        <div class="help" style="margin-top:6px">ดูวิธีใน README.md</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔗 Google Sheet ID</div>
+        <div class="setup-row">
+          <input type="text" class="form-control" id="deskSheetId" placeholder="Google Sheet ID (ไม่บังคับ)">
+          <button class="btn btn-p btn-sm" onclick="saveSheetId()">💾 บันทึก</button>
+        </div>
+        <div class="help" style="margin-top:6px">คัดลอกจาก URL: docs.google.com/spreadsheets/d/<b>xxxxx</b>/edit</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📁 Google Drive Folder ID</div>
+        <div class="setup-row">
+          <input type="text" class="form-control" id="deskFolderId" placeholder="Google Drive Folder ID (ไม่บังคับ)">
+          <button class="btn btn-p btn-sm" onclick="saveFolderId()">💾 บันทึก</button>
+        </div>
+        <div class="help" style="margin-top:6px">คัดลอกจาก URL: drive.google.com/drive/folders/<b>xxxxx</b></div>
+      </div>
+    </div>
+
+    <!-- Form Page -->
+    <div class="page active" id="desk-page-form">
+      <div class="page-header">📝 บันทึกข้อมูล Stamp Parking</div>
+      <div class="card">
+        <form id="deskForm" onsubmit="saveRec(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>ชื่อ-นามสกุล <span class="req">*</span></label>
+              <input type="text" class="form-control" id="deskName" placeholder="สมชาย ใจดี" required>
+              <div class="err-msg" id="deskNameErr">กรุณากรอกชื่อ-นามสกุล</div>
+            </div>
+            <div class="form-group">
+              <label>ชื่อเล่น</label>
+              <input type="text" class="form-control" id="deskNickname" placeholder="ชาย">
+            </div>
+            <div class="form-group">
+              <label>เบอร์ติดต่อ</label>
+              <input type="tel" class="form-control" id="deskPhone" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <div class="err-msg" id="deskPhoneErr">เบอร์ต้องมี 10 หลัก</div>
+            </div>
+            <div class="form-group">
+              <label>หน่วยงาน <span class="req">*</span></label>
+              <select class="form-control" id="deskDept" required>
+                <option value="">เลือก</option><option value="OFM">OFM</option><option value="PCS">PCS</option>
+              </select>
+              <div class="err-msg" id="deskDeptErr">กรุณาเลือกหน่วยงาน</div>
+            </div>
+            <div class="form-group">
+              <label>ประเภทการลงเวลา <span class="req">*</span></label>
+              <select class="form-control" id="deskTimeType" required>
+                <option value="">เลือก</option><option value="เข้างาน">เข้างาน (Check In)</option><option value="ออกงาน">ออกงาน (Check Out)</option>
+              </select>
+              <div class="err-msg" id="deskTimeErr">กรุณาเลือกประเภท</div>
+            </div>
+            <div class="form-group">
+              <label>ยานพาหนะ <span class="req">*</span></label>
+              <select class="form-control" id="deskVehicle" required>
+                <option value="">เลือก</option><option value="รถจักรยานยนต์">🏍 รถจักรยานยนต์</option><option value="รถยนต์">🚗 รถยนต์</option>
+              </select>
+              <div class="err-msg" id="deskVehicleErr">กรุณาเลือกยานพาหนะ</div>
+            </div>
+            <div class="form-group full">
+              <label>เลขบัตรจอดรถ (Ticket No.) <span class="req">*</span></label>
+              <input type="text" class="form-control" id="deskTicket" placeholder="17 หลัก" maxlength="17" required oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
+              <div class="err-msg" id="deskTicketErr">กรุณากรอกเลขบัตร 17 หลัก</div>
+              <div class="help">🆔 หมายเลข Ticket 17 หลัก</div>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <label style="font-size:13px;font-weight:500;color:var(--g600);display:block;margin-bottom:4px">📸 ถ่ายรูป <span style="font-weight:400;color:var(--g400)">(ไม่บังคับ)</span></label>
+            <div class="dropzone" id="deskDropzone" onclick="document.getElementById('deskPhotoInput').click()">
+              <div class="ph" id="deskPh">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <p>คลิกเพื่อถ่ายรูปหรือเลือกรูป</p>
+              </div>
+              <img id="deskPreview" style="display:none" alt="preview">
+            </div>
+            <div class="photo-actions" id="deskPhotoAct" style="display:none">
+              <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('deskPhotoInput').click()">เปลี่ยน</button>
+              <button type="button" class="btn btn-d btn-sm" onclick="clrPhoto('desk')">ลบรูป</button>
+            </div>
+            <input type="file" id="deskPhotoInput" accept="image/*" capture="environment" onchange="onPhoto(event,'desk')">
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            <button type="submit" class="btn btn-s" id="deskSubmitBtn">💾 บันทึกข้อมูล</button>
+            <button type="button" class="btn btn-o" onclick="resetForm('desk')">↻ ล้าง</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div class="page" id="desk-page-dash">
+      <div class="page-header">📊 Dashboard <span style="flex:1"></span><button class="bell-btn" onclick="markSeen()" title="ข้อมูลใหม่">🔔<span class="bell-badge" id="deskBellBadge">0</span></button></div>
+      <div class="stats" id="deskStats">
+        <div class="stat"><div class="v" id="deskStTotal">0</div><div class="l">ทั้งหมด</div></div>
+        <div class="stat green"><div class="v" id="deskStOfm">0</div><div class="l">OFM</div></div>
+        <div class="stat orange"><div class="v" id="deskStPcs">0</div><div class="l">PCS</div></div>
+        <div class="stat purple"><div class="v" id="deskStBike">0</div><div class="l">🏍 จักรยานยนต์</div></div>
+        <div class="stat red"><div class="v" id="deskStCar">0</div><div class="l">🚗 รถยนต์</div></div>
+        <div class="stat"><div class="v" id="deskStToday">0</div><div class="l">📅 วันนี้</div></div>
+      </div>
+      <div class="sync-bar">
+        <span class="sync-text" id="deskSync">🔄 —</span>
+        <div class="sync-actions">
+          <button class="btn btn-o btn-sm" onclick="refresh()">🔄 รีเฟรช</button>
+          <button class="btn btn-o btn-sm" onclick="exportCSV()">📥 CSV</button>
+        </div>
+      </div>
+      <div class="card" style="padding:16px">
+        <div class="toolbar">
+          <div class="search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="form-control" id="deskSearch" placeholder="ค้นหา..." oninput="render()">
+          </div>
+          <select id="deskFDept" onchange="render()"><option value="">หน่วยงาน</option><option value="OFM">OFM</option><option value="PCS">PCS</option></select>
+          <select id="deskFVehicle" onchange="render()"><option value="">ยานพาหนะ</option><option value="รถจักรยานยนต์">🏍 จักรยานยนต์</option><option value="รถยนต์">🚗 รถยนต์</option></select>
+          <select id="deskFStatus" onchange="render()"><option value="">สถานะ</option><option value="รออนุมัติ">⏳ รออนุมัติ</option><option value="อนุมัติ">✅ อนุมัติ</option><option value="ไม่อนุมัติ">❌ ไม่อนุมัติ</option></select>
+          <input type="date" class="form-control" id="deskFDate" onchange="render()" style="width:auto;max-width:150px">
+        </div>
+        <div class="wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>ชื่อ-สกุล</th><th>หน่วยงาน</th><th>ลงเวลา</th><th>ยานพาหนะ</th><th>Ticket No.</th><th>สถานะ</th><th>รูป</th><th>วันที่</th><th style="width:36px"></th>
+            </tr></thead>
+            <tbody id="deskTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================
+     MOBILE LAYOUT
+     ============================================================ -->
+<div class="mobile-layout">
+  <!-- Header -->
+  <div class="mobile-header">
+    <div class="logo" onclick="go('form')" title="กลับหน้าแรก">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2v-3l2-5h10l3 5h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2"/><circle cx="7" cy="15" r="2"/><circle cx="17" cy="15" r="2"/><path d="M5 10h10"/></svg></div>
+      Stamp Parking
+      <span class="conn-dot" id="mobConnDot"></span>
+    </div>
+  </div>
+  <div class="offline-bar" id="mobOffline">⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์</div>
+
+  <div class="mobile-content">
+    <!-- Setup -->
+    <div class="page" id="mob-page-setup">
+      <div class="card">
+        <div class="card-title">🌐 Web App URL</div>
+        <div class="setup-banner show" id="mobSetupBanner">
+          <h4>⚙️ ตั้งค่า URL</h4>
+          <p>ใส่ Web App URL หลังจาก Deploy Google Apps Script</p>
+        </div>
+        <div class="setup-row">
+          <input type="url" class="form-control" id="mobGasUrl" placeholder="https://script.google.com/macros/s/...">
+          <button class="btn btn-p" onclick="saveUrl()">💾 บันทึก</button>
+        </div>
+        <div style="margin-top:8px"><button class="btn btn-o btn-sm" id="mobTestBtn" onclick="testConn()">📡 ทดสอบ</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔗 Google Sheet ID</div>
+        <div class="setup-row">
+          <input type="text" class="form-control" id="mobSheetId" placeholder="Sheet ID (ไม่บังคับ)">
+          <button class="btn btn-p btn-sm" onclick="saveSheetId()">💾</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📁 Google Drive Folder ID</div>
+        <div class="setup-row">
+          <input type="text" class="form-control" id="mobFolderId" placeholder="Folder ID (ไม่บังคับ)">
+          <button class="btn btn-p btn-sm" onclick="saveFolderId()">💾</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="page active" id="mob-page-form">
+      <div class="card">
+        <div class="card-title">📝 บันทึกข้อมูล</div>
+        <form id="mobForm" onsubmit="saveRec(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>ชื่อ-นามสกุล <span class="req">*</span></label>
+              <input type="text" class="form-control" id="mobName" placeholder="สมชาย ใจดี" required>
+              <div class="err-msg" id="mobNameErr">กรุณากรอกชื่อ-นามสกุล</div>
+            </div>
+            <div class="form-group">
+              <label>ชื่อเล่น</label>
+              <input type="text" class="form-control" id="mobNickname" placeholder="ชาย">
+            </div>
+            <div class="form-group">
+              <label>เบอร์ติดต่อ</label>
+              <input type="tel" class="form-control" id="mobPhone" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <div class="err-msg" id="mobPhoneErr">เบอร์ต้องมี 10 หลัก</div>
+            </div>
+            <div class="form-group">
+              <label>หน่วยงาน <span class="req">*</span></label>
+              <select class="form-control" id="mobDept" required>
+                <option value="">เลือก</option><option value="OFM">OFM</option><option value="PCS">PCS</option>
+              </select>
+              <div class="err-msg" id="mobDeptErr">กรุณาเลือกหน่วยงาน</div>
+            </div>
+            <div class="form-group">
+              <label>ประเภทการลงเวลา <span class="req">*</span></label>
+              <select class="form-control" id="mobTimeType" required>
+                <option value="">เลือก</option><option value="เข้างาน">เข้างาน</option><option value="ออกงาน">ออกงาน</option>
+              </select>
+              <div class="err-msg" id="mobTimeErr">กรุณาเลือกประเภท</div>
+            </div>
+            <div class="form-group">
+              <label>ยานพาหนะ <span class="req">*</span></label>
+              <select class="form-control" id="mobVehicle" required>
+                <option value="">เลือก</option><option value="รถจักรยานยนต์">🏍 รถจักรยานยนต์</option><option value="รถยนต์">🚗 รถยนต์</option>
+              </select>
+              <div class="err-msg" id="mobVehicleErr">กรุณาเลือกยานพาหนะ</div>
+            </div>
+            <div class="form-group full">
+              <label>เลขบัตรจอดรถ <span class="req">*</span></label>
+              <input type="text" class="form-control" id="mobTicket" placeholder="17 หลัก" maxlength="17" required oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
+              <div class="err-msg" id="mobTicketErr">กรุณากรอกเลขบัตร 17 หลัก</div>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px">📸 ถ่ายรูป <span style="font-weight:400;color:var(--g400)">(ไม่บังคับ)</span></label>
+            <div class="dropzone" id="mobDropzone" onclick="document.getElementById('mobPhotoInput').click()">
+              <div class="ph" id="mobPh">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <p>ถ่ายรูปหรือเลือกรูป</p>
+              </div>
+              <img id="mobPreview" style="display:none" alt="preview">
+            </div>
+            <div class="photo-actions" id="mobPhotoAct" style="display:none">
+              <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('mobPhotoInput').click()">เปลี่ยน</button>
+              <button type="button" class="btn btn-d btn-sm" onclick="clrPhoto('mob')">ลบ</button>
+            </div>
+            <input type="file" id="mobPhotoInput" accept="image/*" capture="environment" onchange="onPhoto(event,'mob')">
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            <button type="submit" class="btn btn-s" id="mobSubmitBtn">💾 บันทึก</button>
+            <button type="button" class="btn btn-o" onclick="resetForm('mob')">↻ ล้าง</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="page" id="mob-page-dash">
+      <div class="stats" id="mobStats">
+        <div class="stat"><div class="v" id="mobStTotal">0</div><div class="l">ทั้งหมด</div></div>
+        <div class="stat green"><div class="v" id="mobStOfm">0</div><div class="l">OFM</div></div>
+        <div class="stat orange"><div class="v" id="mobStPcs">0</div><div class="l">PCS</div></div>
+        <div class="stat purple"><div class="v" id="mobStBike">0</div><div class="l">🏍 จักรยาน</div></div>
+        <div class="stat red"><div class="v" id="mobStCar">0</div><div class="l">🚗 รถยนต์</div></div>
+        <div class="stat"><div class="v" id="mobStToday">0</div><div class="l">📅 วันนี้</div></div>
+      </div>
+      <div class="sync-bar">
+        <span class="sync-text" id="mobSync">🔄 —</span>
+        <div class="sync-actions">
+          <button class="bell-btn" onclick="markSeen()" title="ข้อมูลใหม่" style="font-size:18px">🔔<span class="bell-badge" id="mobBellBadge">0</span></button>
+          <button class="btn btn-o btn-sm" onclick="refresh()">🔄</button>
+          <button class="btn btn-o btn-sm" onclick="exportCSV()">📥</button>
+        </div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div class="toolbar">
+          <div class="search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="form-control" id="mobSearch" placeholder="ค้นหา..." oninput="render()">
+          </div>
+          <select id="mobFStatus" onchange="render()"><option value="">สถานะ</option><option value="รออนุมัติ">⏳</option><option value="อนุมัติ">✅</option><option value="ไม่อนุมัติ">❌</option></select>
+          <input type="date" class="form-control" id="mobFDate" onchange="render()" style="width:auto;max-width:140px">
+        </div>
+        <div class="wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>ชื่อ</th><th>ยานพาหนะ</th><th>Ticket</th><th>สถานะ</th><th style="width:32px"></th>
+            </tr></thead>
+            <tbody id="mobTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="bottom-item active" data-page="form" onclick="go('form')">
+      <span class="bottom-item-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>บันทึก</span>
+      </span>
+    </button>
+    <button class="bottom-item" data-page="dash" onclick="go('dash')">
+      <span class="bottom-item-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+        <span class="badge" id="mobBadge">0</span>
+      </span>
+    </button>
+    <button class="bottom-item" data-page="setup" onclick="go('setup')">
+      <span class="bottom-item-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>ตั้งค่า</span>
+      </span>
+    </button>
+  </nav>
+</div>
+
+<!-- ===== Modal Photo ===== -->
+<div class="modal" id="photoModal">
+  <div class="modal-box">
+    <div class="modal-hd"><h3>📸 รูปภาพ</h3><button class="modal-close" onclick="closeModal('photoModal')">&times;</button></div>
+    <div class="modal-bd"><img id="modalImg" src="" alt="photo"></div>
+  </div>
+</div>
+
+<!-- ===== Modal Confirm ===== -->
+<div class="modal" id="confirmModal">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-hd"><h3>⚠️ ยืนยัน</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
+    <div class="modal-bd">
+      <p style="text-align:center;color:var(--g600);margin-bottom:12px">คุณแน่ใจหรือไม่?</p>
+      <div class="confirm-actions">
+        <button class="btn btn-o" onclick="closeModal('confirmModal')">ยกเลิก</button>
+        <button class="btn btn-d" id="confirmBtn" onclick="doDelete()">🗑 ลบ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- Loading Overlay -->
+<div class="overlay" id="loadingOverlay">
+  <div class="sp"></div>
+  <p id="loadingText">กำลังโหลด...</p>
+</div>
+
+<script>
+// ===================================================================
+//  CONFIG
+// ===================================================================
+const CFG_KEY='sp_config';const CACHE_KEY='sp_cache'
+function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:''}}catch{return{url:''}}}
+function gasUrl(){return cfg().url}
+
+// Determine active layout
+function isDesktop(){return window.innerWidth>=768}
+
+function domId(prefix,id){
+  // Map shared IDs to the right prefix based on current layout
+  if(isDesktop()) return 'desk'+id.charAt(0).toUpperCase()+id.slice(1)
+  return 'mob'+id.charAt(0).toUpperCase()+id.slice(1)
+}
+function q(id){return document.getElementById(id)}
+
+// ===================================================================
+//  URL SETUP
+// ===================================================================
+function saveUrl(){
+  const p=isDesktop()?'desk':'mob'
+  const c=cfg()
+  c.url=document.getElementById(p+'GasUrl').value.trim()
+  if(!c.url) return toast('⚠️ กรุณาใส่ URL','e')
+  c.sheetId=document.getElementById(p+'SheetId').value.trim()
+  c.folderId=document.getElementById(p+'FolderId').value.trim()
+  localStorage.setItem(CFG_KEY,JSON.stringify(c))
+  syncSetupInputs();updateSetupUI()
+  toast('✅ บันทึกแล้ว','s')
+  setConn(true)
+  refresh()
+}
+function saveSheetId(){
+  const p=isDesktop()?'desk':'mob'
+  const c=cfg()
+  c.sheetId=document.getElementById(p+'SheetId').value.trim()
+  localStorage.setItem(CFG_KEY,JSON.stringify(c))
+  syncSetupInputs()
+  toast('✅ บันทึก Sheet ID แล้ว','s')
+}
+function saveFolderId(){
+  const p=isDesktop()?'desk':'mob'
+  const c=cfg()
+  c.folderId=document.getElementById(p+'FolderId').value.trim()
+  localStorage.setItem(CFG_KEY,JSON.stringify(c))
+  syncSetupInputs()
+  toast('✅ บันทึก Folder ID แล้ว','s')
+}
+function syncSetupInputs(){
+  const c=cfg()
+  const m=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||''}
+  m('deskGasUrl',c.url);m('mobGasUrl',c.url)
+  m('deskSheetId',c.sheetId);m('mobSheetId',c.sheetId)
+  m('deskFolderId',c.folderId);m('mobFolderId',c.folderId)
+}
+function updateSetupUI(){
+  const ok=!!cfg().url
+  ;['deskSetupBanner','mobSetupBanner'].forEach(id=>{
+    const el=document.getElementById(id)
+    if(el){if(ok)el.classList.remove('show');else el.classList.add('show')}
+  })
+}
+syncSetupInputs();updateSetupUI()
+
+// ===================================================================
+//  API
+// ===================================================================
+async function get(action){
+  const u=gasUrl();if(!u) return {success:false,error:'no_url',data:[]}
+  const c=cfg()
+  let url=u+'?action='+action
+  if(c.sheetId) url+='&sheetId='+encodeURIComponent(c.sheetId)
+  if(c.folderId) url+='&folderId='+encodeURIComponent(c.folderId)
+  try{
+    const r=await fetch(url,{method:'GET',redirect:'follow'})
+    return JSON.parse(await r.text())
+  }catch(e){return {success:false,error:e.message,data:[]}}
+}
+async function post(data){
+  const u=gasUrl();if(!u) return {success:false,error:'no_url'}
+  const c=cfg()
+  const body={...data}
+  if(c.sheetId) body.sheetId=c.sheetId
+  if(c.folderId) body.folderId=c.folderId
+  try{
+    // สองจังหวะ: (1) GET หา final redirect URL → (2) POST ตรงไปยัง URL นั้น
+    // เพราะ GAS redirect ไป script.googleusercontent.com (cross-origin) แล้ว browser ทิ้ง body
+    const init=await fetch(u,{method:'GET',redirect:'manual'})
+    const finalUrl=init.headers.get('Location')||u
+    const r=await fetch(finalUrl,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})
+    return JSON.parse(await r.text())
+  }catch(e){return {success:false,error:e.message}}
+}
+
+// ===================================================================
+//  CACHE
+// ===================================================================
+function cacheR(){try{return JSON.parse(localStorage.getItem(CACHE_KEY))||[]}catch{return[]}}
+function setCache(r){localStorage.setItem(CACHE_KEY,JSON.stringify(r))}
+
+	// ===================================================================
+//  PHOTO — Cloudinary upload
+// ===================================================================
+// ไปที่ cloudinary.com → สมัคร → Dashboard → หา Cloud name
+// Settings > Upload > Upload presets > Add > Signing Mode: Unsigned
+const CLOUD_NAME = 'ruhoptxw'
+const UPLOAD_PRESET = 'stamp_parking'
+
+async function uploadToCloudinary(base64) {
+  const fd = new FormData()
+  fd.append('file', base64)
+  fd.append('upload_preset', UPLOAD_PRESET)
+  try {
+    const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: fd })
+    const d = await r.json()
+    console.log('[cloudinary] uploaded:', d.secure_url)
+    return d.secure_url || null
+  } catch (e) {
+    console.error('[cloudinary] upload failed:', e)
+    return null
+  }
+}
+
+let _photoData={}
+function onPhoto(e,p){
+  const f=e.target.files[0];if(!f)return
+  compressFile(f).then(c=>{
+    if(!c){toast('⚠️ ไม่สามารถอ่านรูปได้','e');return}
+    showPhoto(c,p);_photoData[p]=c
+  })
+}
+function compressFile(file,mw=500,q=.5){
+  return new Promise(r=>{
+    const url=URL.createObjectURL(file)
+    const i=new Image()
+    i.onload=()=>{
+      let w=i.width,h=i.height
+      if(w>mw){h*=mw/w;w=mw}
+      const c=document.createElement('canvas');c.width=w;c.height=h
+      c.getContext('2d').drawImage(i,0,0,w,h)
+      URL.revokeObjectURL(url)
+      // Convert to compressed base64
+      r(c.toDataURL('image/jpeg',q))
+    }
+    i.onerror=()=>{URL.revokeObjectURL(url);r(null)}
+    i.src=url
+  })
+}
+function showPhoto(d,p){
+  const preview=document.getElementById(p+'Preview')
+  const ph=document.getElementById(p+'Ph')
+  const dz=document.getElementById(p+'Dropzone')
+  const act=document.getElementById(p+'PhotoAct')
+  if(preview){preview.src=d;preview.style.display='block'}
+  if(ph)ph.style.display='none'
+  if(dz)dz.classList.add('has-photo')
+  if(act)act.style.display='flex'
+}
+function clrPhoto(p){
+  const preview=document.getElementById(p+'Preview')
+  const ph=document.getElementById(p+'Ph')
+  const dz=document.getElementById(p+'Dropzone')
+  const act=document.getElementById(p+'PhotoAct')
+  const inp=document.getElementById(p+'PhotoInput')
+  if(preview){preview.src='';preview.style.display='none'}
+  if(ph)ph.style.display='block'
+  if(dz)dz.classList.remove('has-photo')
+  if(act)act.style.display='none'
+  if(inp)inp.value=''
+  _photoData[p]=null
+}
+
+// ===================================================================
+//  FORM
+// ===================================================================
+function resetForm(p){
+  const form=document.getElementById(p+'Form')
+  if(form)form.reset()
+  clrPhoto(p);_photoData[p]=null
+  document.querySelectorAll(`#${p}Form .err-msg`).forEach(e=>e.classList.remove('show'))
+  document.querySelectorAll(`#${p}Form .form-control`).forEach(e=>e.classList.remove('err'))
+  // ค่าเริ่มต้น = เข้างาน
+  const tt=document.getElementById(p+'TimeType')
+  if(tt&&!tt.value)tt.value='เข้างาน'
+}
+function eShow(id){const el=document.getElementById(id);if(el)el.classList.add('show')}
+function eHide(id){const el=document.getElementById(id);if(el)el.classList.remove('show')}
+function fieldErr(fieldId){
+  const el=document.getElementById(fieldId)
+  if(el){el.classList.add('err');const msg=document.getElementById(fieldId+'Err');if(msg)msg.classList.add('show')}
+}
+
+async function saveRec(e){
+  e.preventDefault()
+  const p=isDesktop()?'desk':'mob'
+  // Clear errors
+  document.querySelectorAll(`#${p}Form .err-msg`).forEach(el=>el.classList.remove('show'))
+  document.querySelectorAll(`#${p}Form .form-control`).forEach(el=>el.classList.remove('err'))
+
+  const n=document.getElementById(p+'Name').value.trim()
+  const nn=document.getElementById(p+'Nickname').value.trim()
+  const ph=document.getElementById(p+'Phone').value.trim()
+  const d=document.getElementById(p+'Dept').value
+  const t=document.getElementById(p+'TimeType').value
+  const v=document.getElementById(p+'Vehicle').value
+  const tk=document.getElementById(p+'Ticket').value.trim()
+  const photo=_photoData[p]||null
+
+  let ok=true
+  if(!n){fieldErr(p+'Name');ok=false}
+  if(ph&&ph.length!==10){fieldErr(p+'Phone');ok=false}
+  if(!d){fieldErr(p+'Dept');ok=false}
+  if(!t){fieldErr(p+'TimeType');ok=false}
+  if(!v){fieldErr(p+'Vehicle');ok=false}
+  if(!tk||tk.length!==17){fieldErr(p+'Ticket');ok=false}
+  if(!ok) return toast('⚠️ กรอกข้อมูลให้ครบ','e')
+  if(!gasUrl()) return toast('⚠️ ยังไม่ได้ตั้งค่า API','e')
+
+  const btn=document.getElementById(p+'SubmitBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังบันทึก...'
+
+  // ☁️ อัปโหลดรูปไป Cloudinary ก่อนส่งข้อมูล (ไม่ต้องผ่าน GAS)
+  let photoUrl = ''
+  if (photo) {
+    btn.innerHTML='<span class="spin"></span> กำลังอัปโหลดรูป...'
+    photoUrl = await uploadToCloudinary(photo)
+    if (!photoUrl) toast('⚠️ อัปโหลดรูปไม่สำเร็จ จะบันทึกเฉพาะข้อมูล','i')
+  }
+
+  try{
+    const r=await post({name:n,nickname:nn,phone:ph,department:d,timeType:t,vehicleType:v,ticketNo:tk,photoUrl})
+    if(r.success){
+      if(photoUrl) toast('✅ '+r.message+' 📸','s')
+      else toast('✅ '+r.message,'s')
+      resetForm(p);_photoData[p]=null;await refresh()
+    }
+    else toast('❌ '+(r.error||'บันทึกไม่สำเร็จ'),'e')
+  }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
+  finally{btn.disabled=false;btn.innerHTML='💾 '+(p==='desk'?'บันทึกข้อมูล':'บันทึก')}
+}
+
+// ===================================================================
+//  DASHBOARD
+// ===================================================================
+async function refresh(){
+  if(!gasUrl())return
+  showLoad('กำลังโหลดข้อมูล...');setConn(false)
+  try{
+    const r=await get('getAll')
+    if(r.success){setCache(r.data);setConn(true);updateSyncTime()}
+    else if(r.error==='no_url'){toast('⚠️ ยังไม่ได้ตั้งค่า API','e')}
+    else{setConn(false);toast('⚠️ โหลดไม่สำเร็จ ใช้แคช','e')}
+  }catch{setConn(false)}
+  hideLoad();render();updBadge();updateBell()
+}
+function updateSyncTime(){
+  const t='🔄 '+new Date().toLocaleString('th-TH')
+  const d=document.getElementById('deskSync');if(d)d.textContent=t
+  const m=document.getElementById('mobSync');if(m)m.textContent=t
+}
+function updBadge(){
+  const n=cacheR().filter(x=>x.status==='รออนุมัติ').length
+  const b1=document.getElementById('deskBadge');if(b1){b1.textContent=n;b1.style.display=n>0?'':'none'}
+  const b2=document.getElementById('mobBadge');if(b2){b2.textContent=n;b2.style.display=n>0?'':'none'}
+}
+
+// ===================================================================
+//  BELL NOTIFICATION
+// ===================================================================
+function getNewCount(){
+  const c=cfg()
+  const seenAt=c.seenAt
+  if(!seenAt) return 0
+  const t=new Date(seenAt).getTime()
+  return cacheR().filter(r=>new Date(r.createdAt).getTime()>t).length
+}
+function updateBell(){
+  const n=getNewCount()
+  ;['deskBellBadge','mobBellBadge'].forEach(id=>{
+    const el=document.getElementById(id)
+    if(!el) return
+    if(n>0){el.textContent=n;el.classList.add('show')}
+    else el.classList.remove('show')
+  })
+  if(n>0) playNewDataSound(n)
+}
+function playNewDataSound(count){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)()
+    const g=ctx.createGain();g.connect(ctx.destination);g.gain.value=.15
+    // Two-tone notification chime
+    const o1=ctx.createOscillator();o1.type='sine';o1.frequency.value=880
+    o1.connect(g);o1.start();o1.stop(ctx.currentTime+.15)
+    const o2=ctx.createOscillator();o2.type='sine';o2.frequency.value=1320
+    o2.connect(g);o2.start(ctx.currentTime+.18);o2.stop(ctx.currentTime+.35)
+  }catch(e){/* audio not supported */}
+}
+function markSeen(){
+  const c=cfg()
+  c.seenAt=new Date().toISOString()
+  localStorage.setItem(CFG_KEY,JSON.stringify(c))
+  updateBell()
+  toast('✅ ทำเครื่องหมายว่าอ่านแล้ว','s')
+}
+
+function render(){
+  const isD=isDesktop()
+  const prefix=isD?'desk':'mob'
+  let r=cacheR()
+  const s=document.getElementById(prefix+'Search')
+  const fd=document.getElementById(prefix+'FDept')
+  const fv=document.getElementById(prefix+'FVehicle')
+  const fs=document.getElementById(prefix+'FStatus')
+  const fdate=document.getElementById(prefix+'FDate')
+
+  const search=s?s.value.toLowerCase().trim():''
+  const deptFilter=fd?fd.value:''
+  const vehicleFilter=fv?fv.value:''
+  const statusFilter=fs?fs.value:''
+  const dateFilter=fdate?fdate.value:''
+
+  if(search) r=r.filter(x=>x.name.toLowerCase().includes(search)||(x.nickname&&x.nickname.toLowerCase().includes(search))||(x.phone&&x.phone.includes(search))||x.ticketNo.toLowerCase().includes(search))
+  if(deptFilter) r=r.filter(x=>x.department===deptFilter)
+  if(vehicleFilter) r=r.filter(x=>x.vehicleType===vehicleFilter)
+  if(statusFilter) r=r.filter(x=>x.status===statusFilter)
+  if(dateFilter) r=r.filter(x=>{const d=new Date(x.createdAt);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')===dateFilter})
+
+  // Stats
+  const a=cacheR()
+  const setStat=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val}
+  setStat(prefix+'StTotal',a.length)
+  setStat(prefix+'StOfm',a.filter(x=>x.department==='OFM').length)
+  setStat(prefix+'StPcs',a.filter(x=>x.department==='PCS').length)
+  setStat(prefix+'StBike',a.filter(x=>x.vehicleType==='รถจักรยานยนต์').length)
+  setStat(prefix+'StCar',a.filter(x=>x.vehicleType==='รถยนต์').length)
+  setStat(prefix+'StToday',a.filter(x=>{const d=new Date(x.createdAt),n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()}).length)
+
+  // Table
+  const tbody=document.getElementById(prefix+'Tbody')
+  if(!tbody)return
+  if(!r.length){tbody.innerHTML='<tr class="empty"><td colspan="10">📭 ไม่พบข้อมูล</td></tr>';return}
+
+  if(isD){
+    // Desktop table — full columns
+    tbody.innerHTML=r.map((x,i)=>{
+      const d=new Date(x.createdAt)
+      const ds=d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
+      const ts=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})
+      return `<tr>
+        <td>${i+1}</td>
+        <td><strong>${esc(x.name)}</strong></td>
+        <td><span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${x.department}</span></td>
+        <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
+        <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType}</span></td>
+        <td style="font-family:monospace;font-size:12px">${esc(x.ticketNo)}</td>
+        <td>
+          <select class="status-select" data-id="${esc(x.id)}" onchange="updateStatus(this)">
+            <option value="รออนุมัติ" ${x.status==='รออนุมัติ'?'selected':''}>⏳ รออนุมัติ</option>
+            <option value="อนุมัติ" ${x.status==='อนุมัติ'?'selected':''}>✅ อนุมัติ</option>
+            <option value="ไม่อนุมัติ" ${x.status==='ไม่อนุมัติ'?'selected':''}>❌ ไม่อนุมัติ</option>
+          </select>
+        </td>
+        <td>${x.photo?`<button class="btn btn-o btn-sm" onclick="viewPhoto('${esc(x.id)}')">📷</button>`:'—'}</td>
+        <td style="font-size:11px;white-space:nowrap">${ds}<br><span style="color:var(--g400)">${ts}</span></td>
+        <td><button class="btn btn-d btn-sm" onclick="promptDel('${esc(x.id)}')" title="ลบ">🗑</button></td>
+      </tr>`
+    }).join('')
+  } else {
+    // Mobile table — compact columns
+    tbody.innerHTML=r.map((x,i)=>{
+      return `<tr>
+        <td>${i+1}</td>
+        <td>${esc(x.name)}</td>
+        <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType==='รถจักรยานยนต์'?'🏍':'🚗'}</span></td>
+        <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
+        <td>
+          <select class="status-select" data-id="${esc(x.id)}" onchange="updateStatus(this)" style="width:80px">
+            <option value="รออนุมัติ" ${x.status==='รออนุมัติ'?'selected':''}>⏳</option>
+            <option value="อนุมัติ" ${x.status==='อนุมัติ'?'selected':''}>✅</option>
+            <option value="ไม่อนุมัติ" ${x.status==='ไม่อนุมัติ'?'selected':''}>❌</option>
+          </select>
+        </td>
+        <td style="white-space:nowrap">
+          ${x.photo?`<button class="btn btn-o btn-sm" onclick="viewPhoto('${esc(x.id)}')" style="padding:3px 6px;font-size:10px">📷</button>`:''}
+          <button class="btn btn-d btn-sm" onclick="promptDel('${esc(x.id)}')" style="padding:3px 6px;font-size:10px">🗑</button>
+        </td>
+      </tr>`
+    }).join('')
+  }
+}
+
+// ===================================================================
+//  STATUS
+// ===================================================================
+async function updateStatus(el){
+  const id=el.dataset.id;const st=el.value
+  try{
+    const r=await get('updateStatus&id='+id+'&status='+encodeURIComponent(st))
+    if(r.success){
+      const c=cacheR().map(x=>x.id===id?{...x,status:st}:x)
+      setCache(c);render();updBadge()
+      toast('✅ อัปเดตสถานะเรียบร้อย','s')
+    }else toast('❌ '+(r.error||'อัปเดตไม่สำเร็จ'),'e')
+  }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
+}
+
+// ===================================================================
+//  DELETE
+// ===================================================================
+let delId=null
+function promptDel(id){delId=id;document.getElementById('confirmModal').classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show');delId=null}
+async function doDelete(){
+  if(!delId)return
+  const btn=document.getElementById('confirmBtn');btn.disabled=true;btn.innerHTML='กำลังลบ...'
+  try{
+    const r=await get('delete&id='+delId)
+    if(r.success){toast('🗑 ลบเรียบร้อย','i');await refresh()}
+    else toast('❌ ลบไม่สำเร็จ','e')
+  }catch{toast('❌ ไม่สามารถเชื่อมต่อ','e')}
+  finally{btn.disabled=false;btn.innerHTML='🗑 ลบ'}
+  closeModal('confirmModal')
+}
+
+// ===================================================================
+//  PHOTO MODAL
+// ===================================================================
+function viewPhoto(id){
+  const r=cacheR().find(x=>x.id===id)
+  if(!r||!r.photo)return
+  document.getElementById('modalImg').src=r.photo
+  document.getElementById('photoModal').classList.add('show')
+}
+
+// ===================================================================
+//  CONNECTION
+// ===================================================================
+function setConn(on){
+  // Desktop sidebar
+  const dot=document.getElementById('deskConnDot');const txt=document.getElementById('deskConnText')
+  if(dot)dot.className='dot '+(on?'on':'off')
+  if(txt)txt.textContent=on?'ออนไลน์':'ออฟไลน์'
+
+  // Mobile header dot
+  const mdot=document.getElementById('mobConnDot')
+  if(mdot)mdot.className='conn-dot '+(on?'on':'off')
+
+  // Mobile offline bar
+  const bar=document.getElementById('mobOffline')
+  if(bar){if(!on)bar.classList.add('show');else bar.classList.remove('show')}
+}
+
+async function testConn(){
+  const p=isDesktop()?'desk':'mob'
+  const c=cfg()
+  c.url=document.getElementById(p+'GasUrl').value.trim()
+  if(!c.url)return toast('⚠️ กรุณาใส่ URL ก่อน','e')
+  c.sheetId=document.getElementById(p+'SheetId').value.trim()
+  c.folderId=document.getElementById(p+'FolderId').value.trim()
+  localStorage.setItem(CFG_KEY,JSON.stringify(c))
+  syncSetupInputs()
+  showLoad('กำลังทดสอบ...')
+  setConn(false)
+  try{
+    const r=await get('getAll')
+    if(r.success){
+      setCache(r.data);setConn(true)
+      toast('✅ เชื่อมต่อสำเร็จ! พบ '+r.data.length+' รายการ','s')
+      render();updBadge();updateSyncTime();updateBell();updateSetupUI()
+      const tb=document.getElementById(p+'TestBtn')
+      if(tb){tb.className='btn btn-s btn-sm';tb.innerHTML='✅ เชื่อมต่อแล้ว';setTimeout(()=>{tb.className='btn btn-o btn-sm';tb.innerHTML='📡 ทดสอบ'},3000)}
+    }else toast('❌ '+(r.error||'เชื่อมต่อล้มเหลว'),'e')
+  }catch{toast('❌ ไม่สามารถเชื่อมต่อ','e')}
+  hideLoad()
+}
+
+// ===================================================================
+//  CSV
+// ===================================================================
+function exportCSV(){
+  const r=cacheR()
+  if(!r.length)return toast('📭 ไม่มีข้อมูล','e')
+  const h='ชื่อ-นามสกุล,ชื่อเล่น,เบอร์ติดต่อ,หน่วยงาน,การลงเวลา,ยานพาหนะ,เลขบัตรจอดรถ,สถานะ,วันที่'
+  const rows=r.map(x=>{
+    const d=new Date(x.createdAt).toLocaleString('th-TH')
+    return `"${x.name}","${x.nickname||''}","${x.phone||''}","${x.department}","${x.timeType}","${x.vehicleType}","${x.ticketNo}","${x.status}","${d}"`
+  })
+  const csv='﻿'+[h,...rows].join('\n')
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8'})
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`stamp-parking-${new Date().toISOString().slice(0,10)}.csv`
+  a.click();URL.revokeObjectURL(a.href)
+  toast('📥 ดาวน์โหลด CSV','s')
+}
+
+// ===================================================================
+//  UTILITY
+// ===================================================================
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function toast(msg,t='s'){
+  const c=document.getElementById('toasts');const el=document.createElement('div')
+  el.className='toast '+t;el.textContent=msg;c.appendChild(el)
+  setTimeout(()=>{el.style.animation='so .25s ease forwards';setTimeout(()=>el.remove(),250)},2800)
+}
+function showLoad(t){
+  const el=document.getElementById('loadingText');if(el)el.textContent=t||'กำลังโหลด...'
+  const ov=document.getElementById('loadingOverlay');if(ov)ov.classList.add('show')
+}
+function hideLoad(){
+  const ov=document.getElementById('loadingOverlay');if(ov)ov.classList.remove('show')
+}
+
+// ===================================================================
+//  NAVIGATION
+// ===================================================================
+function go(page){
+  const isD=isDesktop()
+  const prefix=isD?'desk':'mob'
+  const layoutCls=isD?'desktop':'mobile'
+
+  // Hide all pages in current layout
+  document.querySelectorAll(`.${layoutCls}-layout .page`).forEach(el=>el.classList.remove('active'))
+  // Show target page
+  const target=document.getElementById(prefix+'-page-'+page)
+  if(target)target.classList.add('active')
+
+  // Update nav
+  if(isD){
+    document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'))
+    const active=document.querySelector(`.sidebar-item[data-page="${page}"]`)
+    if(active)active.classList.add('active')
+  } else {
+    document.querySelectorAll('.bottom-item').forEach(el=>el.classList.remove('active'))
+    const active=document.querySelector(`.bottom-item[data-page="${page}"]`)
+    if(active)active.classList.add('active')
+  }
+
+  if(page==='dash') refresh()
+}
+
+// ===================================================================
+//  MODAL CLOSE
+// ===================================================================
+document.querySelectorAll('.modal').forEach(el=>{
+  el.addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');delId=null}}
+)})
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'));delId=null}
+})
+
+// ===================================================================
+//  INIT
+// ===================================================================
+if(!cfg().seenAt){const c=cfg();c.seenAt=new Date().toISOString();localStorage.setItem(CFG_KEY,JSON.stringify(c))}
+// ตั้งค่าเริ่มต้นฟอร์ม
+resetForm('desk');resetForm('mob')
+// ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
+;['deskFDate','mobFDate'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)})
+if(gasUrl())refresh()
+</script>
+</body>
+</html>
