@@ -688,7 +688,9 @@ tr:hover td{background:var(--g50)}
 //  CONFIG
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache'
-function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:''}}catch{return{url:''}}}
+// 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwRr997ntoBpI93DQkinNSyL8BHWCNwceuusPP7OnLMOTqiMKXQhB2V8rdtgV9wnObAIw/exec'
+function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
 // Determine active layout

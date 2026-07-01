@@ -13,7 +13,9 @@
       "PowerShell($env:Path += ';C:\\\\Program Files\\\\GitHub CLI'; Set-Location 'd:\\\\claude code'; git init; git add -A; git commit -m \"Initial commit - Stamp Parking\"; git branch -M main; gh repo create stamp-parking --public --push --source=. --remote=origin)",
       "Bash(git config *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "PowerShell($env:Path += ';C:\\\\Program Files\\\\GitHub CLI'; Set-Location 'd:\\\\claude code'; gh repo create stamp-parking --public --push --source=. --remote=origin)",
+      "PowerShell($env:Path += ';C:\\\\Program Files\\\\GitHub CLI'; Set-Location 'd:\\\\claude code'; gh repo edit technicianofm-blip/stamp-parking --default-branch main; gh api repos/technicianofm-blip/stamp-parking/pages -X POST -f source='{\"branch\":\"main\",\"path\":\"/\"}' 2>&1)"
     ]
   }
 }
