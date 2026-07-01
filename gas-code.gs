@@ -17,7 +17,7 @@ const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';          // ID จาก URL Googl
 const FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE';   // ID โฟลเดอร์สำหรับเก็บรูป
 
 // Column indices (0-based) — ทำให้อ่านโค้ดง่ายขึ้น
-const COL = { id:0, name:1, nickname:2, phone:3, dept:4, timeType:5, vehicle:6, ticketNo:7, photo:8, createdAt:9, status:10 };
+const COL = { id:0, name:1, nickname:2, phone:3, dept:4, timeType:5, vehicle:6, ticketNo:7, photo:8, createdAt:9, status:10, discount:11 };
 
 // ============================================================
 // DO GET — ดึงข้อมูล / ลบข้อมูล
@@ -162,7 +162,8 @@ function doPost(e) {
       ticketNo,
       photoUrl,
       createdAt,
-      'รออนุมัติ'
+      'รออนุมัติ',
+      String(data.discount || '').trim()
     ]);
 
     clearRecordCache(sheetId);
@@ -272,7 +273,8 @@ function getAllRecords(sheetId) {
       ticketNo: String(row[COL.ticketNo] || ''),
       photo: String(row[COL.photo] || ''),
       createdAt: String(row[COL.createdAt] || ''),
-      status: String(row[COL.status] || 'รออนุมัติ')
+      status: String(row[COL.status] || 'รออนุมัติ'),
+      discount: String(row[COL.discount] || '')
     });
   }
 
@@ -297,20 +299,24 @@ function getSheet(sheetId) {
     sheet.appendRow([
       'ID', 'ชื่อ-นามสกุล', 'ชื่อเล่น', 'เบอร์ติดต่อ',
       'หน่วยงาน', 'ประเภทการลงเวลา', 'ยานพาหนะ',
-      'เลขบัตรจอดรถ', 'รูปภาพ (URL)', 'วันที่บันทึก', 'สถานะ'
+      'เลขบัตรจอดรถ', 'รูปภาพ (URL)', 'วันที่บันทึก', 'สถานะ', 'ส่วนลด'
     ]);
     sheet.setFrozenRows(1);
     // จัดความกว้างคอลัมน์
-    sheet.setColumnWidths(1, 11, 180);
+    sheet.setColumnWidths(1, 12, 180);
   }
   return sheet;
 }
 
-// ถ้า sheet เก่าที่ยังไม่มีคอลัมน์ "สถานะ" ให้เพิ่มให้
+// ถ้า sheet เก่าที่ยังไม่มีคอลัมน์ "สถานะ" หรือ "ส่วนลด" ให้เพิ่มให้
 function ensureStatusColumn(sheet) {
   const h = sheet.getRange(1, COL.status + 1).getValue();
   if (!h || h === '') {
     sheet.getRange(1, COL.status + 1).setValue('สถานะ');
+  }
+  const d = sheet.getRange(1, COL.discount + 1).getValue();
+  if (!d || d === '') {
+    sheet.getRange(1, COL.discount + 1).setValue('ส่วนลด');
   }
 }
 

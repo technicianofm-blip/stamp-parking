@@ -232,7 +232,7 @@ tr:hover td{background:var(--g50)}
 .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
 .badge-ofm{background:#dbeafe;color:#1e40af}.badge-pcs{background:#fce7f3;color:#9d174d}
 .badge-in{background:#d1fae5;color:#065f46}.badge-out{background:#fef3c7;color:#92400e}
-.badge-bike{background:#e0e7ff;color:#3730a3}.badge-car{background:#f3e8ff;color:#6b21a8}
+.badge-bike{background:#e0e7ff;color:#3730a3}.badge-car{background:#f3e8ff;color:#6b21a8}.badge-disc{background:#fef3c7;color:#92400e}.badge-free{background:#d1fae5;color:#065f46}
 .badge-pending{background:#fef3c7;color:#92400e}
 .badge-approved{background:#d1fae5;color:#065f46}
 .badge-rejected{background:#fce4ec;color:#b71c1c}
@@ -465,7 +465,7 @@ tr:hover td{background:var(--g50)}
         <div class="wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>ชื่อ-สกุล</th><th>หน่วยงาน</th><th>ลงเวลา</th><th>ยานพาหนะ</th><th>Ticket No.</th><th>สถานะ</th><th>รูป</th><th>วันที่</th><th style="width:36px"></th>
+              <th>#</th><th>ชื่อ-สกุล</th><th>หน่วยงาน</th><th>ลงเวลา</th><th>ยานพาหนะ</th><th>Ticket No.</th><th>ส่วนลด</th><th>สถานะ</th><th>รูป</th><th>วันที่</th><th style="width:36px"></th>
             </tr></thead>
             <tbody id="deskTbody"></tbody>
           </table>
@@ -620,7 +620,7 @@ tr:hover td{background:var(--g50)}
         <div class="wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>ชื่อ</th><th>ยานพาหนะ</th><th>Ticket</th><th>สถานะ</th><th style="width:32px"></th>
+              <th>#</th><th>ชื่อ</th><th>ยานพาหนะ</th><th>Ticket</th><th>ส่วนลด</th><th>สถานะ</th><th style="width:32px"></th>
             </tr></thead>
             <tbody id="mobTbody"></tbody>
           </table>
@@ -1041,6 +1041,7 @@ function render(){
         <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType}</span></td>
         <td style="font-family:monospace;font-size:12px">${esc(x.ticketNo)}</td>
+        <td><span class="badge ${x.discount==='Free All'?'badge-free':'badge-disc'}">${esc(x.discount)||'—'}</span></td>
         <td>
           <select class="status-select" data-id="${esc(x.id)}" onchange="updateStatus(this)">
             <option value="รออนุมัติ" ${x.status==='รออนุมัติ'?'selected':''}>⏳ รออนุมัติ</option>
@@ -1061,6 +1062,7 @@ function render(){
         <td>${esc(x.name)}</td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType==='รถจักรยานยนต์'?'🏍':'🚗'}</span></td>
         <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
+        <td style="font-size:11px">${esc(x.discount)?'🎫 '+esc(x.discount):'—'}</td>
         <td>
           <select class="status-select" data-id="${esc(x.id)}" onchange="updateStatus(this)" style="width:80px">
             <option value="รออนุมัติ" ${x.status==='รออนุมัติ'?'selected':''}>⏳</option>
@@ -1168,10 +1170,10 @@ async function testConn(){
 function exportCSV(){
   const r=cacheR()
   if(!r.length)return toast('📭 ไม่มีข้อมูล','e')
-  const h='ชื่อ-นามสกุล,ชื่อเล่น,เบอร์ติดต่อ,หน่วยงาน,การลงเวลา,ยานพาหนะ,เลขบัตรจอดรถ,สถานะ,วันที่'
+  const h='ชื่อ-นามสกุล,ชื่อเล่น,เบอร์ติดต่อ,หน่วยงาน,การลงเวลา,ยานพาหนะ,เลขบัตรจอดรถ,ส่วนลด,สถานะ,วันที่'
   const rows=r.map(x=>{
     const d=new Date(x.createdAt).toLocaleString('th-TH')
-    return `"${x.name}","${x.nickname||''}","${x.phone||''}","${x.department}","${x.timeType}","${x.vehicleType}","${x.ticketNo}","${x.status}","${d}"`
+    return `"${x.name}","${x.nickname||''}","${x.phone||''}","${x.department}","${x.timeType}","${x.vehicleType}","${x.ticketNo}","${x.discount||''}","${x.status}","${d}"`
   })
   const csv='﻿'+[h,...rows].join('\n')
   const b=new Blob([csv],{type:'text/csv;charset=utf-8'})
