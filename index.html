@@ -236,8 +236,8 @@ tr:hover td{background:var(--g50)}
 .badge-pending{background:#fef3c7;color:#92400e}
 .badge-approved{background:#d1fae5;color:#065f46}
 .badge-rejected{background:#fce4ec;color:#b71c1c}
-.status-select{padding:3px 6px;border:1px solid var(--g300);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;width:96px}
-.status-select:focus{outline:none;border-color:var(--p)}
+.status-select,.discount-select{padding:3px 6px;border:1px solid var(--g300);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;width:96px}
+.status-select:focus,.discount-select:focus{outline:none;border-color:var(--p)}
 
 /* Setup */
 .setup-banner{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:none}
@@ -689,7 +689,7 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache'
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwRr997ntoBpI93DQkinNSyL8BHWCNwceuusPP7OnLMOTqiMKXQhB2V8rdtgV9wnObAIw/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbzBedCkLdCb7dv0QgxOPjqJ4QjcKENQ3jH8OVudEXEiHsbq1BVAu-RG38K5Ffm32GsPmw/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
@@ -1041,7 +1041,15 @@ function render(){
         <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType}</span></td>
         <td style="font-family:monospace;font-size:12px">${esc(x.ticketNo)}</td>
-        <td><span class="badge ${x.discount==='Free All'?'badge-free':'badge-disc'}">${esc(x.discount)||'—'}</span></td>
+        <td>
+          <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)">
+            <option value="" ${!x.discount?'selected':''}>—</option>
+            <option value="5" ${x.discount==='5'?'selected':''}>5 ชม.</option>
+            <option value="9" ${x.discount==='9'?'selected':''}>9 ชม.</option>
+            <option value="12" ${x.discount==='12'?'selected':''}>12 ชม.</option>
+            <option value="Free All" ${x.discount==='Free All'?'selected':''}>🏆 Free All</option>
+          </select>
+        </td>
         <td>
           <select class="status-select" data-id="${esc(x.id)}" onchange="updateStatus(this)">
             <option value="รออนุมัติ" ${x.status==='รออนุมัติ'?'selected':''}>⏳ รออนุมัติ</option>
@@ -1062,7 +1070,15 @@ function render(){
         <td>${esc(x.name)}</td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType==='รถจักรยานยนต์'?'🏍':'🚗'}</span></td>
         <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
-        <td style="font-size:11px">${esc(x.discount)?'🎫 '+esc(x.discount):'—'}</td>
+        <td>
+          <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)" style="width:65px;font-size:11px;padding:3px">
+            <option value="" ${!x.discount?'selected':''}>—</option>
+            <option value="5" ${x.discount==='5'?'selected':''}>5</option>
+            <option value="9" ${x.discount==='9'?'selected':''}>9</option>
+            <option value="12" ${x.discount==='12'?'selected':''}>12</option>
+            <option value="Free All" ${x.discount==='Free All'?'selected':''}>🏆</option>
+          </select>
+        </td>
         <td>
           <select class="status-select" data-id="${esc(x.id)}" onchange="updateStatus(this)" style="width:80px">
             <option value="รออนุมัติ" ${x.status==='รออนุมัติ'?'selected':''}>⏳</option>
@@ -1090,6 +1106,17 @@ async function updateStatus(el){
       const c=cacheR().map(x=>x.id===id?{...x,status:st}:x)
       setCache(c);render();updBadge()
       toast('✅ อัปเดตสถานะเรียบร้อย','s')
+    }else toast('❌ '+(r.error||'อัปเดตไม่สำเร็จ'),'e')
+  }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
+}
+async function updateDiscount(el){
+  const id=el.dataset.id;const disc=el.value
+  try{
+    const r=await get('updateDiscount&id='+id+'&discount='+encodeURIComponent(disc))
+    if(r.success){
+      const c=cacheR().map(x=>x.id===id?{...x,discount:disc}:x)
+      setCache(c);render();updBadge()
+      toast('✅ อัปเดตส่วนลดเรียบร้อย','s')
     }else toast('❌ '+(r.error||'อัปเดตไม่สำเร็จ'),'e')
   }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
 }

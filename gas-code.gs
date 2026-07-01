@@ -99,6 +99,40 @@ function doGet(e) {
       }
     }
 
+    if (action === 'updateDiscount') {
+      const id = e?.parameter?.id;
+      const discount = e?.parameter?.discount || '';
+      if (!id) return jsonResponse({ success: false, error: 'Missing id' }, 400);
+
+      const lock = LockService.getScriptLock();
+      try {
+        lock.waitLock(10000);
+        console.log('[updateDiscount] id=' + id + ' → "' + discount + '"');
+
+        const sheet = getSheet(sheetId);
+        ensureStatusColumn(sheet);
+        const data = sheet.getDataRange().getValues();
+        let found = false;
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][COL.id]) === String(id)) {
+            sheet.getRange(i + 1, COL.discount + 1).setValue(discount);
+            found = true;
+            break;
+          }
+        }
+
+        clearRecordCache(sheetId);
+        console.log('[updateDiscount] id=' + id + ' found=' + found);
+        if (found) return jsonResponse({ success: true });
+        return jsonResponse({ success: false, error: 'Record not found' }, 404);
+      } catch (err) {
+        console.error('[updateDiscount] error: ' + err.toString());
+        return jsonResponse({ success: false, error: err.toString() }, 500);
+      } finally {
+        lock.releaseLock();
+      }
+    }
+
     return jsonResponse({ success: false, error: 'Unknown action' }, 400);
   } catch (err) {
     console.error('[doGet] error: ' + err.toString());
