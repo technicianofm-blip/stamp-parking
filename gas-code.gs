@@ -13,8 +13,8 @@
 // ============================================================
 // 🔧 ตั้งค่าที่นี่ (แก้ไขให้ตรงกับของคุณ)
 // ============================================================
-const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';          // ID จาก URL Google Sheet
-const FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE';   // ID โฟลเดอร์สำหรับเก็บรูป
+const SHEET_ID = '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo';          // ID จาก URL Google Sheet
+const FOLDER_ID = '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK';   // ID โฟลเดอร์สำหรับเก็บรูป
 
 // Column indices (0-based) — ทำให้อ่านโค้ดง่ายขึ้น
 const COL = { id:0, name:1, nickname:2, phone:3, dept:4, timeType:5, vehicle:6, ticketNo:7, photo:8, createdAt:9, status:10, discount:11 };
