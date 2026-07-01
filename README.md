@@ -143,6 +143,44 @@
 - ได้ CDN URL → เปิดใน Dashboard ได้เร็ว
 - **วิธีตั้งค่า:** ดูหัวข้อ ⚙️ วิธีติดตั้ง
 
+# 📖 คู่มือการใช้งาน
+
+## 📝 วิธีบันทึกข้อมูล
+1. ไปที่หน้า **📝 บันทึก**
+2. กรอกข้อมูลให้ครบ:
+   - **ชื่อ-นามสกุล** (จำเป็น)
+   - **ชื่อเล่น** (ไม่บังคับ)
+   - **เบอร์ติดต่อ** (10 หลัก)
+   - **หน่วยงาน** → OFM / PCS
+   - **ประเภทการลงเวลา** → เริ่มต้นเป็นเข้างาน
+   - **ยานพาหนะ** → รถจักรยานยนต์ / รถยนต์
+   - **เลขบัตรจอดรถ** → 17 หลัก (ตัวเลข+ตัวอักษร)
+3. (ไม่บังคับ) 📸 **ถ่ายรูป** → กดที่ช่องว่างเพื่อเปิดกล้อง
+4. กด **💾 บันทึก**
+
+> 💡 ถ้ากรอกข้อมูลไม่ครบ จะมีข้อความแจ้ง字段ที่ขาด
+
+## 📱 สร้าง Shortcut หน้า Home มือถือ
+
+### Android (Chrome)
+1. เปิด [stamp-parking](https://technicianofm-blip.github.io/stamp-parking/) ใน **Chrome**
+2. กดปุ่ม ⋮ (สามจุด) มุมบนขวา
+3. เลือก **Add to Home screen**
+4. ตั้งชื่อ → กด **Add**
+5. จะมีไอคอน Stamp Parking ขึ้นที่หน้าจอ
+
+### iPhone / iPad (Safari)
+1. เปิด [stamp-parking](https://technicianofm-blip.github.io/stamp-parking/) ใน **Safari**
+2. กดปุ่ม ⬆️ (Share) ที่แถบล่าง
+3. เลื่อนลง → เลือก **Add to Home Screen**
+4. ตั้งชื่อ → กด **Add**
+5. จะมีไอคอน Stamp Parking ขึ้นที่หน้าจอ
+
+### ข้อดี
+- เปิดเหมือน App จริงๆ ไม่ต้องเข้า Browser ก่อน
+- ไม่มีแถบ URL → เนื้อที่เต็มจอ
+- เร็วขึ้นเพราะ cache จาก service worker
+
 ## 📱 Responsive Design
 - **Desktop (≥ 768px):** Sidebar Navigation + Full Table
 - **Mobile (< 768px):** Bottom Tab Bar + Compact Table + Offline Bar
