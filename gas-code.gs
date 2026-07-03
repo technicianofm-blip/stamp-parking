@@ -211,12 +211,11 @@ function doPost(e) {
       String(data.discount || '').trim()
     ];
     sheet.appendRow(rowData);
-    // ฟอร์แมตและเขียน Ticket No. ซ้ำเป็นข้อความ (กันเลข 0 ต้นหาย)
+    // ฟอร์แมตและเขียน Ticket No. เป็นสูตรข้อความ (กันเลข 0 ต้นหาย 100%)
     const tr = sheet.getLastRow();
     const tc = sheet.getRange(tr, COL.ticketNo + 1);
     tc.setNumberFormat('@');
-    tc.setValue(ticketNo);
-    console.log('[doPost] ticket cell formatted: row=' + tr + ' val="' + ticketNo + '"');
+    tc.setFormula('="' + ticketNo.replace(/"/g,'""') + '"');
 
     clearRecordCache(sheetId);
     console.log('[doPost] created: ' + id + ' (' + name + ') photo=' + (photoUrl ? 'yes' : 'no'));
