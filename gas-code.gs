@@ -133,6 +133,21 @@ function doGet(e) {
       }
     }
 
+    if (action === 'fetchUrl') {
+      const url = e?.parameter?.url || '';
+      if (!url) return jsonResponse({ success: false, error: 'Missing url' }, 400);
+      console.log('[fetchUrl] fetching: ' + url);
+      try {
+        const r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, timeout: 10 });
+        const html = r.getContentText();
+        const found = html.match(/\b(\d{17})\b/);
+        return jsonResponse({ success: true, ticket: found ? found[1] : '', htmlLength: html.length });
+      } catch (err) {
+        console.error('[fetchUrl] error: ' + err.toString());
+        return jsonResponse({ success: false, error: err.toString() }, 500);
+      }
+    }
+
     return jsonResponse({ success: false, error: 'Unknown action' }, 400);
   } catch (err) {
     console.error('[doGet] error: ' + err.toString());
