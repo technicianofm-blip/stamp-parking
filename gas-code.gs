@@ -208,7 +208,7 @@ function doPost(e) {
       department,
       timeType,
       vehicleType,
-      ticketNo,
+      "'" + ticketNo, // ' นำหน้า → บังคับ Sheets ให้เป็นข้อความ ไม่ตัดเลข 0
       photoUrl,
       createdAt,
       'รออนุมัติ',
