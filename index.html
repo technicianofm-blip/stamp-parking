@@ -370,16 +370,16 @@ tr:hover td{background:var(--g50)}
           <div class="form-grid">
             <div class="form-group">
               <label>ชื่อ-นามสกุล <span class="req">*</span></label>
-              <input type="text" class="form-control" id="deskName" placeholder="สมชาย ใจดี" required>
+              <input type="text" class="form-control" id="deskName" list="deskNameList" placeholder="สมชาย ใจดี" required>
               <div class="err-msg" id="deskNameErr">กรุณากรอกชื่อ-นามสกุล</div>
             </div>
             <div class="form-group">
               <label>ชื่อเล่น</label>
-              <input type="text" class="form-control" id="deskNickname" placeholder="ชาย">
+              <input type="text" class="form-control" id="deskNickname" list="deskNickList" placeholder="ชาย">
             </div>
             <div class="form-group">
               <label>เบอร์ติดต่อ</label>
-              <input type="tel" class="form-control" id="deskPhone" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <input type="tel" class="form-control" id="deskPhone" list="deskPhoneList" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
               <div class="err-msg" id="deskPhoneErr">เบอร์ต้องมี 10 หลัก</div>
             </div>
             <div class="form-group">
@@ -528,16 +528,16 @@ tr:hover td{background:var(--g50)}
           <div class="form-grid">
             <div class="form-group">
               <label>ชื่อ-นามสกุล <span class="req">*</span></label>
-              <input type="text" class="form-control" id="mobName" placeholder="สมชาย ใจดี" required>
+              <input type="text" class="form-control" id="mobName" list="mobNameList" placeholder="สมชาย ใจดี" required>
               <div class="err-msg" id="mobNameErr">กรุณากรอกชื่อ-นามสกุล</div>
             </div>
             <div class="form-group">
               <label>ชื่อเล่น</label>
-              <input type="text" class="form-control" id="mobNickname" placeholder="ชาย">
+              <input type="text" class="form-control" id="mobNickname" list="mobNickList" placeholder="ชาย">
             </div>
             <div class="form-group">
               <label>เบอร์ติดต่อ</label>
-              <input type="tel" class="form-control" id="mobPhone" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <input type="tel" class="form-control" id="mobPhone" list="mobPhoneList" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
               <div class="err-msg" id="mobPhoneErr">เบอร์ต้องมี 10 หลัก</div>
             </div>
             <div class="form-group">
@@ -687,7 +687,7 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 //  CONFIG
 // ===================================================================
-const CFG_KEY='sp_config';const CACHE_KEY='sp_cache'
+const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history'
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
 const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbzrKY9pDFbOFjoCfoq76Mte4LL7eipX771RbZ-Mlr0yJ_cWsWU34Rm1DRsrQIfMWK73jg/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
@@ -920,7 +920,7 @@ async function saveRec(e){
     if(r.success){
       if(photoUrl) toast('✅ '+r.message+' 📸','s')
       else toast('✅ '+r.message,'s')
-      resetForm(p);_photoData[p]=null;await refresh()
+      saveFormHistory(n,nn,ph);resetForm(p);_photoData[p]=null;await refresh()
     }
     else toast('❌ '+(r.error||'บันทึกไม่สำเร็จ'),'e')
   }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
@@ -1192,6 +1192,31 @@ async function testConn(){
 }
 
 // ===================================================================
+//  AUTO-COMPLETE HISTORY
+// ===================================================================
+const HIST_MAX=10
+function getHist(){try{return JSON.parse(localStorage.getItem(HIST_KEY))||{name:[],nickname:[],phone:[]}}catch{return{name:[],nickname:[],phone:[]}}}
+function addHist(field,val){
+  if(!val)return
+  const h=getHist()
+  h[field]=[val,...h[field].filter(x=>x!==val)].slice(0,HIST_MAX)
+  localStorage.setItem(HIST_KEY,JSON.stringify(h))
+}
+function saveFormHistory(n,nn,ph){
+  addHist('name',n);addHist('nickname',nn);addHist('phone',ph)
+  initDatalists() // refresh suggestions
+}
+function initDatalists(){
+  const h=getHist()
+  ;['desk','mob'].forEach(p=>{
+    ['Name','Nickname','Phone'].forEach(f=>{
+      const el=document.getElementById(p+f+'List')
+      if(el)el.innerHTML=h[f.toLowerCase()].map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('')
+    })
+  })
+}
+
+// ===================================================================
 //  CSV
 // ===================================================================
 function copyTicket(t){
@@ -1272,7 +1297,7 @@ document.addEventListener('keydown',e=>{
 // ===================================================================
 if(!cfg().seenAt){const c=cfg();c.seenAt=new Date().toISOString();localStorage.setItem(CFG_KEY,JSON.stringify(c))}
 // ตั้งค่าเริ่มต้นฟอร์ม
-resetForm('desk');resetForm('mob')
+resetForm('desk');resetForm('mob');initDatalists()
 // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
 ;['deskFDate','mobFDate'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)})
 if(gasUrl())refresh()
