@@ -709,7 +709,7 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history'
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbycodGRMY7LNUfiBCzefLLwB1yqcjGp33PumdBpID0tjWu5WZTqHKmSFbsfMDQwIftivg/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbyVljBq2AMV5OdW2SS5jV0C-XZpXJjvVishHL2ouAQcrgNzGSbcE79KcB7_oqg7TlkA/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
@@ -791,14 +791,15 @@ async function post(data){
   const body={...data}
   if(c.sheetId) body.sheetId=c.sheetId
   if(c.folderId) body.folderId=c.folderId
-  try{
-    // สองจังหวะ: (1) GET หา final redirect URL → (2) POST ตรงไปยัง URL นั้น
-    // เพราะ GAS redirect ไป script.googleusercontent.com (cross-origin) แล้ว browser ทิ้ง body
-    const init=await fetch(u,{method:'GET',redirect:'manual'})
-    const finalUrl=init.headers.get('Location')||u
-    const r=await fetch(finalUrl,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})
-    return JSON.parse(await r.text())
-  }catch(e){return {success:false,error:e.message}}
+  // ใช้ XMLHttpRequest แทน fetch — จัดการ GAS redirect ได้ดีกว่า
+  return new Promise(r=>{
+    const x=new XMLHttpRequest()
+    x.open('POST',u)
+    x.setRequestHeader('Content-Type','text/plain')
+    x.onload=()=>{try{r(JSON.parse(x.responseText))}catch{r({success:false,error:'Invalid response'})}}
+    x.onerror=()=>r({success:false,error:'Network error'})
+    x.send(JSON.stringify(body))
+  })
 }
 
 // ===================================================================

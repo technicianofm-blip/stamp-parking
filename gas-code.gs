@@ -200,23 +200,23 @@ function doPost(e) {
 
     // บันทึกลง Google Sheet
     const sheet = getSheet(sheetId);
-    sheet.appendRow([
-      id,
-      name,
+    const rowData = [
+      id, name,
       String(data.nickname || '').trim(),
       String(data.phone || '').trim(),
-      department,
-      timeType,
-      vehicleType,
-      ticketNo,  // จะฟอร์แมตเป็นข้อความด้านล่าง
-      photoUrl,
-      createdAt,
+      department, timeType, vehicleType,
+      ticketNo,
+      photoUrl, createdAt,
       'รออนุมัติ',
       String(data.discount || '').trim()
-    ]);
-    // ฟอร์แมต Ticket No. ที่เพิ่งเขียนเป็นข้อความ (เซฟเลข 0 ต้น)
-    const ticketCell = sheet.getRange(sheet.getLastRow(), COL.ticketNo + 1);
-    ticketCell.setNumberFormat('@').setValue("'" + ticketNo);
+    ];
+    sheet.appendRow(rowData);
+    // ฟอร์แมตและเขียน Ticket No. ซ้ำเป็นข้อความ (กันเลข 0 ต้นหาย)
+    const tr = sheet.getLastRow();
+    const tc = sheet.getRange(tr, COL.ticketNo + 1);
+    tc.setNumberFormat('@');
+    tc.setValue(ticketNo);
+    console.log('[doPost] ticket cell formatted: row=' + tr + ' val="' + ticketNo + '"');
 
     clearRecordCache(sheetId);
     console.log('[doPost] created: ' + id + ' (' + name + ') photo=' + (photoUrl ? 'yes' : 'no'));
