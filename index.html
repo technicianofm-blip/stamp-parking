@@ -1040,7 +1040,7 @@ function render(){
         <td><span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${x.department}</span></td>
         <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType}</span></td>
-        <td style="font-family:monospace;font-size:12px">${esc(x.ticketNo)}</td>
+        <td style="font-family:monospace;font-size:12px;cursor:pointer" onclick="copyTicket('${esc(x.ticketNo)}')" title="คลิกเพื่อคัดลอก">${esc(x.ticketNo)}</td>
         <td>
           <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)">
             <option value="" ${!x.discount?'selected':''}>—</option>
@@ -1194,6 +1194,9 @@ async function testConn(){
 // ===================================================================
 //  CSV
 // ===================================================================
+function copyTicket(t){
+  navigator.clipboard.writeText(t).then(()=>toast('✅ คัดลอก '+t,'s')).catch(()=>toast('⚠️ ไม่สามารถคัดลอก','e'))
+}
 function exportCSV(){
   const r=cacheR()
   if(!r.length)return toast('📭 ไม่มีข้อมูล','e')
