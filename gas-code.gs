@@ -193,7 +193,7 @@ function doPost(e) {
     if (!ticketNo || ticketNo.length !== 17) return jsonResponse({ success: false, error: 'เลขบัตรจอดรถต้องมี 17 หลัก' }, 400);
 
     const id = generateId();
-    const createdAt = new Date().toISOString();
+    const createdAt = Utilities.formatDate(new Date(), 'Asia/Bangkok', "yyyy-MM-dd'T'HH:mm:ss'Z'");
     // ☁️ รับ photoUrl จาก Cloudinary โดยตรง (frontend upload ไม่ผ่าน GAS)
     const photoUrl = String(data.photoUrl || '').trim();
     console.log('[doPost] photoUrl=' + (photoUrl ? 'yes[' + photoUrl.length + ']' : 'no'));
@@ -353,7 +353,11 @@ function getSheet(sheetId) {
     sheet.setFrozenRows(1);
     // จัดความกว้างคอลัมน์
     sheet.setColumnWidths(1, 12, 180);
+    // ฟอร์แมตคอลัมน์ Ticket No. (คอลัมน์ H = 8) เป็นข้อความ ป้องกันเลข 0 ต้นหาย
+    sheet.getRange('H:H').setNumberFormat('@');
   }
+  // ป้องกันเลข 0 ต้นหายในคอลัมน์ Ticket No.
+  sheet.getRange('H:H').setNumberFormat('@');
   return sheet;
 }
 
