@@ -208,12 +208,15 @@ function doPost(e) {
       department,
       timeType,
       vehicleType,
-      "'" + ticketNo, // ' นำหน้า → บังคับ Sheets ให้เป็นข้อความ ไม่ตัดเลข 0
+      ticketNo,  // จะฟอร์แมตเป็นข้อความด้านล่าง
       photoUrl,
       createdAt,
       'รออนุมัติ',
       String(data.discount || '').trim()
     ]);
+    // ฟอร์แมต Ticket No. ที่เพิ่งเขียนเป็นข้อความ (เซฟเลข 0 ต้น)
+    const ticketCell = sheet.getRange(sheet.getLastRow(), COL.ticketNo + 1);
+    ticketCell.setNumberFormat('@').setValue("'" + ticketNo);
 
     clearRecordCache(sheetId);
     console.log('[doPost] created: ' + id + ' (' + name + ') photo=' + (photoUrl ? 'yes' : 'no'));
