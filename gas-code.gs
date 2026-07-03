@@ -193,7 +193,7 @@ function doPost(e) {
     if (!ticketNo || ticketNo.length !== 17) return jsonResponse({ success: false, error: 'เลขบัตรจอดรถต้องมี 17 หลัก' }, 400);
 
     const id = generateId();
-    const createdAt = Utilities.formatDate(new Date(), 'Asia/Bangkok', "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    const createdAt = new Date(); // เป็น Date object → Sheet เก็บเป็นตัวเลข serial
     // ☁️ รับ photoUrl จาก Cloudinary โดยตรง (frontend upload ไม่ผ่าน GAS)
     const photoUrl = String(data.photoUrl || '').trim();
     console.log('[doPost] photoUrl=' + (photoUrl ? 'yes[' + photoUrl.length + ']' : 'no'));
@@ -321,7 +321,7 @@ function getAllRecords(sheetId) {
       vehicleType: String(row[COL.vehicle] || ''),
       ticketNo: String(row[COL.ticketNo] || ''),
       photo: String(row[COL.photo] || ''),
-      createdAt: String(row[COL.createdAt] || ''),
+      createdAt: row[COL.createdAt] instanceof Date ? Utilities.formatDate(row[COL.createdAt], 'Asia/Bangkok', "yyyy-MM-dd'T'HH:mm:ss'Z'") : String(row[COL.createdAt] || ''),
       status: String(row[COL.status] || 'รออนุมัติ'),
       discount: String(row[COL.discount] || '')
     });
@@ -358,6 +358,8 @@ function getSheet(sheetId) {
   }
   // ป้องกันเลข 0 ต้นหายในคอลัมน์ Ticket No.
   sheet.getRange('H:H').setNumberFormat('@');
+  // ฟอร์แมตวันที่ (คอลัมน์ I) เป็นไทย
+  sheet.getRange('I:I').setNumberFormat('dd"/"mm"/"yyyy" "HH":"MM');
   return sheet;
 }
 
