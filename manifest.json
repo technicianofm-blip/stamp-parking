@@ -2,7 +2,7 @@
   "name": "OFM",
   "short_name": "OFM",
   "description": "OFM Application",
-  "start_url": "/",
+  "start_url": "/stamp-parking/",
   "display": "standalone",
   "background_color": "#6366f1",
   "theme_color": "#6366f1",
