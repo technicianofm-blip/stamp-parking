@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    OFM Hybrid Favicon
+    - 16px and below: Symbol (3 connected nodes = O•F•M)
+    - 32px and above: Text "OFM" in geometric sans-serif
+    - Uses CSS @media (min-width: 32px) to switch
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f0f0"/>
+    </linearGradient>
+    <style><![CDATA[
+      /* Default: Symbol at small sizes (16px and below) */
+      .symbol { display: block; }
+      .text { display: none; }
+
+      /* At 32px and above: Show text, hide symbol */
+      @media (min-width: 32px) {
+        .symbol { display: none; }
+        .text { display: block; }
+      }
+
+      /* High-DPI: Also show text at 2x (e.g., 32px on retina = 16px CSS) */
+      @media (min-resolution: 2dppx) {
+        .symbol { display: none; }
+        .text { display: block; }
+      }
+    ]]></style>
+  </defs>
+
+  <!-- Background: Squircle (rounded square) -->
+  <rect width="32" height="32" rx="6" fill="url(#bg)"/>
+
+  <!-- SYMBOL: 3 connected nodes (O•F•M) - visible at 16px -->
+  <g class="symbol" stroke="url(#fg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95">
+    <!-- Connecting lines -->
+    <path d="M8 16 L16 16 M16 16 L24 16"/>
+    <!-- Three nodes -->
+    <circle cx="8" cy="16" r="3" fill="url(#fg)"/>
+    <circle cx="16" cy="16" r="3" fill="url(#fg)"/>
+    <circle cx="24" cy="16" r="3" fill="url(#fg)"/>
+    <!-- F crossbar + M peaks (subtle, visible at 24px+) -->
+    <g stroke-width="1.5" opacity="0.7">
+      <line x1="13" y1="13" x2="19" y2="13"/>           <!-- F crossbar -->
+      <path d="M22 19 L24 13 L26 19"/>                  <!-- M peaks -->
+    </g>
+  </g>
+
+  <!-- TEXT: "OFM" - visible at 32px+ -->
+  <g class="text" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+      font-weight="700" fill="url(#fg)" text-anchor="middle" dominant-baseline="central"
+      style="filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));">
+    <text x="16" y="20" font-size="14" letter-spacing="-0.5">OFM</text>
+  </g>
+</svg>

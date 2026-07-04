@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFM Favicon Preview - Generated Icons</title>
+
+  <!-- ===== FAVICON SETUP (Copy this to your HTML <head>) ===== -->
+  <link rel="icon" type="image/svg+xml" href="ofm-favicon.svg">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/icon-64.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96.png">
+  <link rel="icon" type="image/png" sizes="128x128" href="icons/icon-128.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="256x256" href="icons/icon-256.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="icons/apple-touch-icon-76.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
+  <meta name="msapplication-TileColor" content="#6366f1">
+  <meta name="msapplication-TileImage" content="icons/icon-144.png">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #1e293b;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .subtitle { color: #64748b; margin-bottom: 40px; font-size: 1.1rem; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-info { background: #e0e7ff; color: #3730a3; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .card {
+      background: white; border-radius: 16px; padding: 24px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #334155; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 16px; }
+    .icon-item { text-align: center; padding: 16px; background: #f8fafc; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s; border: 2px solid transparent; }
+    .icon-item:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgb(0 0 0 / 0.1); border-color: #e0e7ff; }
+    .icon-item img { width: 56px; height: 56px; border-radius: 10px; margin-bottom: 8px; image-rendering: pixelated; }
+    .icon-item svg { width: 56px; height: 56px; margin-bottom: 8px; border-radius: 10px; }
+    .icon-item .label { font-size: 0.75rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px; }
+    .icon-item .size { font-size: 0.7rem; color: #94a3b8; font-family: monospace; }
+    .code-block {
+      background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; line-height: 1.6; overflow-x: auto; margin-top: 16px;
+    }
+    .code-block .tag { color: #f472b6; }
+    .code-block .attr { color: #fbbf24; }
+    .code-block .value { color: #a5f3fc; }
+    .preview-tabs {
+      display: flex; flex-direction: column; gap: 12px; margin-top: 16px;
+    }
+    .preview-tab {
+      display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+    }
+    .preview-tab.dark { background: #1e293b; border-color: #334155; }
+    .preview-tab .tab-icon { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; image-rendering: pixelated; }
+    .preview-tab .tab-title { font-weight: 600; color: #334155; font-size: 0.95rem; flex: 1; }
+    .preview-tab.dark .tab-title { color: #f1f5f9; }
+    .preview-tab .tab-url { font-family: monospace; font-size: 0.75rem; color: #94a3b8; }
+    .color-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 12px; }
+    .color-swatch { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+    .color-swatch .swatch { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .color-swatch .hex { font-size: 0.7rem; color: #64748b; font-family: monospace; }
+    .note { font-size: 0.85rem; color: #64748b; margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px; border-left: 3px solid #f59e0b; }
+    .note.success { background: #dcfce7; border-left-color: #22c55e; }
+    .svg-preview { width: 120px; height: 120px; border-radius: 16px; margin: 0 auto 16px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OFM Favicon System</h1>
+    <p class="subtitle">ไอคอนชุดครบสำหรับ Browser Tab (16×16), PWA, iOS, Android, Windows — Generated & Ready</p>
+
+    <!-- Master SVG Preview -->
+    <div class="card">
+      <h2>🎨 Master SVG (Vector Source)</h2>
+      <svg class="svg-preview" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366f1"/>
+            <stop offset="50%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#ec4899"/>
+          </linearGradient>
+        </defs>
+        <rect width="32" height="32" rx="6" fill="url(#g)"/>
+        <g stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M8 16 L16 16 M16 16 L24 16" opacity="0.9"/>
+          <circle cx="8" cy="16" r="3" fill="#fff" fill-opacity="0.95"/>
+          <circle cx="16" cy="16" r="3" fill="#fff" fill-opacity="0.95"/>
+          <circle cx="24" cy="16" r="3" fill="#fff" fill-opacity="0.95"/>
+        </g>
+        <g stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.8">
+          <line x1="13" y1="13" x2="19" y2="13"/>
+          <path d="M22 19 L24 13 L26 19"/>
+        </g>
+      </svg>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+        <span class="badge badge-success">32×32 ViewBox</span>
+        <span class="badge badge-info">Scalable Vector</span>
+        <span class="badge badge-info">Dark Mode Ready</span>
+        <span class="badge badge-warning">Optimized for 16px</span>
+      </div>
+      <p class="note success" style="margin-top: 12px;">✅ <strong>Design Concept:</strong> 3 connected nodes = O • F • M | ที่ 16px กลายเป็น 3 จุดเรียบเรียงชัดเจน | ที่ 32px+ แสดงรายละเอียด F crossbar + M peaks</p>
+    </div>
+
+    <!-- Browser Tab Simulation -->
+    <div class="card">
+      <h2>🌐 Browser Tab Preview (Real Rendering)</h2>
+      <div class="preview-tabs">
+        <div class="preview-tab">
+          <img class="tab-icon" src="icons/icon-16.png" alt="16x16">
+          <span class="tab-title">Tab: OFM Application</span>
+          <span class="tab-url">localhost:3000 / your-domain.com</span>
+        </div>
+        <div class="preview-tab dark">
+          <img class="tab-icon" src="icons/icon-16.png" alt="16x16 dark">
+          <span class="tab-title">Dark Mode Tab</span>
+          <span class="tab-url">browser dark theme active</span>
+        </div>
+        <div class="preview-tab">
+          <img class="tab-icon" src="icons/icon-32.png" alt="32x32">
+          <span class="tab-title">HiDPI / Retina Tab (32×32)</span>
+          <span class="tab-url">MacBook / Mobile browsers</span>
+        </div>
+      </div>
+      <p class="note" style="margin-top: 12px;"><strong>ทดสอบจริง:</strong> เปิดไฟล์นี้ในเบราว์เซอร์ → ดูที่ Tab Bar จะเห็นไอคอน 16×16 จริง (SVG จะ auto-scale)</p>
+    </div>
+
+    <!-- All Generated PNG Sizes -->
+    <div class="card">
+      <h2>📱 Generated PNG Sizes (<span id="pngCount">0</span> files)</h2>
+      <div class="icon-grid" id="pngGrid"></div>
+    </div>
+
+    <!-- Apple Touch Icons -->
+    <div class="card">
+      <h2>🍎 Apple Touch Icons (iOS / iPadOS Home Screen)</h2>
+      <div class="icon-grid" id="appleGrid"></div>
+      <p class="note" style="margin-top: 12px;"><strong>หมายเหตุ:</strong> iOS เพิ่มมุมโค้ง (rounded corners) และเงาเอง — ให้ส่ง icon สี่เหลี่ยมจัตุรัสเต็มขนาด</p>
+    </div>
+
+    <!-- Favicon.ico -->
+    <div class="card">
+      <h2>📄 favicon.ico (Multi-size: 16, 32, 48)</h2>
+      <div class="icon-grid">
+        <div class="icon-item">
+          <img src="favicon.ico" alt="favicon.ico">
+          <span class="label">favicon.ico</span>
+          <span class="size">Multi-size ICO</span>
+        </div>
+      </div>
+      <p class="note" style="margin-top: 12px;">✅ <strong>Legacy fallback</strong> — IE11, old Edge, บาง CMS ต้องการ .ico โดยเฉพาะ</p>
+    </div>
+
+    <!-- Color Palette -->
+    <div class="card">
+      <h2>🎨 Color Palette</h2>
+      <div class="color-row">
+        <div class="color-swatch">
+          <div class="swatch" style="background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);"></div>
+          <span class="hex">Primary Gradient</span>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch" style="background: #6366f1;"></div>
+          <span class="hex">#6366f1<br>Indigo-500</span>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch" style="background: #8b5cf6;"></div>
+          <span class="hex">#8b5cf6<br>Violet-500</span>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch" style="background: #ec4899;"></div>
+          <span class="hex">#ec4899<br>Pink-500</span>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch" style="background: #4f46e5;"></div>
+          <span class="hex">#4f46e5<br>Dark Mode</span>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch" style="background: #ffffff;"></div>
+          <span class="hex">#ffffff<br>Symbol Color</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTML Implementation Code -->
+    <div class="card">
+      <h2>💻 Copy to Your HTML <code><head></code></h2>
+      <pre class="code-block"><span class="tag"><!-- ===== OFM Favicon System ===== --></span>
+<span class="tag"><!-- Primary: SVG (Modern browsers, scalable, dark mode) --></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"icon"</span> <span class="attr">type</span>=<span class="value">"image/svg+xml"</span> <span class="attr">href</span>=<span class="value">"/ofm-favicon.svg"</span><span class="tag">></span>
+
+<span class="tag"><!-- Fallback: ICO (Legacy browsers) --></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"shortcut icon"</span> <span class="attr">href</span>=<span class="value">"/favicon.ico"</span><span class="tag">></span>
+
+<span class="tag"><!-- PNG Sizes (Explicit for caching/performance) --></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"icon"</span> <span class="attr">type</span>=<span class="value">"image/png"</span> <span class="attr">sizes</span>=<span class="value">"16x16"</span> <span class="attr">href</span>=<span class="value">"/icons/icon-16.png"</span><span class="tag">></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"icon"</span> <span class="attr">type</span>=<span class="value">"image/png"</span> <span class="attr">sizes</span>=<span class="value">"32x32"</span> <span class="attr">href</span>=<span class="value">"/icons/icon-32.png"</span><span class="tag">></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"icon"</span> <span class="attr">type</span>=<span class="value">"image/png"</span> <span class="attr">sizes</span>=<span class="value">"48x48"</span> <span class="attr">href</span>=<span class="value">"/icons/icon-48.png"</span><span class="tag">></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"icon"</span> <span class="attr">type</span>=<span class="value">"image/png"</span> <span class="attr">sizes</span>=<span class="value">"192x192"</span> <span class="attr">href</span>=<span class="value">"/icons/icon-192.png"</span><span class="tag">></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"icon"</span> <span class="attr">type</span>=<span class="value">"image/png"</span> <span class="attr">sizes</span>=<span class="value">"512x512"</span> <span class="attr">href</span>=<span class="value">"/icons/icon-512.png"</span><span class="tag">></span>
+
+<span class="tag"><!-- Apple Touch Icons (iOS PWA) --></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"apple-touch-icon"</span> <span class="attr">sizes</span>=<span class="value">"180x180"</span> <span class="attr">href</span>=<span class="value">"/icons/apple-touch-icon.png"</span><span class="tag">></span>
+
+<span class="tag"><!-- PWA Manifest --></span>
+<span class="tag"><link</span> <span class="attr">rel</span>=<span class="value">"manifest"</span> <span class="attr">href</span>=<span class="value">"/manifest.json"</span><span class="tag">></span>
+
+<span class="tag"><!-- Theme Color (Browser UI: address bar, tab bar) --></span>
+<span class="tag"><meta</span> <span class="attr">name</span>=<span class="value">"theme-color"</span> <span class="attr">content</span>=<span class="value">"#6366f1"</span><span class="tag">></span>
+<span class="tag"><meta</span> <span class="attr">name</span>=<span class="value">"theme-color"</span> <span class="attr">content</span>=<span class="value">"#4f46e5"</span> <span class="attr">media</span>=<span class="value">"(prefers-color-scheme: dark)"</span><span class="tag">></span>
+
+<span class="tag"><!-- Windows Tile --></span>
+<span class="tag"><meta</span> <span class="attr">name</span>=<span class="value">"msapplication-TileColor"</span> <span class="attr">content</span>=<span class="value">"#6366f1"</span><span class="tag">></span>
+<span class="tag"><meta</span> <span class="attr">name</span>=<span class="value">"msapplication-TileImage"</span> <span class="attr">content</span>=<span class="value">"/icons/icon-144.png"</span><span class="tag">></span></pre>
+    </div>
+
+    <!-- File Structure -->
+    <div class="card">
+      <h2>📁 File Structure (Deploy to your web root / public folder)</h2>
+      <pre class="code-block" style="font-size: 0.75rem;">/
+├── ofm-favicon.svg          ← Master vector (32×32 viewBox)
+├── favicon.ico              ← Multi-size (16, 32, 48)
+├── manifest.json            ← PWA manifest
+├── generate-icons.js        ← Regeneration script
+├── package.json
+└── icons/
+    ├── icon-16.png
+    ├── icon-32.png
+    ├── icon-48.png
+    ├── icon-64.png
+    ├── icon-72.png
+    ├── icon-96.png
+    ├── icon-128.png
+    ├── icon-144.png
+    ├── icon-152.png
+    ├── icon-180.png
+    ├── icon-192.png
+    ├── icon-256.png
+    ├── icon-384.png
+    ├── icon-512.png
+    ├── apple-touch-icon.png           (180×180)
+    ├── apple-touch-icon-167.png       (167×167)
+    ├── apple-touch-icon-152.png       (152×152)
+    ├── apple-touch-icon-120.png       (120×120)
+    └── apple-touch-icon-76.png        (76×76)</pre>
+    </div>
+
+    <!-- Regeneration Instructions -->
+    <div class="card">
+      <h2>🔄 Regenerate Icons (After SVG Changes)</h2>
+      <pre class="code-block"># Install (once)
+npm install sharp
+
+# Run generation
+node generate-icons.js
+
+# Or use online: https://realfavicongenerator.net (upload ofm-favicon.svg)</pre>
+    </div>
+  </div>
+
+  <script>
+    // Populate PNG grid
+    const pngSizes = [
+      {size: 16, file: 'icon-16.png', badge: 'Tab Favicon', badgeClass: 'badge-warning'},
+      {size: 32, file: 'icon-32.png', badge: 'Tab HiDPI', badgeClass: 'badge-info'},
+      {size: 48, file: 'icon-48.png', badge: 'Win Tile', badgeClass: 'badge-info'},
+      {size: 64, file: 'icon-64.png', badge: 'Legacy', badgeClass: ''},
+      {size: 72, file: 'icon-72.png', badge: 'Android', badgeClass: ''},
+      {size: 96, file: 'icon-96.png', badge: 'Android', badgeClass: ''},
+      {size: 128, file: 'icon-128.png', badge: 'Chrome Store', badgeClass: ''},
+      {size: 144, file: 'icon-144.png', badge: 'Win Tile', badgeClass: ''},
+      {size: 152, file: 'icon-152.png', badge: 'iPad', badgeClass: ''},
+      {size: 180, file: 'icon-180.png', badge: 'iPhone', badgeClass: 'badge-success'},
+      {size: 192, file: 'icon-192.png', badge: 'PWA Maskable', badgeClass: 'badge-success'},
+      {size: 256, file: 'icon-256.png', badge: 'Hi-Res', badgeClass: ''},
+      {size: 384, file: 'icon-384.png', badge: 'Splash', badgeClass: ''},
+      {size: 512, file: 'icon-512.png', badge: 'Play Store', badgeClass: 'badge-success'},
+    ];
+
+    const pngGrid = document.getElementById('pngGrid');
+    pngSizes.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'icon-item';
+      div.innerHTML = `
+        <img src="icons/${item.file}" alt="${item.size}x${item.size}" loading="lazy">
+        <span class="label">${item.size}×${item.size}</span>
+        <span class="size">${item.file}</span>
+        ${item.badge ? `<span class="badge ${item.badgeClass}" style="margin-top:4px; display:inline-block;">${item.badge}</span>` : ''}
+      `;
+      pngGrid.appendChild(div);
+    });
+    document.getElementById('pngCount').textContent = pngSizes.length;
+
+    // Populate Apple Touch Icons
+    const appleSizes = [
+      {size: 180, file: 'apple-touch-icon.png', label: 'iPhone Home Screen'},
+      {size: 167, file: 'apple-touch-icon-167.png', label: 'iPad Pro'},
+      {size: 152, file: 'apple-touch-icon-152.png', label: 'iPad'},
+      {size: 120, file: 'apple-touch-icon-120.png', label: 'iPhone Small'},
+      {size: 76, file: 'apple-touch-icon-76.png', label: 'iPad Mini / Old'},
+    ];
+
+    const appleGrid = document.getElementById('appleGrid');
+    appleSizes.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'icon-item';
+      div.innerHTML = `
+        <img src="icons/${item.file}" alt="${item.size}x${item.size}" loading="lazy">
+        <span class="label">${item.size}×${item.size}</span>
+        <span class="size">${item.label}</span>
+      `;
+      appleGrid.appendChild(div);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "claude-code",
+  "version": "1.0.0",
+  "description": "เว็บแอปครบวงจร: **GitHub Pages (Frontend) + Google Apps Script (Backend) + Google Sheets (Database) + Cloudinary (รูปภาพ)**",
+  "main": "generate-icons.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/technicianofm-blip/stamp-parking.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/technicianofm-blip/stamp-parking/issues"
+  },
+  "homepage": "https://github.com/technicianofm-blip/stamp-parking#readme",
+  "dependencies": {
+    "sharp": "^0.35.3"
+  }
+}
