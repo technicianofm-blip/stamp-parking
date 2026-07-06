@@ -183,6 +183,10 @@ select.form-control{
 .btn-s{background:var(--s);color:#fff}.btn-s:hover{background:#047857;box-shadow:var(--sh)}
 .btn-d{background:#fff;color:var(--d);border:1.5px solid var(--d)}.btn-d:hover{background:#fef2f2}
 .btn-o{background:#fff;color:var(--g600);border:1.5px solid var(--g300)}.btn-o:hover{background:var(--g50)}
+/* Setup page specific buttons - Pastel tones */
+.btn-save{background:#93c5fd;color:#1e3a5f;border:1.5px solid #bfdbfe}.btn-save:hover{background:#60a5fa;color:#fff;border-color:#93c5fd;box-shadow:var(--sh)}
+.btn-test{background:#a78bfa;color:#3c096c;border:1.5px solid #c4b5fd}.btn-test:hover{background:#8b5cf6;color:#fff;border-color:#a78bfa;box-shadow:var(--sh)}
+.btn-reset{background:#fbbf24;color:#78350f;border:1.5px solid #fde68a}.btn-reset:hover{background:#f59e0b;color:#fff;border-color:#fbbf24;box-shadow:var(--sh)}
 .btn-sm{padding:6px 12px;font-size:12px}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 
@@ -246,6 +250,7 @@ tr:hover td{background:var(--g50)}
 .setup-banner p{color:#b45309;font-size:12px;line-height:1.4}
 .setup-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .setup-row input{flex:1;min-width:180px}
+.setup-row .btn{height:42px;padding:0 18px;font-size:14px}
 
 /* Sync bar */
 .sync-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
@@ -365,8 +370,9 @@ tr:hover td{background:var(--g50)}
         </div>
         <div class="setup-row">
           <input type="url" class="form-control" id="deskGasUrl" placeholder="https://script.google.com/macros/s/...">
-          <button class="btn btn-p" onclick="saveUrl()">💾 บันทึก</button>
-          <button class="btn btn-o btn-sm" id="deskTestBtn" onclick="testConn()">📡 ทดสอบ</button>
+          <button class="btn btn-save" onclick="saveUrl()">💾 บันทึก</button>
+          <button class="btn btn-test" id="deskTestBtn" onclick="testConn()">📡 ทดสอบ</button>
+          <button class="btn btn-reset" onclick="resetToDefault()">🔄 รีเซ็ตค่าเริ่มต้น</button>
         </div>
         <div class="help" style="margin-top:6px">ดูวิธีใน README.md</div>
       </div>
@@ -374,7 +380,7 @@ tr:hover td{background:var(--g50)}
         <div class="card-title">🔗 Google Sheet ID</div>
         <div class="setup-row">
           <input type="text" class="form-control" id="deskSheetId" placeholder="Google Sheet ID (ไม่บังคับ)">
-          <button class="btn btn-p btn-sm" onclick="saveSheetId()">💾 บันทึก</button>
+          <button class="btn btn-save btn-sm" onclick="saveSheetId()">💾 บันทึก</button>
         </div>
         <div class="help" style="margin-top:6px">คัดลอกจาก URL: docs.google.com/spreadsheets/d/<b>xxxxx</b>/edit</div>
       </div>
@@ -382,7 +388,7 @@ tr:hover td{background:var(--g50)}
         <div class="card-title">📁 Google Drive Folder ID</div>
         <div class="setup-row">
           <input type="text" class="form-control" id="deskFolderId" placeholder="Google Drive Folder ID (ไม่บังคับ)">
-          <button class="btn btn-p btn-sm" onclick="saveFolderId()">💾 บันทึก</button>
+          <button class="btn btn-save btn-sm" onclick="saveFolderId()">💾 บันทึก</button>
         </div>
         <div class="help" style="margin-top:6px">คัดลอกจาก URL: drive.google.com/drive/folders/<b>xxxxx</b></div>
       </div>
@@ -530,21 +536,22 @@ tr:hover td{background:var(--g50)}
         <div class="setup-row">
           <input type="url" class="form-control" id="mobGasUrl" placeholder="https://script.google.com/macros/s/...">
           <button class="btn btn-p" onclick="saveUrl()">💾 บันทึก</button>
+          <button class="btn btn-reset" onclick="resetToDefault()">🔄 รีเซ็ตค่าเริ่มต้น</button>
         </div>
-        <div style="margin-top:8px"><button class="btn btn-o btn-sm" id="mobTestBtn" onclick="testConn()">📡 ทดสอบ</button></div>
+        <div style="margin-top:8px"><button class="btn btn-test btn-sm" id="mobTestBtn" onclick="testConn()">📡 ทดสอบ</button></div>
       </div>
       <div class="card">
         <div class="card-title">🔗 Google Sheet ID</div>
         <div class="setup-row">
           <input type="text" class="form-control" id="mobSheetId" placeholder="Sheet ID (ไม่บังคับ)">
-          <button class="btn btn-p btn-sm" onclick="saveSheetId()">💾</button>
+          <button class="btn btn-save btn-sm" onclick="saveSheetId()">💾 บันทึก</button>
         </div>
       </div>
       <div class="card">
         <div class="card-title">📁 Google Drive Folder ID</div>
         <div class="setup-row">
           <input type="text" class="form-control" id="mobFolderId" placeholder="Folder ID (ไม่บังคับ)">
-          <button class="btn btn-p btn-sm" onclick="saveFolderId()">💾</button>
+          <button class="btn btn-save btn-sm" onclick="saveFolderId()">💾 บันทึก</button>
         </div>
       </div>
     </div>
@@ -784,6 +791,13 @@ function syncSetupInputs(){
   m('deskGasUrl',c.url);m('mobGasUrl',c.url)
   m('deskSheetId',c.sheetId);m('mobSheetId',c.sheetId)
   m('deskFolderId',c.folderId);m('mobFolderId',c.folderId)
+}
+function resetToDefault(){
+  localStorage.removeItem(CFG_KEY)
+  syncSetupInputs()
+  updateSetupUI()
+  toast('🔄 รีเซ็ตเป็นค่าเริ่มต้นแล้ว','s')
+  refresh()
 }
 function updateSetupUI(){
   const ok=!!cfg().url
