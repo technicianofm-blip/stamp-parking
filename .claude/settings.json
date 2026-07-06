@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:)",
+      "Bash(curl -sL \"https://technicianofm-blip.github.io/stamp-parking/\")",
+      "Bash(curl -sI \"https://technicianofm-blip.github.io/stamp-parking/ofm-favicon.svg\")",
+      "Bash(curl -sI \"https://technicianofm-blip.github.io/stamp-parking/favicon.ico\")",
+      "Bash(curl -sI \"https://technicianofm-blip.github.io/stamp-parking/icons/icon-16.png\")",
+      "Bash(curl -sL \"https://script.google.com/macros/s/AKfycbwgx355bMSszx-tcXQqLGRBdrkwmiTeK_yyjUUSClXAkgwYAFR-wzXez9jEYXKIoReVkQ/exec?action=getAll\" -H \"Content-Type: application/json\" --max-time 30)",
+      "PowerShell(cd \"d:\\\\claude code\"; clasp redeploy AKfycbwienlrxo95esZcSXPPXHFuHDxc2y8dpaemz_d6HyXJ @HEAD --description \"OFM Stamp Parking v2\")",
+      "Bash(curl \"https://script.google.com/macros/s/AKfycbwgx355bMSszx-tcXQqLGRBdrkwmiTeK_yyjUUSClXAkgwYAFR-wzXez9jEYXKIoReVkQ/exec?action=getAll\")",
+      "Bash(curl \"https://script.google.com/macros/s/AKfycbxTnBqndxVzqTLdrXWG9tRBeGJZgx5PCEFczwu5G8y16AoH_Xi6Xe9GfHWxjXTz1-F0Xw/exec?action=getAll\")",
+      "Bash(curl \"https://script.google.com/macros/s/AKfycbwGffxCFy7tD6A4vfdGgCtjTcTgXuDrtlJkiS2tlrG2otNYL-Ymzp3CkeyM1kdkzXtUlw/exec?action=getAll\")",
+      "Bash(curl \"https://script.google.com/macros/s/AKfycbxZ7EWgaLhC8SR_gcERDL52Pgg0qcKuXpBmCkfoDb8aEybxZ-DNXUTpOcvrogyycVmdpQ/exec?action=getAll\")",
+      "Bash(curl \"https://script.google.com/macros/s/AKfycbwFCrvP5O6V25aYDM4ngqi9lvSYvK9gyqfITunjNbjAXmNYVBXipcbkGZq5vxZy3kffMw/exec?action=getAll\")"
+    ]
+  }
+}

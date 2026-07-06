@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Modern gradient definitions -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22d3ee"/>
+      <stop offset="30%" style="stop-color:#06b6d4"/>
+      <stop offset="60%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+
+    <linearGradient id="accentGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f472b6"/>
+      <stop offset="50%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#22d3ee"/>
+    </linearGradient>
+
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="50%" style="stop-color:#e0f2fe"/>
+      <stop offset="100%" style="stop-color:#c7d2fe"/>
+    </linearGradient>
+
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:0.3"/>
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0"/>
+    </radialGradient>
+
+    <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feOffset dx="0" dy="4" result="offsetBlur"/>
+      <feFlood flood-color="#22d3ee" flood-opacity="0.4"/>
+      <feComposite in2="offsetBlur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <mask id="textMask">
+      <rect x="0" y="0" width="200" height="200" fill="white"/>
+    </mask>
+  </defs>
+
+  <!-- Background circle with gradient -->
+  <circle cx="100" cy="100" r="95" fill="url(#bgGradient)" filter="url(#dropShadow)"/>
+
+  <!-- Outer glow ring -->
+  <circle cx="100" cy="100" r="92" fill="none" stroke="url(#primaryGradient)" stroke-width="2" opacity="0.6"/>
+
+  <!-- Inner glow ring -->
+  <circle cx="100" cy="100" r="88" fill="none" stroke="url(#accentGradient)" stroke-width="1" opacity="0.4"/>
+
+  <!-- Subtle radial glow behind text -->
+  <circle cx="100" cy="100" r="70" fill="url(#glowGradient)"/>
+
+  <!-- Geometric accent shapes - modern decorative elements -->
+  <g opacity="0.15">
+    <!-- Top right arc -->
+    <path d="M 140 40 Q 170 30 180 60" fill="none" stroke="url(#primaryGradient)" stroke-width="2" stroke-linecap="round"/>
+    <!-- Bottom left arc -->
+    <path d="M 60 160 Q 30 170 20 140" fill="none" stroke="url(#accentGradient)" stroke-width="2" stroke-linecap="round"/>
+    <!-- Top left dots -->
+    <circle cx="35" cy="35" r="3" fill="url(#primaryGradient)"/>
+    <circle cx="45" cy="50" r="2" fill="url(#accentGradient)"/>
+    <circle cx="28" cy="55" r="1.5" fill="#22d3ee"/>
+    <!-- Bottom right dots -->
+    <circle cx="165" cy="165" r="3" fill="url(#accentGradient)"/>
+    <circle cx="155" cy="150" r="2" fill="url(#primaryGradient)"/>
+    <circle cx="172" cy="145" r="1.5" fill="#a855f7"/>
+  </g>
+
+  <!-- Floating geometric particles -->
+  <g opacity="0.3">
+    <circle cx="170" cy="45" r="2" fill="#22d3ee">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="2;3;2" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="30" cy="170" r="1.5" fill="#f472b6">
+      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="1.5;2.5;1.5" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="180" cy="120" r="1" fill="#a855f7">
+      <animate attributeName="opacity" values="0.2;0.6;0.2" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="20" cy="80" r="1" fill="#3b82f6">
+      <animate attributeName="opacity" values="0.2;0.5;0.2" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- OFM Typography - Modern geometric sans-serif -->
+  <g font-family="'Inter', 'Segoe UI', 'Roboto', -apple-system, sans-serif" font-weight="700" text-anchor="middle" dominant-baseline="central">
+    <!-- O - Custom geometric letter with cut -->
+    <g transform="translate(60, 100)">
+      <!-- O outer ring -->
+      <path d="M -25 0 A 25 25 0 1 1 25 0 A 25 25 0 1 1 -25 0 M -15 0 A 15 15 0 1 1 15 0 A 15 15 0 1 1 -15 0"
+            fill="url(#textGradient)" filter="url(#innerGlow)"/>
+      <!-- O accent cut - modern detail -->
+      <path d="M 18 -18 L 28 -28" stroke="url(#accentGradient)" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+    </g>
+
+    <!-- F - Modern geometric F -->
+    <g transform="translate(100, 100)">
+      <path d="M -18 -30 L -18 30 M -18 -30 L 12 -30 M -18 0 L 6 0"
+            fill="none" stroke="url(#textGradient)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+            filter="url(#innerGlow)"/>
+      <!-- F accent dot -->
+      <circle cx="14" cy="-30" r="3" fill="url(#accentGradient)"/>
+    </g>
+
+    <!-- M - Modern geometric M -->
+    <g transform="translate(140, 100)">
+      <path d="M -20 30 L -20 -30 L 0 -10 L 20 -30 L 20 30"
+            fill="none" stroke="url(#textGradient)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+            filter="url(#innerGlow)"/>
+      <!-- M accent dots -->
+      <circle cx="-20" cy="-30" r="3" fill="url(#primaryGradient)"/>
+      <circle cx="20" cy="-30" r="3" fill="url(#primaryGradient)"/>
+    </g>
+  </g>
+
+  <!-- Subtle highlight/reflection on top -->
+  <ellipse cx="100" cy="60" rx="50" ry="8" fill="url(#primaryGradient)" opacity="0.08"/>
+
+  <!-- Bottom tagline area (optional) -->
+  <text x="100" y="175" font-family="'Inter', 'Segoe UI', 'Roboto', -apple-system, sans-serif"
+        font-size="9" font-weight="500" fill="url(#primaryGradient)" text-anchor="middle" opacity="0.6" letter-spacing="2">
+    OPERATIONS • FINANCE • MANAGEMENT
+  </text>
+</svg>
