@@ -732,7 +732,7 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history'
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwgx355bMSszx-tcXQqLGRBdrkwmiTeK_yyjUUSClXAkgwYAFR-wzXez9jEYXKIoReVkQ/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbx4J2qPdNOzE_bmfny9-tHWYv9wxS38ksnCXAk2jhI4mRtDjm-gOnn8dhw14dnkxPTB/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
@@ -798,15 +798,24 @@ syncSetupInputs();updateSetupUI()
 //  API
 // ===================================================================
 async function get(action){
-  const u=gasUrl();if(!u) return {success:false,error:'no_url',data:[]}
+  const u=gasUrl()
+  if(!u) return {success:false,error:'no_url',data:[]}
   const c=cfg()
   let url=u+'?action='+action
   if(c.sheetId) url+='&sheetId='+encodeURIComponent(c.sheetId)
   if(c.folderId) url+='&folderId='+encodeURIComponent(c.folderId)
+  console.log('[API] GET:', action, '| URL:', url)
   try{
     const r=await fetch(url,{method:'GET',redirect:'follow'})
-    return JSON.parse(await r.text())
-  }catch(e){return {success:false,error:e.message,data:[]}}
+    const text=await r.text()
+    console.log('[API] Response status:', r.status, '| text:', text.slice(0,200))
+    const data=JSON.parse(text)
+    console.log('[API] Parsed:', data)
+    return data
+  }catch(e){
+    console.error('[API] Error:', e)
+    return {success:false,error:e.message,data:[]}
+  }
 }
 async function post(data){
   const u=gasUrl();if(!u) return {success:false,error:'no_url'}
@@ -815,12 +824,25 @@ async function post(data){
   if(c.sheetId) body.sheetId=c.sheetId
   if(c.folderId) body.folderId=c.folderId
   // ใช้ XMLHttpRequest แทน fetch — จัดการ GAS redirect ได้ดีกว่า
+  console.log('[API] POST', u, body)
   return new Promise(r=>{
     const x=new XMLHttpRequest()
     x.open('POST',u)
     x.setRequestHeader('Content-Type','text/plain')
-    x.onload=()=>{try{r(JSON.parse(x.responseText))}catch{r({success:false,error:'Invalid response'})}}
-    x.onerror=()=>r({success:false,error:'Network error'})
+    x.onload=()=>{
+      try{
+        const res=JSON.parse(x.responseText)
+        console.log('[API] POST Response:', res)
+        r(res)
+      }catch{
+        console.error('[API] POST Invalid response:', x.responseText)
+        r({success:false,error:'Invalid response'})
+      }
+    }
+    x.onerror=()=>{
+      console.error('[API] POST Network error')
+      r({success:false,error:'Network error'})
+    }
     x.send(JSON.stringify(body))
   })
 }
@@ -1082,8 +1104,12 @@ async function refresh(){
     const r=await get('getAll')
     if(r.success){setCache(r.data);setConn(true);updateSyncTime()}
     else if(r.error==='no_url'){toast('⚠️ ยังไม่ได้ตั้งค่า API','e')}
-    else{setConn(false);toast('⚠️ โหลดไม่สำเร็จ ใช้แคช','e')}
-  }catch{setConn(false)}
+    else{setConn(false);toast('❌ โหลดล้มเหลว: '+(r.error||'Unknown error')+' ใช้แคช','e')}
+  }catch(e){
+    setConn(false)
+    toast('❌ Error: '+e.message+' ใช้แคช','e')
+    console.error('[refresh] catch:', e)
+  }
   hideLoad();render();updBadge();updateBell()
 }
 function updateSyncTime(){
@@ -1245,25 +1271,35 @@ function render(){
 // ===================================================================
 async function updateStatus(el){
   const id=el.dataset.id;const st=el.value
+  console.log('[updateStatus] id:', id, 'status:', st)
   try{
     const r=await get('updateStatus&id='+id+'&status='+encodeURIComponent(st))
+    console.log('[updateStatus] response:', r)
     if(r.success){
       const c=cacheR().map(x=>x.id===id?{...x,status:st}:x)
       setCache(c);render();updBadge()
       toast('✅ อัปเดตสถานะเรียบร้อย','s')
     }else toast('❌ '+(r.error||'อัปเดตไม่สำเร็จ'),'e')
-  }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
+  }catch(e){
+    console.error('[updateStatus] catch:', e)
+    toast('❌ Error: '+e.message,'e')
+  }
 }
 async function updateDiscount(el){
   const id=el.dataset.id;const disc=el.value
+  console.log('[updateDiscount] id:', id, 'discount:', disc)
   try{
     const r=await get('updateDiscount&id='+id+'&discount='+encodeURIComponent(disc))
+    console.log('[updateDiscount] response:', r)
     if(r.success){
       const c=cacheR().map(x=>x.id===id?{...x,discount:disc}:x)
       setCache(c);render();updBadge()
       toast('✅ อัปเดตส่วนลดเรียบร้อย','s')
     }else toast('❌ '+(r.error||'อัปเดตไม่สำเร็จ'),'e')
-  }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
+  }catch(e){
+    console.error('[updateDiscount] catch:', e)
+    toast('❌ Error: '+e.message,'e')
+  }
 }
 
 // ===================================================================
@@ -1275,11 +1311,16 @@ function closeModal(id){document.getElementById(id).classList.remove('show');del
 async function doDelete(){
   if(!delId)return
   const btn=document.getElementById('confirmBtn');btn.disabled=true;btn.innerHTML='กำลังลบ...'
+  console.log('[doDelete] id:', delId)
   try{
     const r=await get('delete&id='+delId)
+    console.log('[doDelete] response:', r)
     if(r.success){toast('🗑 ลบเรียบร้อย','i');await refresh()}
-    else toast('❌ ลบไม่สำเร็จ','e')
-  }catch{toast('❌ ไม่สามารถเชื่อมต่อ','e')}
+    else toast('❌ '+(r.error||'ลบไม่สำเร็จ'),'e')
+  }catch(e){
+    console.error('[doDelete] catch:', e)
+    toast('❌ Error: '+e.message,'e')
+  }
   finally{btn.disabled=false;btn.innerHTML='🗑 ลบ'}
   closeModal('confirmModal')
 }
@@ -1325,6 +1366,7 @@ async function testConn(){
   setConn(false)
   try{
     const r=await get('getAll')
+    console.log('[testConn] response:', r)
     if(r.success){
       setCache(r.data);setConn(true)
       toast('✅ เชื่อมต่อสำเร็จ! พบ '+r.data.length+' รายการ','s')
@@ -1332,7 +1374,10 @@ async function testConn(){
       const tb=document.getElementById(p+'TestBtn')
       if(tb){tb.className='btn btn-s btn-sm';tb.innerHTML='✅ เชื่อมต่อแล้ว';setTimeout(()=>{tb.className='btn btn-o btn-sm';tb.innerHTML='📡 ทดสอบ'},3000)}
     }else toast('❌ '+(r.error||'เชื่อมต่อล้มเหลว'),'e')
-  }catch{toast('❌ ไม่สามารถเชื่อมต่อ','e')}
+  }catch(e){
+    console.error('[testConn] catch:', e)
+    toast('❌ Error: '+e.message,'e')
+  }
   hideLoad()
 }
 
