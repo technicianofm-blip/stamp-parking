@@ -306,25 +306,25 @@ tr:hover td{background:var(--g50)}
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="/stamp-parking/ofm-favicon.svg">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="/stamp-parking/favicon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="/stamp-parking/icons/icon-16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/stamp-parking/icons/icon-32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/stamp-parking/icons/icon-48.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/stamp-parking/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/stamp-parking/icons/icon-512.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="/stamp-parking/icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <!-- PWA Manifest -->
-<link rel="manifest" href="/stamp-parking/manifest.json">
+<link rel="manifest" href="manifest.json">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="/stamp-parking/icons/icon-144.png">
+<meta name="msapplication-TileImage" content="icons/icon-144.png">
 
 </head>
 <body>
@@ -1165,9 +1165,33 @@ function updateBell(){
   })
   if(n>0) playNewDataSound(n)
 }
+// AudioContext singleton - created lazily on first user interaction
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Resume if suspended (autoplay policy)
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+// Initialize AudioContext on first user interaction
+function initAudioOnInteraction() {
+  getAudioCtx();
+  document.removeEventListener('click', initAudioOnInteraction);
+  document.removeEventListener('keydown', initAudioOnInteraction);
+  document.removeEventListener('touchstart', initAudioOnInteraction);
+}
+['click', 'keydown', 'touchstart'].forEach(evt =>
+  document.addEventListener(evt, initAudioOnInteraction, { once: true, passive: true })
+);
+
 function playNewDataSound(count){
   try{
-    const ctx=new(window.AudioContext||window.webkitAudioContext)()
+    const ctx = getAudioCtx();
     const g=ctx.createGain();g.connect(ctx.destination);g.gain.value=.15
     // Two-tone notification chime
     const o1=ctx.createOscillator();o1.type='sine';o1.frequency.value=880
