@@ -1167,20 +1167,25 @@ function updateBell(){
 }
 // AudioContext singleton - created lazily on first user interaction
 let audioCtx = null;
+let audioCtxInitialized = false;
+
 function getAudioCtx() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  // Resume if suspended (autoplay policy)
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
   }
   return audioCtx;
 }
 
 // Initialize AudioContext on first user interaction
 function initAudioOnInteraction() {
-  getAudioCtx();
+  if (!audioCtxInitialized) {
+    getAudioCtx();
+    audioCtxInitialized = true;
+  }
+  // Resume if suspended (autoplay policy)
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
   document.removeEventListener('click', initAudioOnInteraction);
   document.removeEventListener('keydown', initAudioOnInteraction);
   document.removeEventListener('touchstart', initAudioOnInteraction);
@@ -1192,6 +1197,10 @@ function initAudioOnInteraction() {
 function playNewDataSound(count){
   try{
     const ctx = getAudioCtx();
+    // Ensure context is running (autoplay policy)
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const g=ctx.createGain();g.connect(ctx.destination);g.gain.value=.15
     // Two-tone notification chime
     const o1=ctx.createOscillator();o1.type='sine';o1.frequency.value=880
