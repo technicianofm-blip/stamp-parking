@@ -854,15 +854,15 @@ async function verifyPin() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ...'; }
 
   try {
-    const testUrl = gasUrl() + '?action=getAll&pin=' + encodeURIComponent(pin);
-    const r = await fetch(testUrl, { method: 'GET', redirect: 'follow' });
-    const data = await r.json();
+    // ใช้ get() function เพื่อให้ได้ error handling และ headers เหมือนกัน
+    const r = await get('getAll&pin=' + encodeURIComponent(pin));
 
-    if (data.success) {
+    if (r.success) {
       setPin(pin);
       closePinModal();
       toast('✅ เข้าสู่ระบบสำเร็จ', 's');
-      // Redirect to the page user was trying to access
+
+      // Redirect กลับหน้าที่พยายามเข้า
       const returnPage = sessionStorage.getItem('pinReturnPage');
       if (returnPage && (returnPage.includes('dash') || returnPage.includes('setup'))) {
         const pageName = returnPage.replace(/^(desk|mob)-page-/, '');
@@ -871,11 +871,11 @@ async function verifyPin() {
         refresh();
       }
     } else {
-      toast('❌ PIN ไม่ถูกต้อง', 'e');
+      toast('❌ PIN ไม่ถูกต้อง: ' + (r.error || ''), 'e');
     }
   } catch (e) {
     console.error('[verifyPin]', e);
-    toast('❌ ไม่สามารถตรวจสอบได้', 'e');
+    toast('❌ ไม่สามารถตรวจสอบได้: ' + e.message, 'e');
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = 'เข้าสู่ระบบ'; }
   }
@@ -974,10 +974,20 @@ async function get(action) {
     console.log('[API] Response status:', r.status, '| text:', text.slice(0,200))
     const data=JSON.parse(text)
     console.log('[API] Parsed:', data)
+
+    // Check if GAS returned an error (even with 200 status)
+    if (!data.success && data.error) {
+      return {success: false, error: data.error, data: data.data || []};
+    }
     return data
   }catch(e){
     console.error('[API] Error:', e)
-    return {success:false,error:e.message,data:[]}
+    // Check for CORS/Network errors
+    const errorMsg = e.message || '';
+    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+      return {success: false, error: 'CORS/Network Error: Failed to fetch', data: []};
+    }
+    return {success:false,error:errorMsg,data:[]}
   }
 }
 async function post(data){
