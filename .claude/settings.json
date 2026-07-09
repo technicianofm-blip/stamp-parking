@@ -40,7 +40,10 @@
       "Bash(clasp version *)",
       "Bash(curl -sL \"https://script.google.com/macros/s/AKfycbxKrpLYDYSLUkk9TuldmAbSLVtfOy_WMAFMOskwlTmmetnhYfSwQxFXA1jGs8gAqKBzEg/exec?action=initScriptProperties\")",
       "Bash(curl -sL \"https://script.google.com/macros/s/AKfycby5UPCxERJuDAwDOSlhOSoJNQQ4lpSV9_AhAPELlMr24Cqc3f4s4p4izqEYjQ0WRWul3w/exec?action=getAll\")",
-      "Bash(curl -sL \"https://script.google.com/macros/s/AKfycby5UPCxERJuDAwDOSlhOSoJNQQ4lpSV9_AhAPELlMr24Cqc3f4s4p4izqEYjQ0WRWul3w/exec?action=getAll&pin=086079\")"
+      "Bash(curl -sL \"https://script.google.com/macros/s/AKfycby5UPCxERJuDAwDOSlhOSoJNQQ4lpSV9_AhAPELlMr24Cqc3f4s4p4izqEYjQ0WRWul3w/exec?action=getAll&pin=086079\")",
+      "Bash(code --list-extensions)",
+      "Bash(findstr /i \"delete\\\\|redeploy\\\\|deploy\")",
+      "Bash(clasp redeploy *)"
     ]
   }
 }

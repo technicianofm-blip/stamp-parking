@@ -18,7 +18,17 @@
       "PowerShell($env:Path += ';C:\\\\Program Files\\\\GitHub CLI'; Set-Location 'd:\\\\claude code'; gh repo edit technicianofm-blip/stamp-parking --default-branch main; gh api repos/technicianofm-blip/stamp-parking/pages -X POST -f source='{\"branch\":\"main\",\"path\":\"/\"}' 2>&1)",
       "PowerShell($env:Path += ';C:\\\\Program Files\\\\GitHub CLI'; Set-Location 'd:\\\\claude code'; git add -A; git commit -m \"add  discount column to Dashboard + GAS backend\"; git push)",
       "PowerShell($env:Path += ';C:\\\\Program Files\\\\GitHub CLI'; Set-Location 'd:\\\\claude code'; git add -A; git commit -m \"เปลี่ยนส่วนลดเป็น dropdown ใน Dashboard + updateDiscount API\"; git push)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(npx clasp *)",
+      "Bash(clasp check *)",
+      "Bash(clasp status *)",
+      "Bash(clasp open *)",
+      "Bash(clasp set-script-property *)",
+      "Bash(curl *)",
+      "Bash(clasp open-script *)",
+      "Bash(clasp create-version *)",
+      "Bash(clasp logs *)",
+      "Bash(clasp apis *)"
     ]
   }
 }

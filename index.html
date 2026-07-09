@@ -752,7 +752,7 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history';
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbzTOWMZwxIorNjCqzPwsSQlbVV0WE2OCY80TfjYdD0uPlIjefgXHkxHHc7qbxQtXO7YFA/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbyJDqBz0r5-JzgCwi-31xG4057_ujfqpRGfnfqFbIMshyc4oO-FhyfMvgc5E3sba39wzQ/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
@@ -975,6 +975,15 @@ async function get(action) {
     const r=await fetch(url,{method:'GET',redirect:'follow'})
     const text=await r.text()
     console.log('[API] Response status:', r.status, '| text:', text.slice(0,200))
+
+    // Detect GAS login redirect: GAS returns an HTML page (login screen)
+    // instead of JSON when the Web App deployment requires authentication.
+    // This is the real cause of the "CORS/Network" error.
+    if (text.trim().startsWith('<')) {
+      console.error('[API] GAS returned HTML (login page) instead of JSON — deployment likely requires auth');
+      return {success:false,error:'AUTH_REQUIRED',data:[]}
+    }
+
     const data=JSON.parse(text)
     console.log('[API] Parsed:', data)
 
@@ -1288,6 +1297,12 @@ async function refresh(){
     const r=await get('getAll')
     if(r.success){setCache(r.data);setConn(true);updateSyncTime()}
     else if(r.error==='no_url'){toast('⚠️ ยังไม่ได้ตั้งค่า API','e')}
+    else if(r.error==='AUTH_REQUIRED'){
+      // GAS returns a login page instead of JSON → Web App deployment
+      // needs "Who has access: Anyone" (not "Anyone with Google account").
+      setConn(false);
+      toast('⚠️ GAS ต้องการสิทธิ์: ตั้งค่า Deploy → Who has access: Anyone','e');
+    }
     else{
       // Check if it's a CORS/Network error
       const isNetworkError = r.error && (r.error.includes('Failed to fetch') || r.error.includes('NetworkError'));
