@@ -754,7 +754,30 @@ const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history'
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
 const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbxvjAUVZILZNKNb8lSJAUc9plZwX5SgUbQq1nDONQMrHwA27eHyY0jOvkCIlr4WL3xwig/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
-function gasUrl(){return cfg().url}
+// Self-heal: ถ้า URL ที่บันทึกใน localStorage พัง ให้ใช้ GAS_URL_DEFAULT แทนชั่วคราว
+let _urlOverride=null;
+function gasUrl(){return _urlOverride||cfg().url}
+
+// ตรวจสอบว่า URL ที่บันทึกไว้ใช้ได้หรือไม่ ถ้าไม่ได้ให้สลับไป GAS_URL_DEFAULT
+// (แก้ปัญหาเครื่องเก่าที่จำ URL รุ่นเก่าไว้ใน localStorage แล้วเชื่อมต่อไม่ได้)
+let _urlHealTried=false;
+async function healUrl(){
+  if(_urlHealTried) return;
+  _urlHealTried=true;
+  if(cfg().url===GAS_URL_DEFAULT) return; // ใช้ดีฟอลต์ล่าสุดอยู่แล้ว
+  const saved=await get('getAll');
+  if(saved.success) return; // URL เดิมยังใช้ได้
+  // ลองดีฟอลต์ — ถ้าได้ คืนค่าเป็น v59 และบันทึกถาวร
+  _urlOverride=GAS_URL_DEFAULT;
+  const fb=await get('getAll');
+  if(fb.success){
+    const c=cfg();c.url=GAS_URL_DEFAULT;localStorage.setItem(CFG_KEY,JSON.stringify(c));
+    syncSetupInputs();updateSetupUI();
+    toast('🔄 อัปเดต Web App URL เป็นค่าล่าสุดเรียบร้อย','i');
+  }else{
+    _urlOverride=null; // คืนค่าเดิม (ปล่อยให้แจ้ง error ตามปกติ)
+  }
+}
 
 // Determine active layout
 function isDesktop(){return window.innerWidth>=768}
@@ -854,6 +877,7 @@ async function verifyPin() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ...'; }
 
   try {
+    await healUrl(); // ตรวจสอบ/สลับ URL หาก URL เก่าพัง
     // ใช้ get() function เพื่อให้ได้ error handling และ headers เหมือนกัน
     const r = await get('getAll&pin=' + encodeURIComponent(pin));
 
@@ -1238,6 +1262,7 @@ function closeScan(){
 async function saveRec(e){
   e.preventDefault()
   const p=isDesktop()?'desk':'mob'
+  await healUrl(); // ตรวจสอบ/สลับ URL หาก URL เก่าพัง
   // Clear errors
   document.querySelectorAll(`#${p}Form .err-msg`).forEach(el=>el.classList.remove('show'))
   document.querySelectorAll(`#${p}Form .form-control`).forEach(el=>el.classList.remove('err'))
@@ -1292,6 +1317,7 @@ async function saveRec(e){
 // ===================================================================
 async function refresh(){
   if(!gasUrl())return
+  await healUrl(); // สลับไป URL ที่ถูกต้องหาก URL เก่าพัง
   showLoad('กำลังโหลดข้อมูล...');setConn(false)
   try{
     const r=await get('getAll')
