@@ -809,6 +809,10 @@ function showPinModal() {
   const existing = document.getElementById('pinModal');
   if (existing) existing.remove();
 
+  // Store the page user was trying to access
+  const currentPage = document.querySelector('.page.active')?.id || '';
+  sessionStorage.setItem('pinReturnPage', currentPage);
+
   const modal = document.createElement('div');
   modal.className = 'modal show';
   modal.id = 'pinModal';
@@ -836,10 +840,7 @@ function showPinModal() {
 function closePinModal() {
   const modal = document.getElementById('pinModal');
   if (modal) modal.remove();
-  const currentPage = document.querySelector('.page.active')?.id;
-  if (currentPage && (currentPage.includes('dash') || currentPage.includes('setup'))) {
-    go('form');
-  }
+  // Don't auto-redirect - let user decide
 }
 
 async function verifyPin() {
@@ -861,7 +862,14 @@ async function verifyPin() {
       setPin(pin);
       closePinModal();
       toast('✅ เข้าสู่ระบบสำเร็จ', 's');
-      refresh();
+      // Redirect to the page user was trying to access
+      const returnPage = sessionStorage.getItem('pinReturnPage');
+      if (returnPage && (returnPage.includes('dash') || returnPage.includes('setup'))) {
+        const pageName = returnPage.replace(/^(desk|mob)-page-/, '');
+        go(pageName);
+      } else {
+        refresh();
+      }
     } else {
       toast('❌ PIN ไม่ถูกต้อง', 'e');
     }
@@ -933,11 +941,10 @@ if(!localStorage.getItem(CFG_KEY)){
 }
 function resetToDefault(){
   localStorage.removeItem(CFG_KEY)
-  localStorage.removeItem(PIN_KEY)
-  localStorage.removeItem(PIN_EXPIRY_KEY)
+  // Don't clear PIN - keep user logged in
   syncSetupInputs()
   updateSetupUI()
-  toast('🔄 รีเซ็ตเป็นค่าเริ่มต้นแล้ว (ล้าง PIN + URL)','s')
+  toast('🔄 รีเซ็ต Web App URL แล้ว (PIN คงเดิม)','s')
   refresh()
 }
 function updateSetupUI(){
@@ -1267,10 +1274,25 @@ async function refresh(){
     const r=await get('getAll')
     if(r.success){setCache(r.data);setConn(true);updateSyncTime()}
     else if(r.error==='no_url'){toast('⚠️ ยังไม่ได้ตั้งค่า API','e')}
-    else{setConn(false);toast('❌ โหลดล้มเหลว: '+(r.error||'Unknown error')+' ใช้แคช','e')}
+    else{
+      // Check if it's a CORS/Network error
+      const isNetworkError = r.error && (r.error.includes('Failed to fetch') || r.error.includes('NetworkError'));
+      if (isNetworkError) {
+        setConn(false);
+        toast('⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ (CORS/Network) - ใช้แคช','e');
+      } else {
+        setConn(false);
+        toast('❌ โหลดล้มเหลว: '+(r.error||'Unknown error')+' ใช้แคช','e');
+      }
+    }
   }catch(e){
-    setConn(false)
-    toast('❌ Error: '+e.message+' ใช้แคช','e')
+    const isNetworkError = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'));
+    setConn(false);
+    if (isNetworkError) {
+      toast('⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ (CORS/Network) - ใช้แคช','e');
+    } else {
+      toast('❌ Error: '+e.message+' ใช้แคช','e');
+    }
     console.error('[refresh] catch:', e)
   }
   hideLoad();render();updBadge();updateBell()
