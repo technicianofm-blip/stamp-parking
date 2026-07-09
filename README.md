@@ -7,7 +7,6 @@
 ```
 📦 D:\claude code\
  ├── 📄 index.html            # 🌐 Frontend หลัก (รองรับ Desktop + Mobile)
- ├── 📄 stamp-parking.html    # 🌐 Frontend เวอร์ชันเก่า (Desktop-only, LocalStorage)
  ├── 📄 gas-code.gs           # ⚙️ Google Apps Script (Backend API)
  └── 📄 README.md             # 📖 คู่มือนี้
 ```

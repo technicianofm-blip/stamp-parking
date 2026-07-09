@@ -7,7 +7,7 @@
  * 3. เปลี่ยน SHEET_ID และ FOLDER_ID ตามของตัวเอง (ดูวิธีใน README)
  * 4. บันทึก → Deploy > New deployment > Web app
  * 5. ตั้ง Execute as: "Me", Who has access: "Anyone"
- * 6. คัดลอก Web App URL ไปใส่ใน frontend (stamp-parking.html)
+ * 6. คัดลอก Web App URL ไปใส่ใน frontend (index.html)
  */
 
 // ============================================================
