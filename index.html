@@ -932,11 +932,20 @@ function syncSetupInputs(){
   m('deskSheetId',c.sheetId);m('mobSheetId',c.sheetId)
   m('deskFolderId',c.folderId);m('mobFolderId',c.folderId)
 }
+
+// Force sync default URL on load if no saved config
+if(!localStorage.getItem(CFG_KEY)){
+  const c = cfg()
+  const m=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||''}
+  m('deskGasUrl',c.url);m('mobGasUrl',c.url)
+}
 function resetToDefault(){
   localStorage.removeItem(CFG_KEY)
+  localStorage.removeItem(PIN_KEY)
+  localStorage.removeItem(PIN_EXPIRY_KEY)
   syncSetupInputs()
   updateSetupUI()
-  toast('🔄 รีเซ็ตเป็นค่าเริ่มต้นแล้ว','s')
+  toast('🔄 รีเซ็ตเป็นค่าเริ่มต้นแล้ว (ล้าง PIN + URL)','s')
   refresh()
 }
 function updateSetupUI(){
@@ -1698,6 +1707,12 @@ document.addEventListener('keydown',e=>{
 //  INIT
 // ===================================================================
 if(!cfg().seenAt){const c=cfg();c.seenAt=new Date().toISOString();localStorage.setItem(CFG_KEY,JSON.stringify(c))}
+// Debug helper - type in console: clearAllData()
+window.clearAllData = () => {
+  localStorage.clear();
+  toast('🧹 ล้าง localStorage ทั้งหมดแล้ว - โหลดหน้าใหม่','s');
+  setTimeout(() => location.reload(), 1000);
+}
 // ตั้งค่าเริ่มต้นฟอร์ม
 resetForm('desk');resetForm('mob');initDatalists()
 // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
