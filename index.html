@@ -968,8 +968,11 @@ async function get(action) {
   if(c.folderId) url+='&folderId='+encodeURIComponent(c.folderId)
   console.log('[API] GET:', action, '| URL:', url)
   try{
-    const headers = { ...getAuthHeaders() };
-    const r=await fetch(url,{method:'GET',redirect:'follow', headers})
+    // PIN ผ่าน query param แทน header (กัน CORS preflight)
+    const pin = getPin();
+    if (pin) url += '&pin=' + encodeURIComponent(pin);
+
+    const r=await fetch(url,{method:'GET',redirect:'follow'})
     const text=await r.text()
     console.log('[API] Response status:', r.status, '| text:', text.slice(0,200))
     const data=JSON.parse(text)
@@ -996,15 +999,16 @@ async function post(data){
   const body={...data}
   if(c.sheetId) body.sheetId=c.sheetId
   if(c.folderId) body.folderId=c.folderId
-  // ใช้ XMLHttpRequest แทน fetch — จัดการ GAS redirect ได้ดีกว่า
-  console.log('[API] POST', u, body)
+  // PIN ผ่าน query param แทน header (กัน CORS preflight)
+  const pin = getPin();
+  let url = u;
+  if (pin) url += '?pin=' + encodeURIComponent(pin);
+  console.log('[API] POST', url, body)
   return new Promise(r=>{
     const x=new XMLHttpRequest()
-    x.open('POST',u)
+    x.open('POST',url)
     x.setRequestHeader('Content-Type','text/plain')
-    // Add auth header
-    const authHeaders = getAuthHeaders();
-    Object.entries(authHeaders).forEach(([k,v]) => x.setRequestHeader(k, v));
+    // PIN ไป query param แล้ว - ไม่ต้องส่ง header
     x.onload=()=>{
       try{
         const res=JSON.parse(x.responseText)
