@@ -1,0 +1,6 @@
+# Ignore everything by default
+**/**
+
+# Allow only Google Apps Script files
+!gas-code.gs
+!appsscript.json

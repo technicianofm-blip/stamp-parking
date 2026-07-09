@@ -495,5 +495,6 @@ function generateId() {
 function jsonResponse(data, status = 200) {
   const output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
+  output.addHeader('Access-Control-Allow-Origin', 'https://technicianofm-blip.github.io');
   return output;
 }

@@ -752,7 +752,7 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history';
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycby5UPCxERJuDAwDOSlhOSoJNQQ4lpSV9_AhAPELlMr24Cqc3f4s4p4izqEYjQ0WRWul3w/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbzTOWMZwxIorNjCqzPwsSQlbVV0WE2OCY80TfjYdD0uPlIjefgXHkxHHc7qbxQtXO7YFA/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
