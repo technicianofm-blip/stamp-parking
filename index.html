@@ -1559,7 +1559,7 @@ function setConn(on){
   // Auth status visibility
   const authStatus = document.getElementById('deskAuthStatus');
   if (authStatus) {
-    const token = getAuthToken();
+    const token = getPin();
     authStatus.style.display = token ? 'flex' : 'none';
   }
 }
