@@ -29,6 +29,11 @@ function setConfig(key, value) {
   props.setProperty(key, value);
 }
 
+// Global fallbacks — ใช้เมื่อ request ไม่ได้ส่ง sheetId/folderId มา
+// (อ่านจาก Script Properties ก่อน, ถ้าไม่มีใช้ค่า default)
+const SHEET_ID = getConfig().sheetId;
+const FOLDER_ID = getConfig().folderId;
+
 // ============================================================
 // 🛠 Utility: Set Script Properties (call via clasp run)
 // ============================================================
@@ -493,8 +498,10 @@ function generateId() {
 }
 
 function jsonResponse(data, status = 200) {
+  // NOTE: ContentService.TextOutput ไม่มีเมธอด addHeader() และ GAS ไม่อนุญาต
+  // ให้ตั้งค่า CORS header เอง — แต่ Web App ที่ deploy แบบ "Anyone" จะส่ง
+  // Access-Control-Allow-Origin: * ให้อัตโนมัติอยู่แล้ว จึงไม่ต้องทำอะไรเพิ่ม
   const output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
-  output.addHeader('Access-Control-Allow-Origin', 'https://technicianofm-blip.github.io');
   return output;
 }

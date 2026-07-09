@@ -28,7 +28,10 @@
       "Bash(clasp open-script *)",
       "Bash(clasp create-version *)",
       "Bash(clasp logs *)",
-      "Bash(clasp apis *)"
+      "Bash(clasp apis *)",
+      "Bash(node -e \"console.log\\(require\\('C:/Users/OFM-Admin/.clasprc.json'\\).tokens.default.access_token\\)\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);console.log\\(j.files?j.files.map\\(f=>f.name+': '+f.type\\).join\\('\\\\n'\\):d.slice\\(0,800\\)\\)}catch\\(e\\){console.log\\(d.slice\\(0,800\\)\\)}}\\)\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);j.deployments.forEach\\(dp=>{const w=\\(dp.entryPoints||[]\\).find\\(e=>e.webApp\\);if\\(w\\)console.log\\(dp.deploymentConfig.versionNumber||'HEAD', w.webApp.entryPointConfig.access, w.webApp.url.slice\\(-20\\)\\)}\\)}\\)\")"
     ]
   }
 }
