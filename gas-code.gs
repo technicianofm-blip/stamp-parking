@@ -4,20 +4,100 @@
  * วิธีการติดตั้ง:
  * 1. ไปที่ https://script.google.com/create
  * 2. วางโค้ดนี้ทั้งหมด
- * 3. เปลี่ยน SHEET_ID และ FOLDER_ID ตามของตัวเอง (ดูวิธีใน README)
+ * 3. ตั้งค่า Script Properties:
+ *    - SHEET_ID: Google Sheet ID
+ *    - FOLDER_ID: Google Drive Folder ID
+ *    - ADMIN_PIN: รหัส PIN 6 หลัก (เช่น 123456)
  * 4. บันทึก → Deploy > New deployment > Web app
  * 5. ตั้ง Execute as: "Me", Who has access: "Anyone"
  * 6. คัดลอก Web App URL ไปใส่ใน frontend (index.html)
  */
 
 // ============================================================
-// 🔧 ตั้งค่าที่นี่ (แก้ไขให้ตรงกับของคุณ)
+// 🔧 Configuration — ใช้ Script Properties แทน Hardcode
 // ============================================================
-const SHEET_ID = '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo';          // ID จาก URL Google Sheet
-const FOLDER_ID = '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK';   // ID โฟลเดอร์สำหรับเก็บรูป
+function getConfig() {
+  const props = PropertiesService.getScriptProperties();
+  return {
+    sheetId: props.getProperty('SHEET_ID') || '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo',
+    folderId: props.getProperty('FOLDER_ID') || '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK'
+  };
+}
+
+function setConfig(key, value) {
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty(key, value);
+}
+
+// ============================================================
+// 🛠 Utility: Set Script Properties (call via clasp run)
+// ============================================================
+function initScriptProperties() {
+  const props = PropertiesService.getScriptProperties();
+  const updates = {
+    'SHEET_ID': '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo',
+    'FOLDER_ID': '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK',
+    'ADMIN_PIN': '086079'
+  };
+
+  Object.entries(updates).forEach(([key, value]) => {
+    props.setProperty(key, value);
+    console.log('[init] Set ' + key + ' = ' + value);
+  });
+
+  return { success: true, message: 'Script Properties initialized', props: updates };
+}
 
 // Column indices (0-based) — ทำให้อ่านโค้ดง่ายขึ้น
 const COL = { id:0, name:1, nickname:2, phone:3, dept:4, timeType:5, vehicle:6, ticketNo:7, photo:8, createdAt:9, status:10, discount:11 };
+
+// ============================================================
+// 🔐 PIN Authorization (Simple & Shared)
+// ───────────────────────────────────────────────────────────
+// Set ADMIN_PIN in Script Properties (e.g., "123456")
+// ───────────────────────────────────────────────────────────
+function verifyPin(e) {
+  const pin = PropertiesService.getScriptProperties().getProperty('ADMIN_PIN');
+  if (!pin) {
+    console.warn('[Auth] ADMIN_PIN not set in Script Properties');
+    return false;
+  }
+
+  // Check PIN from multiple sources (priority order)
+  let provided = '';
+
+  // 1. Header (recommended)
+  if (e?.headers) {
+    provided = e.headers['X-Admin-Pin'] || e.headers['x-admin-pin'] || '';
+  }
+
+  // 2. Query parameter (fallback)
+  if (!provided && e?.parameter?.pin) {
+    provided = e.parameter.pin;
+  }
+
+  // 3. POST body (fallback)
+  if (!provided && e?.postData?.contents) {
+    try {
+      const body = JSON.parse(e.postData.contents);
+      provided = body.pin || '';
+    } catch {}
+  }
+
+  const valid = provided === pin;
+  if (!valid && provided) {
+    console.warn('[Auth] Invalid PIN attempt');
+  }
+  return valid;
+}
+
+// Actions that require PIN (READ/WRITE protected actions)
+const PROTECTED_ACTIONS = ['getAll', 'delete', 'updateStatus', 'updateDiscount', 'fetchUrl'];
+
+// Helper to check if action needs auth
+function needsAuth(action) {
+  return PROTECTED_ACTIONS.includes(action);
+}
 
 // ============================================================
 // DO GET — ดึงข้อมูล / ลบข้อมูล
@@ -29,6 +109,18 @@ function doGet(e) {
     const folderId = (e?.parameter?.folderId || '').trim();
 
     console.log('[doGet] action=' + action + ' sheetId=' + sheetId);
+
+    // Special action: initScriptProperties (no auth required)
+    if (action === 'initScriptProperties') {
+      return jsonResponse(initScriptProperties());
+    }
+
+    // Check authentication for protected actions
+    if (needsAuth(action)) {
+      if (!verifyPin(e)) {
+        return jsonResponse({ success: false, error: 'Unauthorized: Invalid or missing PIN' }, 401);
+      }
+    }
 
     if (action === 'getAll') {
       return jsonResponse(getAllRecords(sheetId));
@@ -156,7 +248,7 @@ function doGet(e) {
 }
 
 // ============================================================
-// DO POST — เพิ่มข้อมูล (พร้อมรูป)
+// DO POST — เพิ่มข้อมูล (Public - ไม่ต้อง auth)
 // ============================================================
 function doPost(e) {
   console.log('[doPost] CALLED | paramKeys=' + Object.keys(e?.parameter||{}).join(',') + ' | postData=' + (e?.postData ? 'yes:'+typeof e.postData.contents : 'no'));

@@ -355,6 +355,11 @@ tr:hover td{background:var(--g50)}
       <span class="dot" id="deskConnDot"></span>
       <span id="deskConnText">กำลังเชื่อมต่อ...</span>
     </div>
+    <!-- Auth Status / Logout -->
+    <div class="sidebar-conn" id="deskAuthStatus" style="display:none;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px">
+      <span style="color:rgba(255,255,255,.7)">🔒 เข้าสู่ระบบแล้ว</span>
+      <button class="btn btn-o btn-sm" onclick="logout()" style="padding:4px 10px;font-size:11px">🚪 ออกจากระบบ</button>
+    </div>
   </aside>
 
   <!-- Main Content -->
@@ -745,9 +750,9 @@ tr:hover td{background:var(--g50)}
 // ===================================================================
 //  CONFIG
 // ===================================================================
-const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history'
+const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history';
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbx4J2qPdNOzE_bmfny9-tHWYv9wxS38ksnCXAk2jhI4mRtDjm-gOnn8dhw14dnkxPTB/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycby5UPCxERJuDAwDOSlhOSoJNQQ4lpSV9_AhAPELlMr24Cqc3f4s4p4izqEYjQ0WRWul3w/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 function gasUrl(){return cfg().url}
 
@@ -760,6 +765,133 @@ function domId(prefix,id){
   return 'mob'+id.charAt(0).toUpperCase()+id.slice(1)
 }
 function q(id){return document.getElementById(id)}
+
+// ===================================================================
+//  AUTHENTICATION - Shared PIN (Simple & Secure)
+// ===================================================================
+const PIN_EXPIRY_HOURS = 24;
+const PIN_KEY = 'sp_admin_pin';
+const PIN_EXPIRY_KEY = 'sp_admin_pin_expiry';
+
+function getPin() {
+  const pin = localStorage.getItem(PIN_KEY);
+  const expiry = localStorage.getItem(PIN_EXPIRY_KEY);
+  if (pin && expiry && Date.now() < parseInt(expiry)) {
+    return pin;
+  }
+  localStorage.removeItem(PIN_KEY);
+  localStorage.removeItem(PIN_EXPIRY_KEY);
+  return null;
+}
+
+function setPin(pin) {
+  localStorage.setItem(PIN_KEY, pin);
+  localStorage.setItem(PIN_EXPIRY_KEY, String(Date.now() + PIN_EXPIRY_HOURS * 60 * 60 * 1000));
+}
+
+function clearPin() {
+  localStorage.removeItem(PIN_KEY);
+  localStorage.removeItem(PIN_EXPIRY_KEY);
+}
+
+function isAuthenticated() {
+  return !!getPin();
+}
+
+function requireAuth() {
+  const pin = getPin();
+  if (pin) return pin;
+  showPinModal();
+  return null;
+}
+
+function showPinModal() {
+  const existing = document.getElementById('pinModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'modal show';
+  modal.id = 'pinModal';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:360px">
+      <div class="modal-hd"><h3>🔐 ต้องการรหัส PIN</h3><button class="modal-close" onclick="closePinModal()">&times;</button></div>
+      <div class="modal-bd">
+        <p style="color:var(--g600);margin-bottom:16px;text-align:center">กรุณาใส่รหัส PIN 6 หลักเพื่อเข้าถึงหน้านี้</p>
+
+        <div style="margin-bottom:12px;padding:10px;background:var(--g50);border-radius:8px;font-size:12px;color:var(--g500);text-align:center">
+          <strong>PIN สำหรับตั้งค่าใน GAS:</strong><br>
+          ไปที่ Apps Script → ⚙️ Project Settings → Script Properties<br>
+          เพิ่ม: <code>ADMIN_PIN</code> = <code>123456</code> (หรือเลข 6 หลักที่ต้องการ)
+        </div>
+
+        <hr style="margin:12px 0;border-color:var(--g200)">
+
+        <div class="form-group">
+          <input type="password" class="form-control" id="pinInput" placeholder="รหัส PIN 6 หลัก" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyPin()">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+          <button class="btn btn-o" onclick="closePinModal()">ยกเลิก</button>
+          <button class="btn btn-p" onclick="verifyPin()">เข้าสู่ระบบ</button>
+        </div>
+        <p style="font-size:11px;color:var(--g400);text-align:center;margin-top:8px">PIN จะหมดอายุใน 24 ชั่วโมง</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('pinInput')?.focus(), 100);
+}
+
+function closePinModal() {
+  const modal = document.getElementById('pinModal');
+  if (modal) modal.remove();
+  const currentPage = document.querySelector('.page.active')?.id;
+  if (currentPage && (currentPage.includes('dash') || currentPage.includes('setup'))) {
+    go('form');
+  }
+}
+
+async function verifyPin() {
+  const pin = document.getElementById('pinInput')?.value || '';
+  if (!pin || pin.length !== 6) {
+    toast('⚠️ กรุณาใส่ PIN 6 หลัก', 'e');
+    return;
+  }
+
+  const btn = document.querySelector('#pinModal .btn-p');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ...'; }
+
+  try {
+    const testUrl = gasUrl() + '?action=getAll&pin=' + encodeURIComponent(pin);
+    const r = await fetch(testUrl, { method: 'GET', redirect: 'follow' });
+    const data = await r.json();
+
+    if (data.success) {
+      setPin(pin);
+      closePinModal();
+      toast('✅ เข้าสู่ระบบสำเร็จ', 's');
+      refresh();
+    } else {
+      toast('❌ PIN ไม่ถูกต้อง', 'e');
+    }
+  } catch (e) {
+    console.error('[verifyPin]', e);
+    toast('❌ ไม่สามารถตรวจสอบได้', 'e');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'เข้าสู่ระบบ'; }
+  }
+}
+
+function logout() {
+  clearPin();
+  toast('🚪 ออกจากระบบแล้ว', 's');
+  go('form');
+  refresh();
+}
+
+function getAuthHeaders() {
+  const pin = getPin();
+  return pin ? { 'X-Admin-Pin': pin } : {};
+}
 
 // ===================================================================
 //  URL SETUP
@@ -819,7 +951,7 @@ syncSetupInputs();updateSetupUI()
 // ===================================================================
 //  API
 // ===================================================================
-async function get(action){
+async function get(action) {
   const u=gasUrl()
   if(!u) return {success:false,error:'no_url',data:[]}
   const c=cfg()
@@ -828,7 +960,8 @@ async function get(action){
   if(c.folderId) url+='&folderId='+encodeURIComponent(c.folderId)
   console.log('[API] GET:', action, '| URL:', url)
   try{
-    const r=await fetch(url,{method:'GET',redirect:'follow'})
+    const headers = { ...getAuthHeaders() };
+    const r=await fetch(url,{method:'GET',redirect:'follow', headers})
     const text=await r.text()
     console.log('[API] Response status:', r.status, '| text:', text.slice(0,200))
     const data=JSON.parse(text)
@@ -851,6 +984,9 @@ async function post(data){
     const x=new XMLHttpRequest()
     x.open('POST',u)
     x.setRequestHeader('Content-Type','text/plain')
+    // Add auth header
+    const authHeaders = getAuthHeaders();
+    Object.entries(authHeaders).forEach(([k,v]) => x.setRequestHeader(k, v));
     x.onload=()=>{
       try{
         const res=JSON.parse(x.responseText)
@@ -1091,7 +1227,11 @@ async function saveRec(e){
   if(!t){fieldErr(p+'TimeType');ok=false}
   if(!v){fieldErr(p+'Vehicle');ok=false}
   if(!tk||tk.length!==17){fieldErr(p+'Ticket');ok=false}
-  if(!ok) return toast('⚠️ กรอกข้อมูลให้ครบ','e')
+
+  // ✅ ตรวจสอบรูปภาพ - บังคับถ่ายรูป
+  if(!photo){fieldErr(p+'Ticket');toast('⚠️ กรุณาถ่ายรูปหรือเลือกรูปภาพ','e');ok=false}
+
+  if(!ok) return
   if(!gasUrl()) return toast('⚠️ ยังไม่ได้ตั้งค่า API','e')
 
   const btn=document.getElementById(p+'SubmitBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังบันทึก...'
@@ -1406,6 +1546,13 @@ function setConn(on){
   // Mobile offline bar
   const bar=document.getElementById('mobOffline')
   if(bar){if(!on)bar.classList.add('show');else bar.classList.remove('show')}
+
+  // Auth status visibility
+  const authStatus = document.getElementById('deskAuthStatus');
+  if (authStatus) {
+    const token = getAuthToken();
+    authStatus.style.display = token ? 'flex' : 'none';
+  }
 }
 
 async function testConn(){
@@ -1503,6 +1650,16 @@ function hideLoad(){
 //  NAVIGATION
 // ===================================================================
 function go(page){
+  // Protected pages that require authentication
+  const protectedPages = ['dash', 'setup'];
+  if (protectedPages.includes(page)) {
+    const pin = getPin();
+    if (!pin) {
+      showPinModal();
+      return;
+    }
+  }
+
   const isD=isDesktop()
   const prefix=isD?'desk':'mob'
   const layoutCls=isD?'desktop':'mobile'

@@ -187,6 +187,46 @@
 
 ---
 
+# 🔐 การตั้งค่าระบบยืนยันตัวตน (Authentication) — Shared PIN
+
+ระบบมีการป้องกันหน้า **Dashboard** และ **หน้าตั้งค่า** โดยใช้ **รหัส PIN 6 หลัก (Shared PIN)** แบบง่าย:
+
+## 🛡️ โครงสร้างการป้องกัน
+
+| หน้า | สถานะ | คำอธิบาย |
+|------|--------|----------|
+| 📝 บันทึกข้อมูล | **สาธารณะ (Public)** | ใครมี URL ก็สามารถบันทึกข้อมูลได้ |
+| 📊 Dashboard | **ป้องกัน (Protected)** | ต้องใส่ PIN ถึงจะดู/แก้ไข/ลบข้อมูลได้ |
+| ⚙️ ตั้งค่า | **ป้องกัน (Protected)** | ต้องใส่ PIN ถึงจะเปลี่ยนการตั้งค่าได้ |
+
+## 🔧 วิธีตั้งค่า PIN (ใช้เวลา 1 นาที)
+
+### 1. ตั้งค่า PIN ใน Google Apps Script
+1. ไปที่ [script.google.com](https://script.google.com) → เปิดโปรเจค Stamp Parking
+2. ไปที่ ⚙️ **Project Settings** (ไอคอนเฟือง) → **Script Properties**
+3. กด **Add script property**:
+   - **Property:** `ADMIN_PIN`
+   - **Value:** `123456` (หรือเลข 6 หลักที่ต้องการ — แชร์ให้ทีมร่วมใช้)
+4. กด **Save**
+
+### 2. Deploy ใหม่
+1. **Deploy > Manage deployments** → เลือก deployment ที่ใช้งาน → **Edit**
+2. กด **Deploy** (Version: New version)
+3. ใช้ URL เดิมได้เลย (Web App URL ไม่เปลี่ยน)
+
+## 🔄 การใช้งาน
+
+- **เข้าสู่ระบบ:** คลิก 📊 Dashboard หรือ ⚙️ ตั้งค่า → ใส่ PIN 6 หลัก → เข้าสู่ระบบสำเร็จ
+- **PIN หมดอายุ:** 24 ชั่วโมง (ตั้งในตัวแปร `PIN_EXPIRY_HOURS`)
+- **เข้าสู่ระบบใหม่:** เมื่อ PIN หมดอายุ จะขอใส่ PIN ใหม่อัตโนมัติ
+- **ออกจากระบบ:** กดปุ่ม **🚪 ออกจากระบบ** ใน Sidebar (Desktop)
+- **เปลี่ยน PIN:** แก้ค่า `ADMIN_PIN` ใน GAS Script Properties → Deploy ใหม่ → ใส่ PIN ใหม่ในหน้าเว็บ
+
+> ⚠️ **สำคัญ:** ต้องตั้ง `ADMIN_PIN` ใน GAS Script Properties ถึงจะทำงานได้
+> หากไม่ตั้งค่า ระบบจะปิดการเข้าถึง Dashboard และ Setup ทั้งหมด (Fail Closed)
+
+---
+
 # 🔐 การจัดการข้อมูล
 
 ## ดูข้อมูลใน Google Sheet
