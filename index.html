@@ -818,14 +818,6 @@ function showPinModal() {
       <div class="modal-bd">
         <p style="color:var(--g600);margin-bottom:16px;text-align:center">กรุณาใส่รหัส PIN 6 หลักเพื่อเข้าถึงหน้านี้</p>
 
-        <div style="margin-bottom:12px;padding:10px;background:var(--g50);border-radius:8px;font-size:12px;color:var(--g500);text-align:center">
-          <strong>PIN สำหรับตั้งค่าใน GAS:</strong><br>
-          ไปที่ Apps Script → ⚙️ Project Settings → Script Properties<br>
-          เพิ่ม: <code>ADMIN_PIN</code> = <code>123456</code> (หรือเลข 6 หลักที่ต้องการ)
-        </div>
-
-        <hr style="margin:12px 0;border-color:var(--g200)">
-
         <div class="form-group">
           <input type="password" class="form-control" id="pinInput" placeholder="รหัส PIN 6 หลัก" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyPin()">
         </div>
