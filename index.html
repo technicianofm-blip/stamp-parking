@@ -167,6 +167,7 @@ select.form-control{
 }
 .dropzone:hover{border-color:var(--p);background:var(--pl)}
 .dropzone.has-photo{border-style:solid;border-color:var(--s);padding:6px}
+.dropzone.err{border-color:var(--d)}
 .dropzone img{max-width:100%;max-height:200px;border-radius:8px;display:block;margin:0 auto}
 .dropzone .ph{color:var(--g400);font-size:14px}
 .dropzone .ph svg{margin-bottom:6px}
@@ -455,7 +456,7 @@ tr:hover td{background:var(--g50)}
             </div>
           </div>
           <div style="margin-top:14px">
-            <label style="font-size:13px;font-weight:500;color:var(--g600);display:block;margin-bottom:4px">📸 ถ่ายรูป <span style="font-weight:400;color:var(--g400)">(ไม่บังคับ)</span></label>
+            <label style="font-size:13px;font-weight:500;color:var(--g600);display:block;margin-bottom:4px">📸 ถ่ายรูป <span style="font-weight:400;color:var(--g400)">(บังคับ)</span></label>
             <div class="dropzone" id="deskDropzone" onclick="document.getElementById('deskPhotoInput').click()">
               <div class="ph" id="deskPh">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -467,6 +468,7 @@ tr:hover td{background:var(--g50)}
               <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('deskPhotoInput').click()">เปลี่ยน</button>
               <button type="button" class="btn btn-d btn-sm" onclick="clrPhoto('desk')">ลบรูป</button>
             </div>
+            <div class="err-msg" id="deskPhotoErr" style="margin-top:6px">กรุณาถ่ายรูปหรือเลือกรูปภาพ</div>
             <input type="file" id="deskPhotoInput" accept="image/*" capture="environment" onchange="onPhoto(event,'desk')">
           </div>
           <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
@@ -620,7 +622,7 @@ tr:hover td{background:var(--g50)}
             </div>
           </div>
           <div style="margin-top:14px">
-            <label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px">📸 ถ่ายรูป <span style="font-weight:400;color:var(--g400)">(ไม่บังคับ)</span></label>
+            <label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px">📸 ถ่ายรูป <span style="font-weight:400;color:var(--g400)">(บังคับ)</span></label>
             <div class="dropzone" id="mobDropzone" onclick="document.getElementById('mobPhotoInput').click()">
               <div class="ph" id="mobPh">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -632,6 +634,7 @@ tr:hover td{background:var(--g50)}
               <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('mobPhotoInput').click()">เปลี่ยน</button>
               <button type="button" class="btn btn-d btn-sm" onclick="clrPhoto('mob')">ลบ</button>
             </div>
+            <div class="err-msg" id="mobPhotoErr" style="margin-top:6px">กรุณาถ่ายรูปหรือเลือกรูปภาพ</div>
             <input type="file" id="mobPhotoInput" accept="image/*" capture="environment" onchange="onPhoto(event,'mob')">
           </div>
           <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
@@ -1119,7 +1122,7 @@ function showPhoto(d,p){
   const act=document.getElementById(p+'PhotoAct')
   if(preview){preview.src=d;preview.style.display='block'}
   if(ph)ph.style.display='none'
-  if(dz)dz.classList.add('has-photo')
+  if(dz){dz.classList.add('has-photo');dz.classList.remove('err')}
   if(act)act.style.display='flex'
 }
 function clrPhoto(p){
@@ -1130,7 +1133,7 @@ function clrPhoto(p){
   const inp=document.getElementById(p+'PhotoInput')
   if(preview){preview.src='';preview.style.display='none'}
   if(ph)ph.style.display='block'
-  if(dz)dz.classList.remove('has-photo')
+  if(dz){dz.classList.remove('has-photo');dz.classList.remove('err')}
   if(act)act.style.display='none'
   if(inp)inp.value=''
   _photoData[p]=null
@@ -1144,7 +1147,7 @@ function resetForm(p){
   if(form)form.reset()
   clrPhoto(p);_photoData[p]=null
   document.querySelectorAll(`#${p}Form .err-msg`).forEach(e=>e.classList.remove('show'))
-  document.querySelectorAll(`#${p}Form .form-control`).forEach(e=>e.classList.remove('err'))
+  document.querySelectorAll(`#${p}Form .form-control, #${p}Form .dropzone`).forEach(e=>e.classList.remove('err'))
   // ค่าเริ่มต้น = เข้างาน
   const tt=document.getElementById(p+'TimeType')
   if(tt&&!tt.value)tt.value='เข้างาน'
@@ -1282,8 +1285,12 @@ async function saveRec(e){
   if(!v){fieldErr(p+'Vehicle');ok=false}
   if(!tk||tk.length!==17){fieldErr(p+'Ticket');ok=false}
 
-  // ✅ ตรวจสอบรูปภาพ - บังคับถ่ายรูป
-  if(!photo){fieldErr(p+'Ticket');toast('⚠️ กรุณาถ่ายรูปหรือเลือกรูปภาพ','e');ok=false}
+  // ✅ ตรวจสอบรูปภาพ - บังคับถ่ายรูป (ชี้ error ที่ช่องรูป ไม่ใช่ช่องเลขบัตร)
+  if(!photo){
+    const dz=document.getElementById(p+'Dropzone');if(dz)dz.classList.add('err')
+    eShow(p+'PhotoErr')
+    toast('⚠️ กรุณาถ่ายรูปหรือเลือกรูปภาพ','e');ok=false
+  }
 
   if(!ok) return
   if(!gasUrl()) return toast('⚠️ ยังไม่ได้ตั้งค่า API','e')
