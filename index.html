@@ -888,7 +888,7 @@ async function verifyPin() {
       // Redirect กลับหน้าที่พยายามเข้า (page name เช่น 'dash' หรือ 'setup')
       const returnPage = sessionStorage.getItem('pinReturnPage');
       if (returnPage) {
-        go(returnPage);
+        go(returnPage, true);  // พาไปหน้าเป้าหมายโดยไม่เด้ง PIN ซ้ำ
       } else {
         refresh();
       }
@@ -1732,15 +1732,14 @@ function hideLoad(){
 // ===================================================================
 //  NAVIGATION
 // ===================================================================
-function go(page){
+function go(page, _authed){
   // Protected pages that require authentication
   const protectedPages = ['dash', 'setup'];
-  if (protectedPages.includes(page)) {
-    const pin = getPin();
-    if (!pin) {
-      showPinModal(page);  // Pass target page
-      return;
-    }
+  // เด้งหน้าใส่ PIN ทุกครั้งที่กดเข้า Dashboard / Settings
+  // (_authed=true ใช้ตอน verifyPin พาไปหน้าเป้าหมายหลังใส่ PIN สำเร็จ เพื่อไม่ให้เด้งซ้ำ)
+  if (protectedPages.includes(page) && !_authed) {
+    showPinModal(page);  // Pass target page
+    return;
   }
 
   const isD=isDesktop()
