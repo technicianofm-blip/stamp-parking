@@ -828,13 +828,12 @@ function requireAuth() {
   return null;
 }
 
-function showPinModal() {
+function showPinModal(targetPage) {
   const existing = document.getElementById('pinModal');
   if (existing) existing.remove();
 
-  // Store the page user was trying to access
-  const currentPage = document.querySelector('.page.active')?.id || '';
-  sessionStorage.setItem('pinReturnPage', currentPage);
+  // Store the page user was trying to access (target page, not current page)
+  sessionStorage.setItem('pinReturnPage', targetPage || '');
 
   const modal = document.createElement('div');
   modal.className = 'modal show';
@@ -886,11 +885,10 @@ async function verifyPin() {
       closePinModal();
       toast('✅ เข้าสู่ระบบสำเร็จ', 's');
 
-      // Redirect กลับหน้าที่พยายามเข้า
+      // Redirect กลับหน้าที่พยายามเข้า (page name เช่น 'dash' หรือ 'setup')
       const returnPage = sessionStorage.getItem('pinReturnPage');
-      if (returnPage && (returnPage.includes('dash') || returnPage.includes('setup'))) {
-        const pageName = returnPage.replace(/^(desk|mob)-page-/, '');
-        go(pageName);
+      if (returnPage) {
+        go(returnPage);
       } else {
         refresh();
       }
@@ -1740,7 +1738,7 @@ function go(page){
   if (protectedPages.includes(page)) {
     const pin = getPin();
     if (!pin) {
-      showPinModal();
+      showPinModal(page);  // Pass target page
       return;
     }
   }
