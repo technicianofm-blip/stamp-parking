@@ -1305,7 +1305,14 @@ async function saveRec(e){
     if(r.success){
       if(photoUrl) toast('✅ '+r.message+' 📸','s')
       else toast('✅ '+r.message,'s')
-      saveFormHistory(n,nn,ph);resetForm(p);_photoData[p]=null;await refresh()
+      saveFormHistory(n,nn,ph);resetForm(p);_photoData[p]=null
+      // อัปเดต cache ท้องถิ่นจาก response POST (ไม่ต้อง refresh -> getAll ที่ต้อง PIN)
+      if(r.id){
+        const c=cacheR()
+        c.unshift({id:r.id,name:n,nickname:nn,phone:ph,department:d,timeType:t,vehicleType:v,ticketNo:tk,photo:r.photoUrl||'',createdAt:new Date().toISOString(),status:'รออนุมัติ',discount:''})
+        setCache(c)
+      }
+      updBadge();render();updateBell()
     }
     else toast('❌ '+(r.error||'บันทึกไม่สำเร็จ'),'e')
   }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
