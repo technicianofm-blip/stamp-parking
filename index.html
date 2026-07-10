@@ -1334,6 +1334,11 @@ async function refresh(){
       setConn(false);
       toast('⚠️ GAS ต้องการสิทธิ์: ตั้งค่า Deploy → Who has access: Anyone','e');
     }
+    else if(r.error && r.error.indexOf('Unauthorized')!==-1){
+      // 401 จาก getAll = ยังไม่ได้ล็อกอิน/PIN หมดอายุ — ไม่ใช่ปัญหาการเชื่อมต่อ
+      // เซิร์ฟเวอร์ยังต่อได้ (บันทึกข้อมูลได้) จึงไม่แสดง offline-bar
+      setConn(true);
+    }
     else{
       // Check if it's a CORS/Network error
       const isNetworkError = r.error && (r.error.includes('Failed to fetch') || r.error.includes('NetworkError'));
@@ -1790,7 +1795,9 @@ window.clearAllData = () => {
 resetForm('desk');resetForm('mob');initDatalists()
 // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
 ;['deskFDate','mobFDate'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)})
-if(gasUrl())refresh()
+// โหลดข้อมูล Dashboard เฉพาะเมื่อมี PIN (ล็อกอินแล้ว) เท่านั้น
+// ผู้ใช้ทั่วไปที่แค่บันทึกข้อมูลไม่ต้องเรียก getAll (ที่ต้องใช้ PIN) → เลี่ยง 401 ที่ทำให้เด้ง "เชื่อมต่อไม่ได้"
+if(gasUrl() && getPin())refresh()
 </script>
 </body>
 </html>
