@@ -7,10 +7,16 @@
  * 3. ตั้งค่า Script Properties:
  *    - SHEET_ID: Google Sheet ID
  *    - FOLDER_ID: Google Drive Folder ID
- *    - ADMIN_PIN: รหัส PIN 6 หลัก (เช่น 123456)
+ *    - AUTH_SECRET: (สร้างให้อัตโนมัติ) secret ใช้เซ็น token
  * 4. บันทึก → Deploy > New deployment > Web app
  * 5. ตั้ง Execute as: "Me", Who has access: "Anyone"
  * 6. คัดลอก Web App URL ไปใส่ใน frontend (index.html)
+ *
+ * 🔐 Authentication: username+password → HMAC token (หมดอายุ 8 ชม.) + Audit Log
+ *    - หลัง deploy ครั้งแรก ให้รัน (ผ่าน clasp run):
+ *        initScriptProperties
+ *      เพื่อสร้าง AUTH_SECRET, tab Users/AuditLog ใน Sheet และ seed admin คนแรก
+ *      (รหัสผ่านเริ่มต้นคืนค่าใน response — ใช้ล็อกอินครั้งแรกแล้วเปลี่ยนในหน้า Settings)
  */
 
 // ============================================================
@@ -41,67 +47,311 @@ function initScriptProperties() {
   const props = PropertiesService.getScriptProperties();
   const updates = {
     'SHEET_ID': '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo',
-    'FOLDER_ID': '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK',
-    'ADMIN_PIN': '086079'
+    'FOLDER_ID': '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK'
   };
+
+  // AUTH_SECRET — สร้างถ้ายังไม่เคยมี (ครั้งเดียว แล้วเก็บถาวร)
+  let authSecretStatus = 'exists';
+  if (!props.getProperty('AUTH_SECRET')) {
+    props.setProperty('AUTH_SECRET', Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid());
+    authSecretStatus = 'created';
+  }
 
   Object.entries(updates).forEach(([key, value]) => {
     props.setProperty(key, value);
     console.log('[init] Set ' + key + ' = ' + value);
   });
 
-  return { success: true, message: 'Script Properties initialized', props: updates };
+  // สร้าง tab Users / AuditLog ใน Sheet หลักถ้ายังไม่มี
+  getUsersSheet();
+  getAuditSheet();
+
+  // Seed admin คนแรก — เฉพาะตอนยังไม่มี user ใน table
+  let initialPassword = null;
+  const users = getUsersSheet().getDataRange().getValues();
+  if (users.length <= 1) {
+    initialPassword = generateInitialPassword();
+    getUsersSheet().appendRow(['admin', hashPassword(initialPassword), 'ผู้ดูแลระบบ', 'admin', true]);
+    console.log('[init] Seeded default admin (initialPassword = GENERATED)');
+  }
+
+  console.log('[init] authSecret=' + authSecretStatus + ' | initialPassword=' + (initialPassword ? 'GENERATED' : 'none'));
+  return {
+    success: true,
+    message: 'Script Properties initialized',
+    props: updates,
+    authSecret: authSecretStatus,
+    initialAdminCreated: !!initialPassword,
+    initialPassword: initialPassword
+  };
 }
 
 // Column indices (0-based) — ทำให้อ่านโค้ดง่ายขึ้น
 const COL = { id:0, name:1, nickname:2, phone:3, dept:4, timeType:5, vehicle:6, ticketNo:7, photo:8, createdAt:9, status:10, discount:11 };
 
 // ============================================================
-// 🔐 PIN Authorization (Simple & Shared)
+// 🔐 Authentication — Username/Password + HMAC Token
 // ───────────────────────────────────────────────────────────
-// Set ADMIN_PIN in Script Properties (e.g., "123456")
+// AUTH_SECRET เก็บใน Script Properties (สร้างอัตโนมัติถ้ายังไม่มี)
+// Token = base64url(payload).base64url(HMAC-SHA256(payload, secret))
+//   payload = username|expiryMs   (หมดอายุ 8 ชม.)
+// การล็อกอิน = POST body เท่านั้น (ห้าม password ไป query string)
+// token ส่งผ่าน header X-Auth-Token → query ?token= → POST body
 // ───────────────────────────────────────────────────────────
-function verifyPin(e) {
-  const pin = PropertiesService.getScriptProperties().getProperty('ADMIN_PIN');
-  if (!pin) {
-    console.warn('[Auth] ADMIN_PIN not set in Script Properties');
-    return false;
-  }
+const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+const AUTH_HASH_ITERATIONS = 1000;
+const AUTH_MAX_FAILS = 5;
+const AUTH_LOCK_WINDOW_MS = 15 * 60 * 1000;
 
-  // Check PIN from multiple sources (priority order)
-  let provided = '';
-
-  // 1. Header (recommended)
-  if (e?.headers) {
-    provided = e.headers['X-Admin-Pin'] || e.headers['x-admin-pin'] || '';
-  }
-
-  // 2. Query parameter (fallback)
-  if (!provided && e?.parameter?.pin) {
-    provided = e.parameter.pin;
-  }
-
-  // 3. POST body (fallback)
-  if (!provided && e?.postData?.contents) {
-    try {
-      const body = JSON.parse(e.postData.contents);
-      provided = body.pin || '';
-    } catch {}
-  }
-
-  const valid = provided === pin;
-  if (!valid && provided) {
-    console.warn('[Auth] Invalid PIN attempt');
-  }
-  return valid;
+// --- Password hashing (Apps Script ไม่มี PBKDF2 → salt + iterated SHA-256)
+function _sha256Hex(input) {
+  const raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
+  return raw.map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join('');
+}
+function _sha256Iter(salt, password, iterations) {
+  let digest = salt + ':' + password;
+  for (let i = 0; i < iterations; i++) digest = _sha256Hex(digest);
+  return digest;
+}
+function hashPassword(password, salt) {
+  const s = salt || Utilities.getUuid(); // per-user random salt
+  return s + '$' + AUTH_HASH_ITERATIONS + '$' + _sha256Iter(s, password, AUTH_HASH_ITERATIONS);
+}
+function verifyPassword(password, stored) {
+  if (!stored || stored.indexOf('$') === -1) return false;
+  const parts = stored.split('$');
+  const salt = parts[0];
+  const iterations = parseInt(parts[1], 10) || AUTH_HASH_ITERATIONS;
+  const expected = parts[2];
+  return _sha256Iter(salt, password, iterations) === expected;
+}
+function generateInitialPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 12; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  return s;
 }
 
-// Actions that require PIN (READ/WRITE protected actions)
-const PROTECTED_ACTIONS = ['getAll', 'delete', 'updateStatus', 'updateDiscount', 'fetchUrl'];
+// --- HMAC token helpers
+function getSecret() {
+  const props = PropertiesService.getScriptProperties();
+  let s = props.getProperty('AUTH_SECRET');
+  if (!s) {
+    s = Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid();
+    props.setProperty('AUTH_SECRET', s);
+  }
+  return s;
+}
+function issueToken(username, ttlMs) {
+  const payloadBytes = Utilities.newBlob(username + '|' + (Date.now() + (ttlMs || TOKEN_TTL_MS))).getBytes();
+  const payload = Utilities.base64EncodeWebSafe(payloadBytes);
+  const sig = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(payload, getSecret()));
+  return payload + '.' + sig;
+}
+function verifyToken(token) {
+  if (!token || token.indexOf('.') === -1) return null;
+  const dot = token.indexOf('.');
+  const payload = token.substring(0, dot);
+  const sig = token.substring(dot + 1);
+  const expected = Utilities.computeHmacSha256Signature(payload, getSecret());
+  let provided;
+  try { provided = Utilities.base64DecodeWebSafe(sig); } catch (e) { return null; }
+  if (!expected || !provided || expected.length !== provided.length) return null;
+  for (let i = 0; i < expected.length; i++) if (expected[i] !== provided[i]) return null;
+  let payloadStr;
+  try { payloadStr = Utilities.newBlob(Utilities.base64DecodeWebSafe(payload)).getDataAsString(); } catch (e) { return null; }
+  const pipe = payloadStr.lastIndexOf('|');
+  if (pipe === -1) return null;
+  const username = payloadStr.substring(0, pipe);
+  const expiry = parseInt(payloadStr.substring(pipe + 1), 10);
+  if (!username || isNaN(expiry) || Date.now() > expiry) return null;
+  return { username: username };
+}
+function extractToken(e) {
+  if (e && e.headers) {
+    const t = e.headers['X-Auth-Token'] || e.headers['x-auth-token'] || '';
+    if (t) return t;
+  }
+  if (e && e.parameter && e.parameter.token) return e.parameter.token;
+  if (e && e.postData && e.postData.contents) {
+    try { const b = JSON.parse(e.postData.contents); if (b.token) return b.token; } catch (err) {}
+  }
+  return '';
+}
+function verifyAuth(e) {
+  return verifyToken(extractToken(e));
+}
+function requireAdmin(e) {
+  const info = verifyAuth(e);
+  if (!info) return null;
+  const user = findUser(info.username);
+  if (!user || user.active !== true) return null;
+  return { username: user.username, displayName: user.displayName, role: user.role };
+}
+
+// --- User / Audit sheets (เก็บใน Spreadsheet หลักเดียวกันกับข้อมูล)
+const USER_COL = { username: 0, passwordHash: 1, displayName: 2, role: 3, active: 4 };
+const AUDIT_COL = { timestamp: 0, username: 1, action: 2, details: 3 };
+
+function openScriptSpreadsheet() {
+  return SpreadsheetApp.openById(SHEET_ID);
+}
+function getUsersSheet() {
+  const ss = openScriptSpreadsheet();
+  let sheet = ss.getSheetByName('Users');
+  if (!sheet) {
+    sheet = ss.insertSheet('Users');
+    sheet.appendRow(['username', 'passwordHash', 'displayName', 'role', 'active']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+function getAuditSheet() {
+  const ss = openScriptSpreadsheet();
+  let sheet = ss.getSheetByName('AuditLog');
+  if (!sheet) {
+    sheet = ss.insertSheet('AuditLog');
+    sheet.appendRow(['timestamp', 'username', 'action', 'details']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+function findUser(username) {
+  if (!username) return null;
+  const data = getUsersSheet().getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][USER_COL.username]).toLowerCase() === String(username).toLowerCase()) {
+      return {
+        username: String(data[i][USER_COL.username]),
+        passwordHash: String(data[i][USER_COL.passwordHash] || ''),
+        displayName: String(data[i][USER_COL.displayName] || data[i][USER_COL.username]),
+        role: String(data[i][USER_COL.role] || 'admin'),
+        active: data[i][USER_COL.active] === true
+      };
+    }
+  }
+  return null;
+}
+function listUsers() {
+  const data = getUsersSheet().getDataRange().getValues();
+  const out = [];
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i][USER_COL.username]) continue;
+    out.push({
+      username: String(data[i][USER_COL.username]),
+      displayName: String(data[i][USER_COL.displayName] || data[i][USER_COL.username]),
+      role: String(data[i][USER_COL.role] || 'admin'),
+      active: data[i][USER_COL.active] === true
+    });
+  }
+  return out;
+}
+function appendAudit(username, action, details) {
+  try {
+    getAuditSheet().appendRow([new Date(), String(username || ''), String(action || ''), String(details || '')]);
+  } catch (err) {
+    console.error('[audit] error: ' + err.toString());
+  }
+}
+
+// --- Login (public, POST body เท่านั้น) + lockout
+function handleLogin(data) {
+  const username = String(data.username || '').trim();
+  const password = String(data.password || '');
+  if (!username || !password) return { success: false, error: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน' };
+
+  const cache = CacheService.getScriptCache();
+  const base = 'login_fail_' + username.toLowerCase();
+  const blockedUntil = cache.get(base + '_block');
+  if (blockedUntil && Date.now() < parseInt(blockedUntil, 10)) {
+    return { success: false, error: 'พยายามเข้าสู่ระบบผิดหลายครั้ง กรุณารอสักครู่' };
+  }
+
+  const user = findUser(username);
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    let fails = parseInt(cache.get(base) || '0', 10) + 1;
+    cache.put(base, String(fails), 900);
+    if (fails >= AUTH_MAX_FAILS) cache.put(base + '_block', String(Date.now() + AUTH_LOCK_WINDOW_MS), 900);
+    appendAudit(username, 'login_failed', '');
+    return { success: false, error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' };
+  }
+
+  cache.remove(base);
+  cache.remove(base + '_block');
+  if (user.active !== true) return { success: false, error: 'บัญชีนี้ถูกปิดใช้งาน' };
+
+  const token = issueToken(user.username);
+  appendAudit(user.username, 'login', '');
+  return { success: true, token: token, username: user.username, displayName: user.displayName, role: user.role, expiresIn: TOKEN_TTL_MS };
+}
+
+// --- User management (ต้องผ่าน requireAdmin แล้ว; actor = username ตัวที่ลงมือ)
+function handleAddUser(data) {
+  const username = String(data.username || '').trim();
+  const password = String(data.password || '');
+  const displayName = String(data.displayName || '').trim() || username;
+  if (!username || !password) return { success: false, error: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน' };
+  if (password.length < 6) return { success: false, error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' };
+  if (findUser(username)) return { success: false, error: 'ชื่อผู้ใช้นี้มีอยู่แล้ว' };
+  getUsersSheet().appendRow([username, hashPassword(password), displayName, 'admin', true]);
+  appendAudit(data.__actor || '?', 'addUser', JSON.stringify({ username: username, displayName: displayName }));
+  return { success: true, message: 'เพิ่มผู้ใช้เรียบร้อย' };
+}
+function handleResetPassword(data) {
+  const target = String(data.username || '').trim();
+  const newPassword = String(data.password || '');
+  const actor = data.__actor || '?';
+  if (!target || !newPassword) return { success: false, error: 'กรุณาระบุผู้ใช้และรหัสผ่านใหม่' };
+  if (newPassword.length < 6) return { success: false, error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' };
+  const sheet = getUsersSheet();
+  const vals = sheet.getDataRange().getValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (String(vals[i][USER_COL.username]).toLowerCase() === target.toLowerCase()) {
+      sheet.getRange(i + 1, USER_COL.passwordHash + 1).setValue(hashPassword(newPassword));
+      appendAudit(actor, 'resetPassword', JSON.stringify({ username: target }));
+      return { success: true, message: 'รีเซ็ตรหัสผ่านเรียบร้อย' };
+    }
+  }
+  return { success: false, error: 'ไม่พบผู้ใช้' };
+}
+function handleChangeMyPassword(data) {
+  const username = data.__actor || '';
+  const oldPw = String(data.oldPassword || '');
+  const newPw = String(data.newPassword || '');
+  if (!oldPw || !newPw) return { success: false, error: 'กรุณากรอกรหัสผ่านเดิมและรหัสใหม่' };
+  if (newPw.length < 6) return { success: false, error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' };
+  const user = findUser(username);
+  if (!user || !verifyPassword(oldPw, user.passwordHash)) return { success: false, error: 'รหัสผ่านเดิมไม่ถูกต้อง' };
+  const sheet = getUsersSheet();
+  const vals = sheet.getDataRange().getValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (String(vals[i][USER_COL.username]).toLowerCase() === username.toLowerCase()) {
+      sheet.getRange(i + 1, USER_COL.passwordHash + 1).setValue(hashPassword(newPw));
+      appendAudit(username, 'changeMyPassword', JSON.stringify({ username: username }));
+      return { success: true, message: 'เปลี่ยนรหัสผ่านเรียบร้อย' };
+    }
+  }
+  return { success: false, error: 'ไม่พบผู้ใช้' };
+}
+function handleSetUserActive(username, active, actor) {
+  const sheet = getUsersSheet();
+  const vals = sheet.getDataRange().getValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (String(vals[i][USER_COL.username]).toLowerCase() === String(username).toLowerCase()) {
+      sheet.getRange(i + 1, USER_COL.active + 1).setValue(active === true);
+      appendAudit(actor || '?', active ? 'enableUser' : 'disableUser', JSON.stringify({ username: String(vals[i][USER_COL.username]) }));
+      return { success: true, message: active ? 'เปิดใช้งานผู้ใช้เรียบร้อย' : 'ปิดใช้งานผู้ใช้เรียบร้อย' };
+    }
+  }
+  return { success: false, error: 'ไม่พบผู้ใช้' };
+}
+
+// Actions that require auth (READ/WRITE protected actions)
+const PROTECTED_ACTIONS = ['getAll', 'delete', 'updateStatus', 'updateDiscount', 'fetchUrl', 'listUsers', 'setUserActive'];
 
 // Helper to check if action needs auth
 function needsAuth(action) {
-  return PROTECTED_ACTIONS.includes(action);
+  return PROTECTED_ACTIONS.indexOf(action) !== -1;
 }
 
 // ============================================================
@@ -121,9 +371,11 @@ function doGet(e) {
     }
 
     // Check authentication for protected actions
+    let authed = null;
     if (needsAuth(action)) {
-      if (!verifyPin(e)) {
-        return jsonResponse({ success: false, error: 'Unauthorized: Invalid or missing PIN' }, 401);
+      authed = requireAdmin(e);
+      if (!authed) {
+        return jsonResponse({ success: false, error: 'Unauthorized: Invalid or missing token' }, 401);
       }
     }
 
@@ -153,6 +405,7 @@ function doGet(e) {
 
         clearRecordCache(sheetId);
         console.log('[delete] id=' + id + ' result=' + changed);
+        if (changed) appendAudit(authed.username, 'delete', JSON.stringify({ id: id }));
         return jsonResponse({ success: changed, deleted: changed });
       } catch (err) {
         console.error('[delete] error: ' + err.toString());
@@ -186,7 +439,10 @@ function doGet(e) {
 
         clearRecordCache(sheetId);
         console.log('[updateStatus] id=' + id + ' found=' + found);
-        if (found) return jsonResponse({ success: true });
+        if (found) {
+          appendAudit(authed.username, 'updateStatus', JSON.stringify({ id: id, status: status }));
+          return jsonResponse({ success: true });
+        }
         return jsonResponse({ success: false, error: 'Record not found' }, 404);
       } catch (err) {
         console.error('[updateStatus] error: ' + err.toString());
@@ -220,7 +476,10 @@ function doGet(e) {
 
         clearRecordCache(sheetId);
         console.log('[updateDiscount] id=' + id + ' found=' + found);
-        if (found) return jsonResponse({ success: true });
+        if (found) {
+          appendAudit(authed.username, 'updateDiscount', JSON.stringify({ id: id, discount: discount }));
+          return jsonResponse({ success: true });
+        }
         return jsonResponse({ success: false, error: 'Record not found' }, 404);
       } catch (err) {
         console.error('[updateDiscount] error: ' + err.toString());
@@ -238,10 +497,31 @@ function doGet(e) {
         const r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, timeout: 10 });
         const html = r.getContentText();
         const found = html.match(/\b(\d{17})\b/);
+        appendAudit(authed.username, 'fetchUrl', JSON.stringify({ url: url }));
         return jsonResponse({ success: true, ticket: found ? found[1] : '', htmlLength: html.length });
       } catch (err) {
         console.error('[fetchUrl] error: ' + err.toString());
         return jsonResponse({ success: false, error: err.toString() }, 500);
+      }
+    }
+
+    if (action === 'listUsers') {
+      return jsonResponse({ success: true, data: listUsers() });
+    }
+
+    if (action === 'setUserActive') {
+      const username = String(e?.parameter?.username || '').trim();
+      const active = String(e?.parameter?.active || '').toLowerCase() === 'true';
+      if (!username) return jsonResponse({ success: false, error: 'Missing username' }, 400);
+      const lock = LockService.getScriptLock();
+      try {
+        lock.waitLock(10000);
+        return jsonResponse(handleSetUserActive(username, active, authed.username));
+      } catch (err) {
+        console.error('[setUserActive] error: ' + err.toString());
+        return jsonResponse({ success: false, error: err.toString() }, 500);
+      } finally {
+        lock.releaseLock();
       }
     }
 
@@ -253,7 +533,10 @@ function doGet(e) {
 }
 
 // ============================================================
-// DO POST — เพิ่มข้อมูล (Public - ไม่ต้อง auth)
+// DO POST — dispatch: login / manage users (authed) / create record (public)
+//   - data.action = 'login'            → public login
+//   - data.action = addUser/resetUserPassword/changeMyPassword → requireAdmin
+//   - ไม่มี action                      → public create record (แบบฟอร์ม)
 // ============================================================
 function doPost(e) {
   console.log('[doPost] CALLED | paramKeys=' + Object.keys(e?.parameter||{}).join(',') + ' | postData=' + (e?.postData ? 'yes:'+typeof e.postData.contents : 'no'));
@@ -274,6 +557,21 @@ function doPost(e) {
       data = e.parameter;
     } else {
       return jsonResponse({ success: false, error: 'No data received' }, 400);
+    }
+
+    // 🔐 API dispatch: login / user management (POST body เท่านั้น — ห้าม password ไป query string)
+    const action = String(data.action || '').trim();
+    if (action === 'login') {
+      return jsonResponse(handleLogin(data));
+    }
+    const ADMIN_POST_ACTIONS = ['addUser', 'resetUserPassword', 'changeMyPassword'];
+    if (ADMIN_POST_ACTIONS.indexOf(action) !== -1) {
+      const authed = requireAdmin(e);
+      if (!authed) return jsonResponse({ success: false, error: 'Unauthorized: Invalid or missing token' }, 401);
+      data.__actor = authed.username;
+      if (action === 'addUser') return jsonResponse(handleAddUser(data));
+      if (action === 'resetUserPassword') return jsonResponse(handleResetPassword(data));
+      if (action === 'changeMyPassword') return jsonResponse(handleChangeMyPassword(data));
     }
 
     // ตรวจสอบข้อมูลที่จำเป็น

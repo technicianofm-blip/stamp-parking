@@ -358,7 +358,7 @@ tr:hover td{background:var(--g50)}
     </div>
     <!-- Auth Status / Logout -->
     <div class="sidebar-conn" id="deskAuthStatus" style="display:none;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px">
-      <span style="color:rgba(255,255,255,.7)">🔒 เข้าสู่ระบบแล้ว</span>
+      <span id="deskAuthLabel" style="color:rgba(255,255,255,.7);flex:1">🔒 เข้าสู่ระบบแล้ว</span>
       <button class="btn btn-o btn-sm" onclick="logout()" style="padding:4px 10px;font-size:11px">🚪 ออกจากระบบ</button>
     </div>
   </aside>
@@ -397,6 +397,29 @@ tr:hover td{background:var(--g50)}
           <button class="btn btn-save btn-sm" onclick="saveFolderId()">💾 บันทึก</button>
         </div>
         <div class="help" style="margin-top:6px">คัดลอกจาก URL: drive.google.com/drive/folders/<b>xxxxx</b></div>
+      </div>
+      <!-- 👥 จัดการผู้ใช้ (ต้องล็อกอินก่อนถึงจะเห็น) -->
+      <div class="card" id="deskUserMgmt" style="display:none">
+        <div class="card-title">👥 จัดการผู้ใช้</div>
+        <div class="help" style="margin-bottom:10px">เพิ่มผู้ดูแลระบบ / เปลี่ยนรหัสผ่าน (ต้องล็อกอินก่อน)</div>
+
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">รายชื่อผู้ใช้</div>
+        <div id="deskUserList" style="margin-bottom:12px;font-size:13px"></div>
+
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">เพิ่มผู้ใช้</div>
+        <div class="setup-row" style="flex-wrap:wrap">
+          <input type="text" class="form-control" id="deskNewUser" placeholder="ชื่อผู้ใช้" style="flex:1;min-width:120px">
+          <input type="text" class="form-control" id="deskNewName" placeholder="ชื่อแสดงผล" style="flex:1;min-width:120px">
+          <input type="password" class="form-control" id="deskNewPass" placeholder="รหัสผ่าน (≥6)" style="flex:1;min-width:120px">
+          <button class="btn btn-save btn-sm" onclick="addUserAction('desk')">➕ เพิ่ม</button>
+        </div>
+
+        <div style="font-weight:600;font-size:13px;margin-top:12px;margin-bottom:6px">เปลี่ยนรหัสผ่านของฉัน</div>
+        <div class="setup-row" style="flex-wrap:wrap">
+          <input type="password" class="form-control" id="deskOldPass" placeholder="รหัสผ่านเดิม" style="flex:1;min-width:120px">
+          <input type="password" class="form-control" id="deskNewPass2" placeholder="รหัสผ่านใหม่" style="flex:1;min-width:120px">
+          <button class="btn btn-save btn-sm" onclick="changeMyPasswordAction('desk')">🔑 เปลี่ยน</button>
+        </div>
       </div>
     </div>
 
@@ -563,6 +586,29 @@ tr:hover td{background:var(--g50)}
         <div class="setup-row">
           <input type="text" class="form-control" id="mobFolderId" placeholder="Folder ID (ไม่บังคับ)">
           <button class="btn btn-save btn-sm" onclick="saveFolderId()">💾 บันทึก</button>
+        </div>
+      </div>
+      <!-- 👥 จัดการผู้ใช้ (ต้องล็อกอินก่อนถึงจะเห็น) -->
+      <div class="card" id="mobUserMgmt" style="display:none">
+        <div class="card-title">👥 จัดการผู้ใช้</div>
+        <div class="help" style="margin-bottom:10px">เพิ่มผู้ดูแลระบบ / เปลี่ยนรหัสผ่าน</div>
+
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">รายชื่อผู้ใช้</div>
+        <div id="mobUserList" style="margin-bottom:12px;font-size:13px"></div>
+
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">เพิ่มผู้ใช้</div>
+        <div class="setup-row" style="flex-wrap:wrap">
+          <input type="text" class="form-control" id="mobNewUser" placeholder="ชื่อผู้ใช้" style="flex:1;min-width:110px">
+          <input type="text" class="form-control" id="mobNewName" placeholder="ชื่อแสดงผล" style="flex:1;min-width:110px">
+          <input type="password" class="form-control" id="mobNewPass" placeholder="รหัสผ่าน (≥6)" style="flex:1;min-width:110px">
+          <button class="btn btn-save btn-sm" onclick="addUserAction('mob')">➕ เพิ่ม</button>
+        </div>
+
+        <div style="font-weight:600;font-size:13px;margin-top:12px;margin-bottom:6px">เปลี่ยนรหัสผ่านของฉัน</div>
+        <div class="setup-row" style="flex-wrap:wrap">
+          <input type="password" class="form-control" id="mobOldPass" placeholder="รหัสผ่านเดิม" style="flex:1;min-width:110px">
+          <input type="password" class="form-control" id="mobNewPass2" placeholder="รหัสผ่านใหม่" style="flex:1;min-width:110px">
+          <button class="btn btn-save btn-sm" onclick="changeMyPasswordAction('mob')">🔑 เปลี่ยน</button>
         </div>
       </div>
     </div>
@@ -767,6 +813,8 @@ let _urlHealTried=false;
 async function healUrl(){
   if(_urlHealTried) return;
   _urlHealTried=true;
+  // ทดสอบ Local (localhost/127.0.0.1) → ข้าม self-heal เพื่อไม่ไปแตะ GAS ตัวจริง
+  if(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(cfg().url)) return;
   if(cfg().url===GAS_URL_DEFAULT) return; // ใช้ดีฟอลต์ล่าสุดอยู่แล้ว
   const saved=await get('getAll');
   if(saved.success) return; // URL เดิมยังใช้ได้
@@ -793,113 +841,141 @@ function domId(prefix,id){
 function q(id){return document.getElementById(id)}
 
 // ===================================================================
-//  AUTHENTICATION - Shared PIN (Simple & Secure)
+//  AUTHENTICATION - Username/Password + HMAC Token (หมดอายุ 8 ชม.)
 // ===================================================================
-const PIN_EXPIRY_HOURS = 24;
-const PIN_KEY = 'sp_admin_pin';
-const PIN_EXPIRY_KEY = 'sp_admin_pin_expiry';
+const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+const TOKEN_KEY = 'sp_auth_token';
+const TOKEN_EXPIRY_KEY = 'sp_auth_expiry';
+const TOKEN_USER_KEY = 'sp_auth_user';
 
-function getPin() {
-  const pin = localStorage.getItem(PIN_KEY);
-  const expiry = localStorage.getItem(PIN_EXPIRY_KEY);
-  if (pin && expiry && Date.now() < parseInt(expiry)) {
-    return pin;
+// legacy keys จากระบบ PIN เก่า — ลบให้สะอาดเวลาเข้า/ล็อกอิน
+function removeLegacyPinKeys() {
+  localStorage.removeItem('sp_admin_pin');
+  localStorage.removeItem('sp_admin_pin_expiry');
+}
+
+function getToken() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  if (token && expiry && Date.now() < parseInt(expiry)) {
+    return token;
   }
-  localStorage.removeItem(PIN_KEY);
-  localStorage.removeItem(PIN_EXPIRY_KEY);
+  clearToken();
   return null;
 }
 
-function setPin(pin) {
-  localStorage.setItem(PIN_KEY, pin);
-  localStorage.setItem(PIN_EXPIRY_KEY, String(Date.now() + PIN_EXPIRY_HOURS * 60 * 60 * 1000));
+function setToken(token, expiresInMs, user) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + (expiresInMs || TOKEN_TTL_MS)));
+  localStorage.setItem(TOKEN_USER_KEY, JSON.stringify({
+    username: (user && user.username) || '',
+    displayName: (user && user.displayName) || (user && user.username) || '',
+    role: (user && user.role) || 'admin'
+  }));
 }
 
-function clearPin() {
-  localStorage.removeItem(PIN_KEY);
-  localStorage.removeItem(PIN_EXPIRY_KEY);
+function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  localStorage.removeItem(TOKEN_USER_KEY);
+}
+
+function getMe() {
+  try { return JSON.parse(localStorage.getItem(TOKEN_USER_KEY)) || null; } catch (e) { return null; }
 }
 
 function isAuthenticated() {
-  return !!getPin();
+  return !!getToken();
 }
 
 function requireAuth() {
-  const pin = getPin();
-  if (pin) return pin;
-  showPinModal();
+  if (getToken()) return getToken();
+  showLoginModal();
   return null;
 }
 
-function showPinModal(targetPage) {
-  const existing = document.getElementById('pinModal');
+function showLoginModal(targetPage) {
+  removeLegacyPinKeys();
+  const existing = document.getElementById('loginModal');
   if (existing) existing.remove();
 
-  // Store the page user was trying to access (target page, not current page)
-  sessionStorage.setItem('pinReturnPage', targetPage || '');
+  // เก็บหน้าที่ผู้ใช้พยายามเข้า (target page)
+  sessionStorage.setItem('authReturnPage', targetPage || '');
 
   const modal = document.createElement('div');
   modal.className = 'modal show';
-  modal.id = 'pinModal';
+  modal.id = 'loginModal';
   modal.innerHTML = `
     <div class="modal-box" style="max-width:360px">
-      <div class="modal-hd"><h3>🔐 ต้องการรหัส PIN</h3><button class="modal-close" onclick="closePinModal()">&times;</button></div>
+      <div class="modal-hd"><h3>🔐 เข้าสู่ระบบ</h3><button class="modal-close" onclick="closeLoginModal()">&times;</button></div>
       <div class="modal-bd">
-        <p style="color:var(--g600);margin-bottom:16px;text-align:center">กรุณาใส่รหัส PIN 6 หลักเพื่อเข้าถึงหน้านี้</p>
+        <p style="color:var(--g600);margin-bottom:16px;text-align:center">กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้</p>
 
         <div class="form-group">
-          <input type="password" class="form-control" id="pinInput" placeholder="รหัส PIN 6 หลัก" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyPin()">
+          <label class="form-label">ชื่อผู้ใช้</label>
+          <input type="text" class="form-control" id="loginInput" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('passwordInput')?.focus()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">รหัสผ่าน</label>
+          <input type="password" class="form-control" id="passwordInput" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
         </div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-          <button class="btn btn-o" onclick="closePinModal()">ยกเลิก</button>
-          <button class="btn btn-p" onclick="verifyPin()">เข้าสู่ระบบ</button>
+          <button class="btn btn-o" onclick="closeLoginModal()">ยกเลิก</button>
+          <button class="btn btn-p" onclick="login()">เข้าสู่ระบบ</button>
         </div>
-        <p style="font-size:11px;color:var(--g400);text-align:center;margin-top:8px">PIN จะหมดอายุใน 24 ชั่วโมง</p>
+        <p style="font-size:11px;color:var(--g400);text-align:center;margin-top:8px">เซสชันหมดอายุใน 8 ชั่วโมง</p>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
-  setTimeout(() => document.getElementById('pinInput')?.focus(), 100);
+  setTimeout(() => document.getElementById('loginInput')?.focus(), 100);
 }
 
-function closePinModal() {
-  const modal = document.getElementById('pinModal');
+function closeLoginModal() {
+  const modal = document.getElementById('loginModal');
   if (modal) modal.remove();
   // Don't auto-redirect - let user decide
 }
 
-async function verifyPin() {
-  const pin = document.getElementById('pinInput')?.value || '';
-  if (!pin || pin.length !== 6) {
-    toast('⚠️ กรุณาใส่ PIN 6 หลัก', 'e');
+// POST login — ผ่าน post() พร้อม flag ปิด auth-prompt (login ต้องไม่เด้ง modal ซ้ำ)
+function apiLogin(username, password) {
+  return post({ action: 'login', username: username, password: password }, { skipAuthPrompt: true });
+}
+
+async function login() {
+  const username = document.getElementById('loginInput')?.value.trim() || '';
+  const password = document.getElementById('passwordInput')?.value || '';
+  if (!username || !password) {
+    toast('⚠️ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'e');
     return;
   }
 
-  const btn = document.querySelector('#pinModal .btn-p');
+  const btn = document.querySelector('#loginModal .btn-p');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ...'; }
 
   try {
     await healUrl(); // ตรวจสอบ/สลับ URL หาก URL เก่าพัง
-    // ใช้ get() function เพื่อให้ได้ error handling และ headers เหมือนกัน
-    const r = await get('getAll&pin=' + encodeURIComponent(pin));
+    const r = await apiLogin(username, password);
 
     if (r.success) {
-      setPin(pin);
-      closePinModal();
+      setToken(r.token, r.expiresIn || TOKEN_TTL_MS, r);
+      closeLoginModal();
       toast('✅ เข้าสู่ระบบสำเร็จ', 's');
+      setConn(true);
+      renderUserMgmt();
 
       // Redirect กลับหน้าที่พยายามเข้า (page name เช่น 'dash' หรือ 'setup')
-      const returnPage = sessionStorage.getItem('pinReturnPage');
+      const returnPage = sessionStorage.getItem('authReturnPage');
       if (returnPage) {
-        go(returnPage, true);  // พาไปหน้าเป้าหมายโดยไม่เด้ง PIN ซ้ำ
+        go(returnPage, true);  // พาไปหน้าเป้าหมายโดยไม่เด้งล็อกอินซ้ำ
       } else {
         refresh();
       }
     } else {
-      toast('❌ PIN ไม่ถูกต้อง: ' + (r.error || ''), 'e');
+      toast('❌ ' + (r.error || 'เข้าสู่ระบบไม่สำเร็จ'), 'e');
     }
   } catch (e) {
-    console.error('[verifyPin]', e);
+    console.error('[login]', e);
     toast('❌ ไม่สามารถตรวจสอบได้: ' + e.message, 'e');
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = 'เข้าสู่ระบบ'; }
@@ -907,15 +983,111 @@ async function verifyPin() {
 }
 
 function logout() {
-  clearPin();
+  clearToken();
+  renderUserMgmt();
   toast('🚪 ออกจากระบบแล้ว', 's');
   go('form');
   refresh();
 }
 
 function getAuthHeaders() {
-  const pin = getPin();
-  return pin ? { 'X-Admin-Pin': pin } : {};
+  const token = getToken();
+  return token ? { 'X-Auth-Token': token } : {};
+}
+
+// ===================================================================
+//  USER MANAGEMENT (Settings — แสดงเฉพาะเมื่อล็อกอิน)
+// ===================================================================
+function renderUserMgmt() {
+  const show = !!getToken();
+  ['desk', 'mob'].forEach(p => {
+    const card = document.getElementById(p + 'UserMgmt');
+    if (card) card.style.display = show ? '' : 'none';
+  });
+  if (show) loadUserList();
+}
+
+async function loadUserList() {
+  const me = getMe();
+  const r = await get('listUsers');
+  const users = (r.success && Array.isArray(r.data)) ? r.data : [];
+  ['desk', 'mob'].forEach(p => {
+    const box = document.getElementById(p + 'UserList');
+    if (!box) return;
+    box.innerHTML = '';
+    if (!users.length) { box.textContent = '(ยังไม่มีผู้ใช้)'; return; }
+    users.forEach(u => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);flex-wrap:wrap';
+      const isSelf = me && u.username === me.username;
+      const name = document.createElement('span');
+      name.style.flex = '1';
+      name.textContent = (u.displayName || u.username) + ' (' + u.username + ')' + (u.active ? '' : ' 🔇 ปิดใช้งาน');
+      name.style.color = u.active ? 'inherit' : 'var(--g400)';
+      row.appendChild(name);
+
+      const act = document.createElement('button');
+      act.className = 'btn btn-o btn-sm';
+      act.style.cssText = 'padding:3px 8px;font-size:11px';
+      act.textContent = u.active ? '🔇 ปิด' : '▶ เปิด';
+      act.onclick = async () => {
+        await get('setUserActive&username=' + encodeURIComponent(u.username) + '&active=' + (!u.active));
+        toast('✅ อัปเดตแล้ว', 's');
+        loadUserList();
+        setConn(getToken()); // refresh sidebar status
+      };
+      row.appendChild(act);
+
+      // รีเซ็ตรหัสผ่านของคนอื่น (ตัวเองเปลี่ยนผ่านฟอร์มข้างล่าง)
+      if (!isSelf) {
+        const rs = document.createElement('button');
+        rs.className = 'btn btn-o btn-sm';
+        rs.style.cssText = 'padding:3px 8px;font-size:11px';
+        rs.textContent = '🔑 รีเซ็ต';
+        rs.onclick = async () => {
+          const np = window.prompt('รหัสผ่านใหม่สำหรับ ' + u.username + ' (อย่างน้อย 6 ตัว):');
+          if (!np || np.length < 6) { toast('⚠️ รหัสต้องอย่างน้อย 6 ตัว', 'e'); return; }
+          await post({ action: 'resetUserPassword', username: u.username, password: np });
+          toast('✅ รีเซ็ตรหัสผ่านแล้ว', 's');
+        };
+        row.appendChild(rs);
+      }
+      box.appendChild(row);
+    });
+  });
+}
+
+async function addUserAction(p) {
+  const uname = document.getElementById(p + 'NewUser').value.trim();
+  const dname = document.getElementById(p + 'NewName').value.trim();
+  const pw = document.getElementById(p + 'NewPass').value || '';
+  if (!uname || !pw) { toast('⚠️ กรอกชื่อผู้ใช้และรหัสผ่าน', 'e'); return; }
+  if (pw.length < 6) { toast('⚠️ รหัสผ่านต้องอย่างน้อย 6 ตัว', 'e'); return; }
+  const r = await post({ action: 'addUser', username: uname, password: pw, displayName: dname });
+  if (r.success) {
+    toast('✅ ' + (r.message || 'เพิ่มผู้ใช้แล้ว'), 's');
+    document.getElementById(p + 'NewUser').value = '';
+    document.getElementById(p + 'NewName').value = '';
+    document.getElementById(p + 'NewPass').value = '';
+    loadUserList();
+  } else {
+    toast('❌ ' + (r.error || 'เพิ่มไม่ได้'), 'e');
+  }
+}
+
+async function changeMyPasswordAction(p) {
+  const oldPw = document.getElementById(p + 'OldPass').value || '';
+  const newPw = document.getElementById(p + 'NewPass2').value || '';
+  if (!oldPw || !newPw) { toast('⚠️ กรอกรหัสผ่านเดิมและรหัสใหม่', 'e'); return; }
+  if (newPw.length < 6) { toast('⚠️ รหัสใหม่ต้องอย่างน้อย 6 ตัว', 'e'); return; }
+  const r = await post({ action: 'changeMyPassword', oldPassword: oldPw, newPassword: newPw });
+  if (r.success) {
+    toast('✅ เปลี่ยนรหัสผ่านแล้ว', 's');
+    document.getElementById(p + 'OldPass').value = '';
+    document.getElementById(p + 'NewPass2').value = '';
+  } else {
+    toast('❌ ' + (r.error || 'เปลี่ยนไม่ได้'), 'e');
+  }
 }
 
 // ===================================================================
@@ -966,10 +1138,10 @@ if(!localStorage.getItem(CFG_KEY)){
 }
 function resetToDefault(){
   localStorage.removeItem(CFG_KEY)
-  // Don't clear PIN - keep user logged in
+  // Don't clear token - keep user logged in
   syncSetupInputs()
   updateSetupUI()
-  toast('🔄 รีเซ็ต Web App URL แล้ว (PIN คงเดิม)','s')
+  toast('🔄 รีเซ็ต Web App URL แล้ว (ยังล็อกอินอยู่)','s')
   refresh()
 }
 function updateSetupUI(){
@@ -988,22 +1160,23 @@ async function get(action) {
   const u=gasUrl()
   if(!u) return {success:false,error:'no_url',data:[]}
   const c=cfg()
-  let url=u+'?action='+action
-  if(c.sheetId) url+='&sheetId='+encodeURIComponent(c.sheetId)
-  if(c.folderId) url+='&folderId='+encodeURIComponent(c.folderId)
-  console.log('[API] GET:', action, '| URL:', url)
-  try{
-    // PIN ผ่าน query param แทน header (กัน CORS preflight)
-    const pin = getPin();
-    if (pin) url += '&pin=' + encodeURIComponent(pin);
 
+  let url = u + '?action=' + action;
+  if(c.sheetId) url += '&sheetId=' + encodeURIComponent(c.sheetId)
+  if(c.folderId) url += '&folderId=' + encodeURIComponent(c.folderId)
+
+  // token ผ่าน query param (GET ไม่มี body — GAS ไม่รองรับ header preflight)
+  const token = getToken();
+  if (token) url += '&token=' + encodeURIComponent(token);
+
+  console.log('[API] GET:', action, '| Token:', token ? '***' : 'none', '| URL:', url.split('token=')[0])
+  try{
     const r=await fetch(url,{method:'GET',redirect:'follow'})
     const text=await r.text()
     console.log('[API] Response status:', r.status, '| text:', text.slice(0,200))
 
     // Detect GAS login redirect: GAS returns an HTML page (login screen)
     // instead of JSON when the Web App deployment requires authentication.
-    // This is the real cause of the "CORS/Network" error.
     if (text.trim().startsWith('<')) {
       console.error('[API] GAS returned HTML (login page) instead of JSON — deployment likely requires auth');
       return {success:false,error:'AUTH_REQUIRED',data:[]}
@@ -1014,6 +1187,12 @@ async function get(action) {
 
     // Check if GAS returned an error (even with 200 status)
     if (!data.success && data.error) {
+      // ✅ token หาย/หมดอายุ → ล้าง session แล้วเด้งล็อกอิน (เฉพาะตอนมี token)
+      // คืน error เดิม ('Unauthorized...') เพื่อให้ refresh() จัดการเงียบๆ ตาม branch เดิม
+      if (/\b(unauthorized|invalid or missing token|token)\b/i.test(data.error)) {
+        if (getToken()) { clearToken(); showLoginModal(); }
+        return {success: false, error: data.error, data: data.data || []};
+      }
       return {success: false, error: data.error, data: data.data || []};
     }
     return data
@@ -1027,30 +1206,36 @@ async function get(action) {
     return {success:false,error:errorMsg,data:[]}
   }
 }
-async function post(data){
+async function post(data, opts){
   const u=gasUrl();if(!u) return {success:false,error:'no_url'}
   const c=cfg()
   const body={...data}
   if(c.sheetId) body.sheetId=c.sheetId
   if(c.folderId) body.folderId=c.folderId
-  // PIN ผ่าน query param แทน header (กัน CORS preflight)
-  const pin = getPin();
+  // token ส่งใน body (POST text/plain ไม่มี preflight — กันหลุด URL)
+  const token = getToken();
+  if (token) body.token = token;
   let url = u;
-  if (pin) url += '?pin=' + encodeURIComponent(pin);
-  console.log('[API] POST', url, body)
+  console.log('[API] POST', url, '| Token:', token ? '***' : 'none')
   return new Promise(r=>{
     const x=new XMLHttpRequest()
     x.open('POST',url)
     x.setRequestHeader('Content-Type','text/plain')
-    // PIN ไป query param แล้ว - ไม่ต้องส่ง header
     x.onload=()=>{
       try{
         const res=JSON.parse(x.responseText)
         console.log('[API] POST Response:', res)
+        // ✅ token หาย/หมดอายุ → ล้าง session แล้วเด้งล็อกอิน (เฉพาะตอนมี token & ไม่ได้ขอ skip)
+        if (!res.success && res.error && /\b(unauthorized|invalid or missing token|expired|token)\b/i.test(res.error) && !(opts && opts.skipAuthPrompt)) {
+          if (getToken()) { clearToken(); showLoginModal(); }
+        }
         r(res)
       }catch{
         console.error('[API] POST Invalid response:', x.responseText)
-        r({success:false,error:'Invalid response'})
+        const t=(x.responseText||'').trim()
+        r({success:false,error:t.startsWith('<')
+          ? 'URL นี้ตอบ HTML ไม่ใช่ API — ตรวจ Web App URL ว่าต้องลงท้ายด้วย /api/ (เช่น http://localhost:3005/api/)'
+          : 'Invalid response'})
       }
     }
     x.onerror=()=>{
@@ -1254,11 +1439,6 @@ function closeScan(){
   if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
   const m=document.getElementById('scanModal');if(m)m.classList.remove('show')
 }
-function closeScan(){
-  clearInterval(scanTimer);scanTimer=null
-  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
-  const m=document.getElementById('scanModal');if(m)m.classList.remove('show')
-}
 
 async function saveRec(e){
   e.preventDefault()
@@ -1311,7 +1491,7 @@ async function saveRec(e){
       if(photoUrl) toast('✅ '+r.message+' 📸','s')
       else toast('✅ '+r.message,'s')
       saveFormHistory(n,nn,ph);resetForm(p);_photoData[p]=null
-      // อัปเดต cache ท้องถิ่นจาก response POST (ไม่ต้อง refresh -> getAll ที่ต้อง PIN)
+      // อัปเดต cache ท้องถิ่นจาก response POST (ไม่ต้อง refresh -> getAll ที่ต้อง auth)
       if(r.id){
         const c=cacheR()
         c.unshift({id:r.id,name:n,nickname:nn,phone:ph,department:d,timeType:t,vehicleType:v,ticketNo:tk,photo:r.photoUrl||'',createdAt:new Date().toISOString(),status:'รออนุมัติ',discount:''})
@@ -1342,8 +1522,8 @@ async function refresh(){
       toast('⚠️ GAS ต้องการสิทธิ์: ตั้งค่า Deploy → Who has access: Anyone','e');
     }
     else if(r.error && r.error.indexOf('Unauthorized')!==-1){
-      // 401 จาก getAll = ยังไม่ได้ล็อกอิน/PIN หมดอายุ — ไม่ใช่ปัญหาการเชื่อมต่อ
-      // เซิร์ฟเวอร์ยังต่อได้ (บันทึกข้อมูลได้) จึงไม่แสดง offline-bar
+      // 401 จาก getAll = ยังไม่ได้ล็อกอิน / token หมดอายุ — ไม่ใช่ปัญหาการเชื่อมต่อ
+      // (get() จะล้าง token + เด้งล็อกอินเองแล้ว) เซิร์ฟเวอร์ยังต่อได้จึงไม่แสดง offline-bar
       setConn(true);
     }
     else{
@@ -1642,11 +1822,16 @@ function setConn(on){
   const bar=document.getElementById('mobOffline')
   if(bar){if(!on)bar.classList.add('show');else bar.classList.remove('show')}
 
-  // Auth status visibility
+  // Auth status visibility + แสดงชื่อผู้ใช้ที่ล็อกอิน
   const authStatus = document.getElementById('deskAuthStatus');
   if (authStatus) {
-    const token = getPin();
-    authStatus.style.display = token ? 'flex' : 'none';
+    const authed = getToken();
+    authStatus.style.display = authed ? 'flex' : 'none';
+    const label = document.getElementById('deskAuthLabel');
+    if (label) {
+      const me = getMe();
+      label.textContent = me && me.displayName ? '🔒 ' + me.displayName : '🔒 เข้าสู่ระบบแล้ว';
+    }
   }
 }
 
@@ -1747,10 +1932,10 @@ function hideLoad(){
 function go(page, _authed){
   // Protected pages that require authentication
   const protectedPages = ['dash', 'setup'];
-  // เด้งหน้าใส่ PIN ทุกครั้งที่กดเข้า Dashboard / Settings
-  // (_authed=true ใช้ตอน verifyPin พาไปหน้าเป้าหมายหลังใส่ PIN สำเร็จ เพื่อไม่ให้เด้งซ้ำ)
-  if (protectedPages.includes(page) && !_authed) {
-    showPinModal(page);  // Pass target page
+  // เด้งล็อกอินเฉพาะตอนยังไม่ล็อกอิน (token หมดอายุ/ยังไม่เข้า)
+  // (_authed=true ใช้ตอน login พาไปหน้าเป้าหมายหลังล็อกอินสำเร็จ)
+  if (protectedPages.includes(page) && !_authed && !getToken()) {
+    showLoginModal(page);  // Pass target page
     return;
   }
 
@@ -1776,6 +1961,7 @@ function go(page, _authed){
   }
 
   if(page==='dash') refresh()
+  if(page==='setup') renderUserMgmt()
 }
 
 // ===================================================================
@@ -1802,9 +1988,11 @@ window.clearAllData = () => {
 resetForm('desk');resetForm('mob');initDatalists()
 // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
 ;['deskFDate','mobFDate'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)})
-// โหลดข้อมูล Dashboard เฉพาะเมื่อมี PIN (ล็อกอินแล้ว) เท่านั้น
-// ผู้ใช้ทั่วไปที่แค่บันทึกข้อมูลไม่ต้องเรียก getAll (ที่ต้องใช้ PIN) → เลี่ยง 401 ที่ทำให้เด้ง "เชื่อมต่อไม่ได้"
-if(gasUrl() && getPin())refresh()
+// โหลดข้อมูล Dashboard เฉพาะเมื่อมี token (ล็อกอินแล้ว) เท่านั้น
+// ผู้ใช้ทั่วไปที่แค่บันทึกข้อมูลไม่ต้องเรียก getAll (ที่ต้อง auth) → เลี่ยง 401 ที่ทำให้เด้ง "เชื่อมต่อไม่ได้"
+if(gasUrl() && getToken())refresh()
+if(getToken())renderUserMgmt()
+removeLegacyPinKeys()
 </script>
 </body>
 </html>
