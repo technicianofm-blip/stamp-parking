@@ -729,8 +729,14 @@ function getAllRecords(sheetId) {
   // เรียงลำดับล่าสุดก่อน
   records.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-  cache.put(cacheKey, JSON.stringify(records), 600);
-  console.log('[getAll] cached ' + records.length + ' records');
+  // CacheService จำกัดค่า 100KB ต่อ key — ถ้าข้อมูลเยอะ (หลายร้อย record) จน cache ไม่ไหว
+  // ให้ข้ามไป ไม่ throw (ยังคืน data ตามปกติ แค่ไม่ cache)
+  try {
+    cache.put(cacheKey, JSON.stringify(records), 600);
+    console.log('[getAll] cached ' + records.length + ' records');
+  } catch (e) {
+    console.warn('[getAll] cache.put skipped (payload เกินขีดจำกัด?): ' + e.toString());
+  }
   return { success: true, data: records };
 }
 
