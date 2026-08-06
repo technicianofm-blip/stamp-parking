@@ -502,7 +502,7 @@
 // ===================================================================
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history';
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbxvjAUVZILZNKNb8lSJAUc9plZwX5SgUbQq1nDONQMrHwA27eHyY0jOvkCIlr4WL3xwig/exec'
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwEK_PhSzpOIqMP8w2gPLDqRRGCE5bwF4M5aBaAdm5NbI96m3jw70ekKJxnygdXnL-5Ug/exec'
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 // Self-heal: ถ้า URL ที่บันทึกใน localStorage พัง ให้ใช้ GAS_URL_DEFAULT แทนชั่วคราว
 let _urlOverride=null;

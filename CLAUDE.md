@@ -60,7 +60,7 @@ node --check <file>
 
 ## ⚠️ Gotchas / กติกาที่ห้ามละเมิด
 
-1. **`GAS_URL_DEFAULT`** ใน `index.html` (~บรรทัด 804) ต้องอัปเดตให้ตรง deployment ใหม่**ทุกครั้ง**ที่ deploy GAS
+1. **`GAS_URL_DEFAULT`** ใน `index.html` (~บรรทัด 505) ต้องอัปเดตให้ตรง deployment ใหม่**ทุกครั้ง**ที่ deploy GAS
 2. **`healUrl()`** ถือว่า 401 Unauthorized = URL ยังใช้ได้ (แค่ยังไม่ล็อกอิน) — อย่าแก้กลับให้ heal บน 401
 3. `recovery-codes.txt` = 2FA recovery codes — **gitignored แล้ว ห้าม commit** (เช่นเดียวกับ `node.pid`/`server.log`)
 4. เพิ่ม/แก้ฟีเจอร์ auth ต้องทำให้ **3 ที่สอดคล้องกัน**: `gas-code.gs` (จริง) ↔ `index.js` (mock) ↔ `index.html` (frontend)
