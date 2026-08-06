@@ -16,7 +16,9 @@
  *    - หลัง deploy ครั้งแรก ให้รัน (ผ่าน clasp run):
  *        initScriptProperties
  *      เพื่อสร้าง AUTH_SECRET, tab Users/AuditLog ใน Sheet และ seed admin คนแรก
- *      (รหัสผ่านเริ่มต้นคืนค่าใน response — ใช้ล็อกอินครั้งแรกแล้วเปลี่ยนในหน้า Settings)
+ *      (รหัสผ่านเริ่มต้นแสดงใน console.log / clasp run output — ไม่ส่งกลับใน HTTP response
+ *       เพื่อกันคนภายนอกที่มี Web App URL เรียก initScriptProperties แล้วขโมยรหัสผ่านตอน Users ว่าง)
+ *    - ล็อกอินครั้งแรกด้วย username=admin + รหัสที่ได้ แล้วเปลี่ยนในหน้า Settings
  */
 
 // ============================================================
@@ -72,7 +74,8 @@ function initScriptProperties() {
   if (users.length <= 1) {
     initialPassword = generateInitialPassword();
     getUsersSheet().appendRow(['admin', hashPassword(initialPassword), 'ผู้ดูแลระบบ', 'admin', true]);
-    console.log('[init] Seeded default admin (initialPassword = GENERATED)');
+    // ⚠️ แสดงเฉพาะใน log (clasp run / execution log) — ห้ามคืนกลับใน HTTP response
+    console.log('[init] 🆕 Seeded default admin — initialPassword = ' + initialPassword);
   }
 
   console.log('[init] authSecret=' + authSecretStatus + ' | initialPassword=' + (initialPassword ? 'GENERATED' : 'none'));
@@ -81,8 +84,7 @@ function initScriptProperties() {
     message: 'Script Properties initialized',
     props: updates,
     authSecret: authSecretStatus,
-    initialAdminCreated: !!initialPassword,
-    initialPassword: initialPassword
+    initialAdminCreated: !!initialPassword
   };
 }
 

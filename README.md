@@ -8,7 +8,11 @@
 📦 D:\claude code\
  ├── 📄 index.html            # 🌐 Frontend หลัก (รองรับ Desktop + Mobile)
  ├── 📄 gas-code.gs           # ⚙️ Google Apps Script (Backend API)
- └── 📄 README.md             # 📖 คู่มือนี้
+ ├── 📄 index.js              # 🧪 Mock server (Node) จำลอง GAS สำหรับทดสอบ auth ในเครื่อง
+ ├── 📄 test-auth.js          # 🧪 Test suite ระบบ auth (22 cases — รัน: node test-auth.js)
+ ├── 📄 toast-enhancements.js # 🔔 Enhanced toast UI (โหลดโดย index.html)
+ ├── 📄 README.md             # 📖 คู่มือนี้
+ └── 📄 .gitignore            # กันไฟล์อ่อนไหว/ขยะไม่ให้ commit
 ```
 
 ## 🏗️ สถาปัตยกรรม
@@ -62,21 +66,22 @@
 ## 3️⃣ Deploy Google Apps Script
 1. ไปที่ [script.google.com/create](https://script.google.com/create)
 2. เปิดไฟล์ **`gas-code.gs`** → Copy เนื้อหาทั้งหมด → วางใน Apps Script Editor
-3. แก้ไข 2 ค่าที่บรรทัดบนสุด:
-   ```javascript
-   const SHEET_ID  = 'YOUR_GOOGLE_SHEET_ID_HERE';        // ← ใส่ Sheet ID
-   const FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE'; // ← ใส่ Folder ID
-   ```
-4. กด 💾 **บันทึก** (Ctrl+S)
-5. **Deploy > New deployment**
+3. **Deploy > New deployment**
    - **Type:** Web app
    - **Execute as:** `Me`
    - **Who has access:** `Anyone`
-6. กด **Deploy** → อนุญาตสิทธิ์ (Authorize)
-7. **คัดลอก Web App URL**:
+4. กด **Deploy** → อนุญาตสิทธิ์ (Authorize)
+5. **คัดลอก Web App URL**:
    ```
    https://script.google.com/macros/s/XXXXX/exec
    ```
+6. **รัน `initScriptProperties`** (ครั้งแรก) เพื่อสร้าง `AUTH_SECRET`, tab `Users`/`AuditLog` ใน Sheet และ seed **admin คนแรก**:
+   - ผ่าน clasp: `clasp run initScriptProperties`
+   - หรือเปิด URL นี้ใน browser: `https://script.google.com/macros/s/XXXXX/exec?action=initScriptProperties`
+7. **อ่านรหัสผ่านเริ่มต้นของ admin** จาก console.log / clasp run output
+   (รหัสผ่านจะไม่ถูกส่งกลับใน HTTP response เพื่อกันคนนอกแอบเรียกแล้วขโมย — ดูได้ผ่าน log เท่านั้น)
+8. ใส่ **Sheet ID** และ **Folder ID** ใน ⚙️ Project Settings → **Script Properties**
+   (หรือปล่อยเป็นค่า default ที่ hardcode อยู่ในโค้ดก็ได้)
 
 ## 4️⃣ ตั้งค่า Cloudinary (สำหรับอัปโหลดรูป)
 1. ไปที่ [cloudinary.com](https://cloudinary.com) → **Sign Up** (ฟรี)
@@ -187,43 +192,46 @@
 
 ---
 
-# 🔐 การตั้งค่าระบบยืนยันตัวตน (Authentication) — Shared PIN
+# 🔐 การตั้งค่าระบบยืนยันตัวตน (Authentication) — Username + Password
 
-ระบบมีการป้องกันหน้า **Dashboard** และ **หน้าตั้งค่า** โดยใช้ **รหัส PIN 6 หลัก (Shared PIN)** แบบง่าย:
+ระบบป้องกันหน้า **Dashboard** และ **หน้าตั้งค่า** โดยใช้ **บัญชีผู้ใช้ (Username + Password)** แบบแยกต่อคน:
 
 ## 🛡️ โครงสร้างการป้องกัน
 
 | หน้า | สถานะ | คำอธิบาย |
 |------|--------|----------|
 | 📝 บันทึกข้อมูล | **สาธารณะ (Public)** | ใครมี URL ก็สามารถบันทึกข้อมูลได้ |
-| 📊 Dashboard | **ป้องกัน (Protected)** | ต้องใส่ PIN ถึงจะดู/แก้ไข/ลบข้อมูลได้ |
-| ⚙️ ตั้งค่า | **ป้องกัน (Protected)** | ต้องใส่ PIN ถึงจะเปลี่ยนการตั้งค่าได้ |
+| 📊 Dashboard | **ป้องกัน (Protected)** | ต้องล็อกอินถึงจะดู/แก้ไข/ลบข้อมูลได้ |
+| ⚙️ ตั้งค่า | **ป้องกัน (Protected)** | ต้องล็อกอินถึงจะจัดการผู้ใช้/การตั้งค่าได้ |
 
-## 🔧 วิธีตั้งค่า PIN (ใช้เวลา 1 นาที)
+## 🔐 ระบบทำงานอย่างไร
 
-### 1. ตั้งค่า PIN ใน Google Apps Script
-1. ไปที่ [script.google.com](https://script.google.com) → เปิดโปรเจค Stamp Parking
-2. ไปที่ ⚙️ **Project Settings** (ไอคอนเฟือง) → **Script Properties**
-3. กด **Add script property**:
-   - **Property:** `ADMIN_PIN`
-   - **Value:** `123456` (หรือเลข 6 หลักที่ต้องการ — แชร์ให้ทีมร่วมใช้)
-4. กด **Save**
+- **Token:** หลังล็อกอินสำเร็จ ได้ HMAC token (หมดอายุ **8 ชั่วโมง**) เก็บใน localStorage
+- **รหัสผ่าน:** เก็บแบบ hash (salt + SHA-256 iterated 1000 รอบ) ไม่เก็บ plaintext
+- **Lockout:** ใส่รหัสผิด **5 ครั้ง → ล็อก 15 นาที** (กัน brute-force)
+- **Users sheet:** เก็บบัญชีผู้ใช้ (username, password hash, ชื่อแสดงผล, สถานะเปิด/ปิด)
+- **AuditLog sheet:** บันทึกการล็อกอิน/ลบ/แก้ไข/จัดการผู้ใช้ทั้งหมด
 
-### 2. Deploy ใหม่
-1. **Deploy > Manage deployments** → เลือก deployment ที่ใช้งาน → **Edit**
-2. กด **Deploy** (Version: New version)
-3. ใช้ URL เดิมได้เลย (Web App URL ไม่เปลี่ยน)
+## 👤 การจัดการผู้ใช้
+
+ทำได้ในหน้า **⚙️ ตั้งค่า** (ต้องล็อกอินก่อน):
+
+| ฟังก์ชัน | คำอธิบาย |
+|---------|----------|
+| **➕ เพิ่มผู้ใช้** | ระบุ username, ชื่อแสดงผล, รหัสผ่าน (≥ 6 ตัว) |
+| **🔇 ปิด / ▶ เปิด** | ปิดบัญชี = ล็อกอินไม่ได้ทันที (token เดิมใช้ไม่ได้) |
+| **🔑 รีเซ็ตรหัสผ่าน** | ตั้งรหัสใหม่ให้ผู้ใช้คนอื่น (โดย admin) |
+| **🔑 เปลี่ยนรหัสผ่านของฉัน** | เปลี่ยนรหัสตัวเอง (ต้องรู้รหัสเดิม) |
 
 ## 🔄 การใช้งาน
 
-- **เข้าสู่ระบบ:** คลิก 📊 Dashboard หรือ ⚙️ ตั้งค่า → ใส่ PIN 6 หลัก → เข้าสู่ระบบสำเร็จ
-- **PIN หมดอายุ:** 24 ชั่วโมง (ตั้งในตัวแปร `PIN_EXPIRY_HOURS`)
-- **เข้าสู่ระบบใหม่:** เมื่อ PIN หมดอายุ จะขอใส่ PIN ใหม่อัตโนมัติ
-- **ออกจากระบบ:** กดปุ่ม **🚪 ออกจากระบบ** ใน Sidebar (Desktop)
-- **เปลี่ยน PIN:** แก้ค่า `ADMIN_PIN` ใน GAS Script Properties → Deploy ใหม่ → ใส่ PIN ใหม่ในหน้าเว็บ
+- **เข้าสู่ระบบ:** คลิก 📊 Dashboard หรือ ⚙️ ตั้งค่า → ใส่ username + password
+- **หมดอายุ:** token หมดอายุใน 8 ชั่วโมง → ระบบขอให้ล็อกอินใหม่อัตโนมัติ
+- **ออกจากระบบ:** กด **🚪 ออกจากระบบ** ใน Sidebar (Desktop)
+- **ล็อกอินครั้งแรก:** ใช้ `admin` + รหัสผ่านที่ได้จาก `initScriptProperties` → ไปเปลี่ยนในหน้า Settings
 
-> ⚠️ **สำคัญ:** ต้องตั้ง `ADMIN_PIN` ใน GAS Script Properties ถึงจะทำงานได้
-> หากไม่ตั้งค่า ระบบจะปิดการเข้าถึง Dashboard และ Setup ทั้งหมด (Fail Closed)
+> ⚠️ **สำคัญ:** ห้ามลบบรรทัด `AUTH_SECRET` ใน Script Properties — ถ้าหาย token ทั้งหมดจะใช้ไม่ได้
+> และรหัสผ่านเริ่มต้นของ admin จะแสดงใน **log เท่านั้น** ไม่แสดงใน HTTP response
 
 ---
 
@@ -231,7 +239,7 @@
 
 ## ดูข้อมูลใน Google Sheet
 - เปิด Sheet ที่สร้างไว้ → Sheet ชื่อ `Stamp Parking`
-- 11 คอลัมน์: ID, ชื่อ-นามสกุล, ชื่อเล่น, เบอร์ติดต่อ, หน่วยงาน, ประเภทการลงเวลา, ยานพาหนะ, เลขบัตรจอดรถ, รูปภาพ (URL), วันที่บันทึก, **สถานะ**
+- 12 คอลัมน์: ID, ชื่อ-นามสกุล, ชื่อเล่น, เบอร์ติดต่อ, หน่วยงาน, ประเภทการลงเวลา, ยานพาหนะ, เลขบัตรจอดรถ, รูปภาพ (URL), วันที่บันทึก, **สถานะ**, **ส่วนลด**
 
 ## ดูรูปภาพใน Google Drive
 - เปิด Drive → โฟลเดอร์ `Stamp Parking Photos`

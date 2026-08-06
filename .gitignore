@@ -1,0 +1,10 @@
+# Runtime / test artifacts
+node.pid
+server.log
+*.log
+
+# 🔒 Sensitive — 2FA recovery codes, ห้าม commit
+recovery-codes.txt
+
+# Dependencies
+node_modules/

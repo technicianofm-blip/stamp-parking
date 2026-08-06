@@ -241,7 +241,7 @@ const server = http.createServer((req, res) => {
     const contentType = ext === '.html' ? 'text/html' :
     ext === '.css' ? 'text/css' :
     ext === '.js' ? 'application/javascript' : 'text/plain';
-    res.writeHead(200);
+    res.writeHead(200, { 'Content-Type': contentType });
     res.end(data);
   });
 });
