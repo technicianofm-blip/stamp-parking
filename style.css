@@ -151,8 +151,10 @@ body{
 .form-group label .req{color:var(--d);margin-left:2px}
 .form-control{
   padding:10px 12px;border:1.5px solid var(--g300);border-radius:8px;
-  font-size:14px;transition:border-color .2s;outline:none;background:#fff;width:100%
+  font-size:14px;transition:border-color .2s;outline:none;background:#fff;width:100%;
+  color:var(--g700) /* กำหนดเอง เพราะ input/select ได้สี UA fieldtext (=ดำ) ถ้าไม่ตั้ง → อ่านไม่ออกใน dark theme */
 }
+.form-control::placeholder{color:var(--g400)}
 .form-control:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .form-control.err{border-color:var(--d)}
 select.form-control{
@@ -226,7 +228,7 @@ select.form-control{
 .toolbar .search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--g400)}
 .toolbar select{
   padding:7px 24px 7px 10px;border:1.5px solid var(--g300);border-radius:8px;font-size:12px;
-  background:#fff;appearance:none;
+  background:#fff;appearance:none;color:var(--g700);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 7px center;cursor:pointer
 }
@@ -246,7 +248,7 @@ tr:hover td{background:var(--g50)}
 .badge-pending{background:#fef3c7;color:#92400e}
 .badge-approved{background:#d1fae5;color:#065f46}
 .badge-rejected{background:#fce4ec;color:#b71c1c}
-.status-select,.discount-select{padding:3px 6px;border:1px solid var(--g300);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;width:96px}
+.status-select,.discount-select{padding:3px 6px;border:1px solid var(--g300);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;width:96px;color:var(--g700)}
 .status-select:focus,.discount-select:focus{outline:none;border-color:var(--p)}
 
 /* Setup */
@@ -383,6 +385,7 @@ html[data-theme="dark"]{
   --g400:#94a3b8;--g500:#94a3b8;--g600:#cbd5e1;--g700:#e2e8f0;--g800:#f1f5f9;
   --pl:#16243c;
   --sh:0 1px 3px rgba(0,0,0,.5);--shl:0 4px 20px rgba(0,0,0,.55);
+  color-scheme:dark /* ทำให้ native control (select dropdown/date picker/scrollbar) เป็นโหมดมืดตามด้วย */
 }
 html[data-theme="dark"] .card,
 html[data-theme="dark"] .stat,
@@ -413,3 +416,7 @@ html[data-theme="dark"] .badge-out,html[data-theme="dark"] .badge-pending,html[d
 html[data-theme="dark"] .badge-bike{background:#1e2a4f;color:#a5b4fc}
 html[data-theme="dark"] .badge-car{background:#3b1d4a;color:#d8b4fe}
 html[data-theme="dark"] .badge-rejected{background:#3a1d21;color:#fda4af}
+/* สีตัวเลข/ปุ่มที่เข้มเกินไปบนพื้นมืด → ยกสว่างให้อ่านง่าย (เฉพาะ dark) */
+html[data-theme="dark"] .stat.purple .v{color:#a78bfa}
+html[data-theme="dark"] .stat.red .v{color:#f87171}
+html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
