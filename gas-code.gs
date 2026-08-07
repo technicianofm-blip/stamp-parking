@@ -720,7 +720,7 @@ function getAllRecords(sheetId) {
       vehicleType: String(row[COL.vehicle] || ''),
       ticketNo: String(row[COL.ticketNo] || ''),
       photo: String(row[COL.photo] || ''),
-      createdAt: row[COL.createdAt] instanceof Date ? Utilities.formatDate(row[COL.createdAt], 'Asia/Bangkok', "yyyy-MM-dd'T'HH:mm:ss'Z'") : String(row[COL.createdAt] || ''),
+      createdAt: row[COL.createdAt] instanceof Date ? row[COL.createdAt].toISOString() : String(row[COL.createdAt] || ''),
       status: String(row[COL.status] || 'รออนุมัติ'),
       discount: String(row[COL.discount] || '')
     });
