@@ -474,7 +474,7 @@
         <div class="wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>ชื่อ</th><th>ยานพาหนะ</th><th>Ticket</th><th>ส่วนลด</th><th>สถานะ</th><th style="width:32px"></th>
+              <th>#</th><th>ชื่อ</th><th>ลงเวลา</th><th>Ticket</th><th>ส่วนลด</th><th>สถานะ</th><th style="width:32px"></th>
             </tr></thead>
             <tbody id="mobTbody"></tbody>
           </table>
@@ -1717,7 +1717,7 @@ function render(){
       return `<tr>
         <td>${startIdx+i+1}</td>
         <td>${esc(x.name)}</td>
-        <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType==='รถจักรยานยนต์'?'🏍':'🚗'}</span></td>
+        <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
         <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
         <td>
           <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)" style="width:65px;font-size:11px;padding:3px">
