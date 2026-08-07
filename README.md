@@ -7,9 +7,11 @@
 ```
 📦 D:\claude code\
  ├── 📄 index.html            # 🌐 Frontend หลัก (รองรับ Desktop + Mobile)
+ ├── 📄 style.css             # 🎨 CSS หลัก (design tokens + components)
  ├── 📄 gas-code.gs           # ⚙️ Google Apps Script (Backend API)
  ├── 📄 index.js              # 🧪 Mock server (Node) จำลอง GAS สำหรับทดสอบ auth ในเครื่อง
  ├── 📄 test-auth.js          # 🧪 Test suite ระบบ auth (22 cases — รัน: node test-auth.js)
+ ├── 📄 test-production.js    # 🧪 Smoke test production (รัน: node test-production.js <password>)
  ├── 📄 toast-enhancements.js # 🔔 Enhanced toast UI (โหลดโดย index.html)
  ├── 📄 README.md             # 📖 คู่มือนี้
  └── 📄 .gitignore            # กันไฟล์อ่อนไหว/ขยะไม่ให้ commit
@@ -103,7 +105,7 @@
 | **Local** (ง่ายสุด) | เปิด `index.html` ใน Chrome/Edge โดยตรง |
 | **GitHub Pages** (แนะนำ) | Push ไป GitHub Repo → Settings > Pages → เลือก branch main |
 
-## 5️⃣ ตั้งค่าในหน้าเว็บ
+## 6️⃣ ตั้งค่าในหน้าเว็บ
 1. เปิดหน้าเว็บ → ไปที่ **⚙️ ตั้งค่า**
 2. วาง **Web App URL** → กด **💾 บันทึก**
 3. *(ไม่บังคับ)* ใส่ **Google Sheet ID** และ **Google Drive Folder ID** → กดบันทึก
