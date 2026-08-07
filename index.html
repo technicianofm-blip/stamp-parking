@@ -53,7 +53,7 @@
       <button class="sidebar-item" data-page="setup" onclick="go('setup')">
         ⚙️ ตั้งค่า
       </button>
-      <button class="sidebar-item" onclick="toggleTheme()" title="สลับธีมมืด/สว่าง">
+      <button class="sidebar-item" onclick="toggleTheme()" aria-label="สลับธีมมืด/สว่าง" title="สลับธีมมืด/สว่าง">
         <span class="th-icon">🌙</span><span class="th-label">โหมดมืด</span>
       </button>
     </nav>
@@ -177,7 +177,7 @@
               <label>เลขบัตรจอดรถ (Ticket No.) <span class="req">*</span></label>
               <div class="input-row">
                 <input type="text" class="form-control" id="deskTicket" placeholder="17 หลัก" maxlength="17" required enterkeyhint="done" oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
-                <button type="button" class="btn btn-o" onclick="scanTicket('desk')" title="สแกนบาร์โค้ด">📷</button>
+                <button type="button" class="btn btn-o" onclick="scanTicket('desk')" aria-label="สแกนบาร์โค้ด" title="สแกนบาร์โค้ด">📷</button>
               </div>
               <div class="err-msg" id="deskTicketErr">กรุณากรอกเลขบัตร 17 หลัก</div>
               <div class="help">🆔 หมายเลข Ticket 17 หลัก</div>
@@ -209,7 +209,7 @@
 
     <!-- Dashboard Page -->
     <div class="page" id="desk-page-dash">
-      <div class="page-header">📊 Dashboard <span style="flex:1"></span><button class="bell-btn" onclick="markSeen()" title="ข้อมูลใหม่">🔔<span class="bell-badge" id="deskBellBadge">0</span></button></div>
+      <div class="page-header">📊 Dashboard <span style="flex:1"></span><button class="bell-btn" onclick="toggleNotifPanel()" aria-label="การแจ้งเตือนข้อมูลใหม่" title="ข้อมูลใหม่">🔔<span class="bell-badge" id="deskBellBadge">0</span></button></div>
       <div class="stats" id="deskStats">
         <div class="stat"><div class="v" id="deskStTotal">0</div><div class="l">ทั้งหมด</div></div>
         <div class="stat green"><div class="v" id="deskStOfm">0</div><div class="l">OFM</div></div>
@@ -224,23 +224,34 @@
         </div>
         <canvas id="deskChart" class="analytics-canvas"></canvas>
       </div>
+      <div class="card">
+        <div class="card-title">🔥 การใช้งานรายสัปดาห์ <span style="flex:1"></span>
+          <span class="heat-legend">น้อย <span class="heat-swatch" style="background:rgba(59,130,246,.2)"></span> มาก <span class="heat-swatch" style="background:#3b82f6"></span></span>
+        </div>
+        <div id="deskHeatmap" class="heatmap"></div>
+      </div>
       <div class="sync-bar">
         <span class="sync-text" id="deskSync">🔄 —</span>
         <div class="sync-actions">
-          <button class="btn btn-o btn-sm" onclick="refresh()">🔄 รีเฟรช</button>
-          <button class="btn btn-o btn-sm" onclick="exportCSV()">📥 CSV</button>
+          <button class="btn btn-o btn-sm" onclick="refresh()" aria-label="รีเฟรชข้อมูล">🔄 รีเฟรช</button>
+          <button class="btn btn-o btn-sm" onclick="exportCSV()" aria-label="ดาวน์โหลด CSV">📥 CSV</button>
         </div>
       </div>
       <div class="card" style="padding:16px">
         <div class="toolbar">
           <div class="search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="form-control" id="deskSearch" placeholder="ค้นหา..." oninput="render()">
+            <input type="text" class="form-control" id="deskSearch" placeholder="ค้นหา..." aria-label="ค้นหา" oninput="onSearch()">
           </div>
-          <select id="deskFDept" onchange="render()"><option value="">หน่วยงาน</option><option value="OFM">OFM</option><option value="PCS">PCS</option></select>
-          <select id="deskFVehicle" onchange="render()"><option value="">ยานพาหนะ</option><option value="รถจักรยานยนต์">🏍 จักรยานยนต์</option><option value="รถยนต์">🚗 รถยนต์</option></select>
-          <select id="deskFStatus" onchange="render()"><option value="">สถานะ</option><option value="รออนุมัติ">⏳ รออนุมัติ</option><option value="อนุมัติ">✅ อนุมัติ</option><option value="ไม่อนุมัติ">❌ ไม่อนุมัติ</option></select>
-          <input type="date" class="form-control" id="deskFDate" onchange="render()" style="width:auto;max-width:150px">
+          <select id="deskFDept" aria-label="กรองหน่วยงาน" onchange="filterChange()"><option value="">หน่วยงาน</option><option value="OFM">OFM</option><option value="PCS">PCS</option></select>
+          <select id="deskFVehicle" aria-label="กรองยานพาหนะ" onchange="filterChange()"><option value="">ยานพาหนะ</option><option value="รถจักรยานยนต์">🏍 จักรยานยนต์</option><option value="รถยนต์">🚗 รถยนต์</option></select>
+          <select id="deskFStatus" aria-label="กรองสถานะ" onchange="filterChange()"><option value="">สถานะ</option><option value="รออนุมัติ">⏳ รออนุมัติ</option><option value="อนุมัติ">✅ อนุมัติ</option><option value="ไม่อนุมัติ">❌ ไม่อนุมัติ</option></select>
+          <select id="deskFPhoto" aria-label="กรองรูปภาพ" onchange="filterChange()"><option value="">รูป</option><option value="has">📷 มีรูป</option><option value="none">🚫 ไม่มีรูป</option></select>
+          <span class="date-range">
+            <input type="date" class="form-control" id="deskFDateFrom" aria-label="วันที่เริ่มต้น" onchange="filterChange()" style="width:auto;max-width:140px">
+            <span class="date-sep">–</span>
+            <input type="date" class="form-control" id="deskFDateTo" aria-label="วันที่สิ้นสุด" onchange="filterChange()" style="width:auto;max-width:140px">
+          </span>
         </div>
         <div class="wrap">
           <table>
@@ -249,6 +260,11 @@
             </tr></thead>
             <tbody id="deskTbody"></tbody>
           </table>
+        </div>
+        <div class="pager">
+          <button class="btn btn-o btn-sm" id="deskPrev" onclick="setPage(page-1)">◀ ก่อนหน้า</button>
+          <span class="pager-info" id="deskPageInfo">หน้า 1/1</span>
+          <button class="btn btn-o btn-sm" id="deskNext" onclick="setPage(page+1)">ถัดไป ▶</button>
         </div>
       </div>
     </div>
@@ -266,7 +282,7 @@
       Stamp Parking
       <span class="conn-dot" id="mobConnDot"></span>
     </div>
-    <button class="theme-btn" onclick="toggleTheme()" title="สลับธีมมืด/สว่าง">
+    <button class="theme-btn" onclick="toggleTheme()" aria-label="สลับธีมมืด/สว่าง" title="สลับธีมมืด/สว่าง">
       <span class="th-icon">🌙</span><span class="th-label">โหมดมืด</span>
     </button>
   </div>
@@ -376,7 +392,7 @@
               <label>เลขบัตรจอดรถ <span class="req">*</span></label>
               <div class="input-row">
                 <input type="text" class="form-control" id="mobTicket" placeholder="17 หลัก" maxlength="17" required enterkeyhint="done" oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
-                <button type="button" class="btn btn-o" onclick="scanTicket('mob')" title="สแกนบาร์โค้ด">📷</button>
+                <button type="button" class="btn btn-o" onclick="scanTicket('mob')" aria-label="สแกนบาร์โค้ด" title="สแกนบาร์โค้ด">📷</button>
               </div>
               <div class="err-msg" id="mobTicketErr">กรุณากรอกเลขบัตร 17 หลัก</div>
             </div>
@@ -421,22 +437,35 @@
         </div>
         <canvas id="mobChart" class="analytics-canvas"></canvas>
       </div>
+      <div class="card">
+        <div class="card-title">🔥 รายสัปดาห์ <span style="flex:1"></span>
+          <span class="heat-legend">น้อย <span class="heat-swatch" style="background:rgba(59,130,246,.2)"></span> มาก <span class="heat-swatch" style="background:#3b82f6"></span></span>
+        </div>
+        <div id="mobHeatmap" class="heatmap"></div>
+      </div>
       <div class="sync-bar">
         <span class="sync-text" id="mobSync">🔄 —</span>
         <div class="sync-actions">
-          <button class="bell-btn" onclick="markSeen()" title="ข้อมูลใหม่" style="font-size:18px">🔔<span class="bell-badge" id="mobBellBadge">0</span></button>
-          <button class="btn btn-o btn-sm" onclick="refresh()">🔄</button>
-          <button class="btn btn-o btn-sm" onclick="exportCSV()">📥</button>
+          <button class="bell-btn" onclick="toggleNotifPanel()" aria-label="การแจ้งเตือนข้อมูลใหม่" title="ข้อมูลใหม่" style="font-size:18px">🔔<span class="bell-badge" id="mobBellBadge">0</span></button>
+          <button class="btn btn-o btn-sm" onclick="refresh()" aria-label="รีเฟรชข้อมูล">🔄</button>
+          <button class="btn btn-o btn-sm" onclick="exportCSV()" aria-label="ดาวน์โหลด CSV">📥</button>
         </div>
       </div>
       <div class="card" style="padding:12px">
         <div class="toolbar">
           <div class="search">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="form-control" id="mobSearch" placeholder="ค้นหา..." oninput="render()">
+            <input type="text" class="form-control" id="mobSearch" placeholder="ค้นหา..." aria-label="ค้นหา" oninput="onSearch()">
           </div>
-          <select id="mobFStatus" onchange="render()"><option value="">สถานะ</option><option value="รออนุมัติ">⏳</option><option value="อนุมัติ">✅</option><option value="ไม่อนุมัติ">❌</option></select>
-          <input type="date" class="form-control" id="mobFDate" onchange="render()" style="width:auto;max-width:140px">
+          <select id="mobFDept" aria-label="กรองหน่วยงาน" onchange="filterChange()"><option value="">หน่วยงาน</option><option value="OFM">OFM</option><option value="PCS">PCS</option></select>
+          <select id="mobFVehicle" aria-label="กรองยานพาหนะ" onchange="filterChange()"><option value="">ยานพาหนะ</option><option value="รถจักรยานยนต์">🏍 จักรยานยนต์</option><option value="รถยนต์">🚗 รถยนต์</option></select>
+          <select id="mobFStatus" aria-label="กรองสถานะ" onchange="filterChange()"><option value="">สถานะ</option><option value="รออนุมัติ">⏳</option><option value="อนุมัติ">✅</option><option value="ไม่อนุมัติ">❌</option></select>
+          <select id="mobFPhoto" aria-label="กรองรูปภาพ" onchange="filterChange()"><option value="">รูป</option><option value="has">📷 มีรูป</option><option value="none">🚫 ไม่มี</option></select>
+          <span class="date-range">
+            <input type="date" class="form-control" id="mobFDateFrom" aria-label="วันที่เริ่มต้น" onchange="filterChange()" style="width:auto;max-width:130px">
+            <span class="date-sep">–</span>
+            <input type="date" class="form-control" id="mobFDateTo" aria-label="วันที่สิ้นสุด" onchange="filterChange()" style="width:auto;max-width:130px">
+          </span>
         </div>
         <div class="wrap">
           <table>
@@ -445,6 +474,11 @@
             </tr></thead>
             <tbody id="mobTbody"></tbody>
           </table>
+        </div>
+        <div class="pager">
+          <button class="btn btn-o btn-sm" id="mobPrev" onclick="setPage(page-1)">◀ ก่อนหน้า</button>
+          <span class="pager-info" id="mobPageInfo">หน้า 1/1</span>
+          <button class="btn btn-o btn-sm" id="mobNext" onclick="setPage(page+1)">ถัดไป ▶</button>
         </div>
       </div>
     </div>
@@ -477,7 +511,7 @@
 <!-- ===== Modal Photo ===== -->
 <div class="modal" id="photoModal">
   <div class="modal-box">
-    <div class="modal-hd"><h3>📸 รูปภาพ</h3><button class="modal-close" onclick="closeModal('photoModal')">&times;</button></div>
+    <div class="modal-hd"><h3>📸 รูปภาพ</h3><button class="modal-close" onclick="closeModal('photoModal')" aria-label="ปิด">&times;</button></div>
     <div class="modal-bd"><img id="modalImg" src="" alt="photo"></div>
   </div>
 </div>
@@ -485,7 +519,7 @@
 <!-- ===== Modal Confirm ===== -->
 <div class="modal" id="confirmModal">
   <div class="modal-box" style="max-width:360px">
-    <div class="modal-hd"><h3>⚠️ ยืนยัน</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
+    <div class="modal-hd"><h3>⚠️ ยืนยัน</h3><button class="modal-close" onclick="closeModal('confirmModal')" aria-label="ปิด">&times;</button></div>
     <div class="modal-bd">
       <p style="text-align:center;color:var(--g600);margin-bottom:12px">คุณแน่ใจหรือไม่?</p>
       <div class="confirm-actions">
@@ -496,12 +530,22 @@
   </div>
 </div>
 
+<!-- ===== Notification Center ===== -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-hd"><span>🔔 ข้อมูลใหม่</span>
+    <span style="flex:1"></span>
+    <button class="btn btn-o btn-sm" onclick="notifMarkAll()">อ่านทั้งหมด</button>
+  </div>
+  <div class="notif-list" id="notifList"></div>
+  <div class="notif-empty" id="notifEmpty">ไม่มีข้อมูลใหม่</div>
+</div>
+
 <div id="toasts"></div>
 
 <!-- ===== Modal Scan ===== -->
 <div class="modal" id="scanModal" onclick="if(event.target===this)closeScan()">
   <div class="modal-box" style="max-width:500px">
-    <div class="modal-hd"><h3>📷 สแกนบาร์โค้ด</h3><button class="modal-close" onclick="closeScan()">&times;</button></div>
+    <div class="modal-hd"><h3>📷 สแกนบาร์โค้ด</h3><button class="modal-close" onclick="closeScan()" aria-label="ปิด">&times;</button></div>
     <div class="modal-bd">
       <video id="scanVideo" autoplay playsinline style="width:100%;border-radius:8px;max-height:60vh;object-fit:contain;background:#000"></video>
       <p id="scanStatus" style="text-align:center;margin-top:10px;color:var(--g500)">📷 กำลังมองหาบาร์โค้ด...</p>
@@ -1347,7 +1391,6 @@ function markSeen(){
   c.seenAt=new Date().toISOString()
   localStorage.setItem(CFG_KEY,JSON.stringify(c))
   updateBell()
-  toast('✅ ทำเครื่องหมายว่าอ่านแล้ว','s')
 }
 
 // ===================================================================
@@ -1413,6 +1456,144 @@ function renderChart(){
 // วาดกราฟใหม่เมื่อย่อ/ขยายหน้าต่าง (หน้าจอเปลี่ยนความกว้าง)
 window.addEventListener('resize',()=>{ if(getToken()) setTimeout(renderChart,100) })
 
+// ===================================================================
+//  PERFORMANCE — debounce ค้นหา + pagination (PAGE_SIZE แถว/หน้า)
+// ===================================================================
+let page=1;const PAGE_SIZE=50;let totalPages=1
+function onSearch(){ // ค้นหา: debounce 250ms แล้วกลับหน้าว่างแรก
+  clearTimeout(onSearch._t)
+  onSearch._t=setTimeout(()=>{page=1;render()},250)
+}
+function filterChange(){ // เปลี่ยน filter → กลับหน้าว่างแรก
+  page=1;render()
+}
+function setPage(p){
+  page=Math.min(Math.max(1,p),totalPages)
+  render()
+}
+function renderPager(){
+  ;['desk','mob'].forEach(pr=>{
+    const info=document.getElementById(pr+'PageInfo')
+    if(!info)return
+    info.textContent='หน้า '+page+'/'+totalPages
+    const prev=document.getElementById(pr+'Prev');if(prev)prev.disabled=page<=1
+    const next=document.getElementById(pr+'Next');if(next)next.disabled=page>=totalPages
+  })
+}
+
+// ===================================================================
+//  NOTIFICATION CENTER — กด bell เปิดรายการข้อมูลใหม่ (หลัง seenAt)
+// ===================================================================
+function toggleNotifPanel(){
+  const p=document.getElementById('notifPanel')
+  if(p.classList.contains('show')){closeNotifPanel();return}
+  buildNotifList();p.classList.add('show')
+}
+function buildNotifList(){
+  const c=cfg();const t=new Date(c.seenAt||0).getTime()
+  const list=cacheR().filter(r=>new Date(r.createdAt).getTime()>t)
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,20)
+  const el=document.getElementById('notifList')
+  const empty=document.getElementById('notifEmpty')
+  if(!list.length){el.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none'
+  el.innerHTML=list.map(x=>{
+    const d=new Date(x.createdAt)
+    const tstr=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})
+    return `<button class="notif-item" onclick="notifOpen('${esc(x.id)}')" title="ดูรายละเอียด">
+      <span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${x.department}</span>
+      <span class="notif-name">${esc(x.name)}</span>
+      <span class="notif-meta">${tstr} · ${esc(x.ticketNo)}${x.photo?' · 📷':''}</span>
+    </button>`
+  }).join('')
+}
+function notifOpen(id){
+  const r=cacheR().find(x=>x.id===id)
+  if(r&&r.photo)viewPhoto(id)
+  else if(r)toast('🎫 '+r.name+' · '+r.ticketNo+' · '+r.department,'i')
+  closeNotifPanel()
+}
+function closeNotifPanel(){
+  const p=document.getElementById('notifPanel')
+  if(!p.classList.contains('show'))return
+  p.classList.remove('show')
+  markSeen() // อ่านแล้วเมื่อปิด panel
+}
+function notifMarkAll(){
+  markSeen();closeNotifPanel()
+}
+
+// ===================================================================
+//  HEATMAP — การใช้งานรายสัปดาห์ (วันในสัปดาห์ × ช่วง 2 ชม. สีตามจำนวน)
+// ===================================================================
+function renderHeatmap(){
+  const id=(isDesktop()?'desk':'mob')+'Heatmap'
+  const el=document.getElementById(id)
+  if(!el)return
+  const days=['อา','จ','อ','พ','พฤ','ศ','ส']
+  const dayNames=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์']
+  const grid=[]
+  for(let d=0;d<7;d++)grid.push(new Array(12).fill(0))
+  cacheR().forEach(x=>{
+    const dt=new Date(x.createdAt)
+    grid[dt.getDay()][Math.floor(dt.getHours()/2)]++
+  })
+  if(!cacheR().length){el.innerHTML='<div class="heat-empty">📭 ยังไม่มีข้อมูล</div>';return}
+  const max=Math.max(1,...grid.flat())
+  let html='<span></span>'+[0,2,4,6,8,10,12,14,16,18,20,22].map(h=>`<span class="heat-hour">${h}</span>`).join('')
+  days.forEach((day,di)=>{
+    html+='<span class="heat-day">'+day+'</span>'
+    for(let h=0;h<12;h++){
+      const c=grid[di][h],inten=c?c/max:0
+      const bg=c?'rgba(59,130,246,'+(0.15+0.75*inten).toFixed(2)+')':'rgba(148,163,184,.08)'
+      const fg=inten>.5?'#fff':'var(--g600)'
+      html+=`<span class="heat-cell" style="background:${bg};color:${fg}" title="${dayNames[di]} ${String(h*2).padStart(2,'0')}:00–${String(h*2+2).padStart(2,'0')}:00 · ${c} รายการ">${c||''}</span>`
+    }
+  })
+  el.innerHTML=html
+}
+
+// ===================================================================
+//  ACCESSIBILITY — focus trap modal + auto label + openModal (โฟกัส)
+// ===================================================================
+let _lastFocus=null
+function openModal(id){
+  const m=document.getElementById(id)
+  if(!m)return
+  _lastFocus=document.activeElement
+  m.classList.add('show')
+  setTimeout(()=>{
+    const el=m.querySelector('.modal-close,button,input,select,textarea')
+    if(el&&typeof el.focus==='function')el.focus()
+  },50)
+}
+// Tab ใน modal → วนอยู่ใน modal; Esc → ปิด modal (แยกกรณี login/scan)
+document.addEventListener('keydown',e=>{
+  const m=document.querySelector('.modal.show')
+  if(!m)return
+  if(e.key==='Escape'){
+    const id=m.id
+    if(id==='loginModal')closeLoginModal()
+    else if(id==='scanModal')closeScan()
+    else closeModal(id)
+    return
+  }
+  if(e.key!=='Tab')return
+  const f=m.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')
+  if(!f.length)return
+  const first=f[0],last=f[f.length-1]
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  else if(!m.contains(document.activeElement)){e.preventDefault();first.focus()}
+})
+// เชื่อม label ใน .form-group กับ input ให้ screen reader รู้ชื่อช่อง
+;['desk','mob'].forEach(p=>{
+  document.querySelectorAll('#'+p+'Form .form-group').forEach(g=>{
+    const l=g.querySelector('label'),inp=g.querySelector('.form-control,select,textarea')
+    if(l&&inp&&!inp.getAttribute('aria-label'))inp.setAttribute('aria-label',l.textContent.replace('*','').trim())
+  })
+})
+
 function render(){
   const isD=isDesktop()
   const prefix=isD?'desk':'mob'
@@ -1421,19 +1602,26 @@ function render(){
   const fd=document.getElementById(prefix+'FDept')
   const fv=document.getElementById(prefix+'FVehicle')
   const fs=document.getElementById(prefix+'FStatus')
-  const fdate=document.getElementById(prefix+'FDate')
+  const fdateFrom=document.getElementById(prefix+'FDateFrom')
+  const fdateTo=document.getElementById(prefix+'FDateTo')
+  const fphoto=document.getElementById(prefix+'FPhoto')
 
   const search=s?s.value.toLowerCase().trim():''
   const deptFilter=fd?fd.value:''
   const vehicleFilter=fv?fv.value:''
   const statusFilter=fs?fs.value:''
-  const dateFilter=fdate?fdate.value:''
+  const dateFrom=fdateFrom?fdateFrom.value:''
+  const dateTo=fdateTo?fdateTo.value:''
+  const photoFilter=fphoto?fphoto.value:''
 
   if(search) r=r.filter(x=>x.name.toLowerCase().includes(search)||(x.nickname&&x.nickname.toLowerCase().includes(search))||(x.phone&&x.phone.includes(search))||x.ticketNo.toLowerCase().includes(search))
   if(deptFilter) r=r.filter(x=>x.department===deptFilter)
   if(vehicleFilter) r=r.filter(x=>x.vehicleType===vehicleFilter)
   if(statusFilter) r=r.filter(x=>x.status===statusFilter)
-  if(dateFilter) r=r.filter(x=>{const d=new Date(x.createdAt);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')===dateFilter})
+  if(photoFilter==='has') r=r.filter(x=>!!x.photo)
+  if(photoFilter==='none') r=r.filter(x=>!x.photo)
+  if(dateFrom) r=r.filter(x=>{const d=new Date(x.createdAt);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')>=dateFrom})
+  if(dateTo) r=r.filter(x=>{const d=new Date(x.createdAt);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')<=dateTo})
 
   // Stats
   const a=cacheR()
@@ -1445,11 +1633,17 @@ function render(){
   setStat(prefix+'StCar',a.filter(x=>x.vehicleType==='รถยนต์').length)
   setStat(prefix+'StToday',a.filter(x=>{const d=new Date(x.createdAt),n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()}).length)
   renderChart()
+  renderHeatmap()
 
-  // Table
+  // Table — แสดงทีละหน้า (pagination: PAGE_SIZE แถว/หน้า)
   const tbody=document.getElementById(prefix+'Tbody')
   if(!tbody)return
+  totalPages=Math.max(1,Math.ceil(r.length/PAGE_SIZE))
+  if(page>totalPages)page=totalPages
+  renderPager()
   if(!r.length){tbody.innerHTML='<tr class="empty"><td colspan="10">📭 ไม่พบข้อมูล</td></tr>';return}
+  const startIdx=(page-1)*PAGE_SIZE
+  r=r.slice(startIdx,startIdx+PAGE_SIZE)
 
   if(isD){
     // Desktop table — full columns
@@ -1458,7 +1652,7 @@ function render(){
       const ds=d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})
       const ts=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})
       return `<tr>
-        <td>${i+1}</td>
+        <td>${startIdx+i+1}</td>
         <td><strong>${esc(x.name)}</strong></td>
         <td><span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${x.department}</span></td>
         <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
@@ -1480,16 +1674,16 @@ function render(){
             <option value="ไม่อนุมัติ" ${x.status==='ไม่อนุมัติ'?'selected':''}>❌ ไม่อนุมัติ</option>
           </select>
         </td>
-        <td>${x.photo?`<button class="btn btn-o btn-sm" onclick="viewPhoto('${esc(x.id)}')">📷</button>`:'—'}</td>
+        <td>${x.photo?`<button class="btn btn-o btn-sm" onclick="viewPhoto('${esc(x.id)}')" aria-label="ดูรูปภาพ" title="ดูรูปภาพ">📷</button>`:'—'}</td>
         <td style="font-size:11px;white-space:nowrap">${ds}<br><span style="color:var(--g400)">${ts}</span></td>
-        <td><button class="btn btn-d btn-sm" onclick="promptDel('${esc(x.id)}')" title="ลบ">🗑</button></td>
+        <td><button class="btn btn-d btn-sm" onclick="promptDel('${esc(x.id)}')" aria-label="ลบรายการ" title="ลบ">🗑</button></td>
       </tr>`
     }).join('')
   } else {
     // Mobile table — compact columns
     tbody.innerHTML=r.map((x,i)=>{
       return `<tr>
-        <td>${i+1}</td>
+        <td>${startIdx+i+1}</td>
         <td>${esc(x.name)}</td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType==='รถจักรยานยนต์'?'🏍':'🚗'}</span></td>
         <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
@@ -1510,8 +1704,8 @@ function render(){
           </select>
         </td>
         <td style="white-space:nowrap">
-          ${x.photo?`<button class="btn btn-o btn-sm" onclick="viewPhoto('${esc(x.id)}')" style="padding:3px 6px;font-size:10px">📷</button>`:''}
-          <button class="btn btn-d btn-sm" onclick="promptDel('${esc(x.id)}')" style="padding:3px 6px;font-size:10px">🗑</button>
+          ${x.photo?`<button class="btn btn-o btn-sm" onclick="viewPhoto('${esc(x.id)}')" aria-label="ดูรูปภาพ" style="padding:3px 6px;font-size:10px">📷</button>`:''}
+          <button class="btn btn-d btn-sm" onclick="promptDel('${esc(x.id)}')" aria-label="ลบรายการ" style="padding:3px 6px;font-size:10px">🗑</button>
         </td>
       </tr>`
     }).join('')
@@ -1558,8 +1752,8 @@ async function updateDiscount(el){
 //  DELETE
 // ===================================================================
 let delId=null
-function promptDel(id){delId=id;document.getElementById('confirmModal').classList.add('show')}
-function closeModal(id){document.getElementById(id).classList.remove('show');delId=null}
+function promptDel(id){delId=id;openModal('confirmModal')}
+function closeModal(id){document.getElementById(id).classList.remove('show');delId=null;if(_lastFocus&&_lastFocus.focus)_lastFocus.focus()}
 async function doDelete(){
   if(!delId)return
   const btn=document.getElementById('confirmBtn');btn.disabled=true;btn.innerHTML='กำลังลบ...'
@@ -1584,7 +1778,7 @@ function viewPhoto(id){
   const r=cacheR().find(x=>x.id===id)
   if(!r||!r.photo)return
   document.getElementById('modalImg').src=r.photo
-  document.getElementById('photoModal').classList.add('show')
+  openModal('photoModal')
 }
 
 // ===================================================================
@@ -1768,8 +1962,7 @@ window.clearAllData = () => {
 }
 // ตั้งค่าเริ่มต้นฟอร์ม
 resetForm('desk');resetForm('mob');initDatalists()
-// ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
-;['deskFDate','mobFDate'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)})
+// filter วันที่ (จาก/ถึง) เริ่มต้นว่าง = แสดงทั้งหมด (advanced search)
 // โหลดข้อมูล Dashboard เฉพาะเมื่อมี token (ล็อกอินแล้ว) เท่านั้น
 // ผู้ใช้ทั่วไปที่แค่บันทึกข้อมูลไม่ต้องเรียก getAll (ที่ต้อง auth) → เลี่ยง 401 ที่ทำให้เด้ง "เชื่อมต่อไม่ได้"
 if(gasUrl() && getToken())refresh()
