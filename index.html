@@ -132,16 +132,16 @@
           <div class="form-grid">
             <div class="form-group">
               <label>ชื่อ-นามสกุล <span class="req">*</span></label>
-              <input type="text" class="form-control" id="deskName" list="deskNameList" placeholder="สมชาย ใจดี" required>
+              <input type="text" class="form-control" id="deskName" list="deskNameList" placeholder="สมชาย ใจดี" required enterkeyhint="next">
               <div class="err-msg" id="deskNameErr">กรุณากรอกชื่อ-นามสกุล</div>
             </div>
             <div class="form-group">
               <label>ชื่อเล่น</label>
-              <input type="text" class="form-control" id="deskNickname" list="deskNickList" placeholder="ชาย">
+              <input type="text" class="form-control" id="deskNickname" list="deskNickList" placeholder="ชาย" enterkeyhint="next">
             </div>
             <div class="form-group">
               <label>เบอร์ติดต่อ</label>
-              <input type="tel" class="form-control" id="deskPhone" list="deskPhoneList" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <input type="tel" class="form-control" id="deskPhone" list="deskPhoneList" placeholder="0812345678" maxlength="10" inputmode="numeric" enterkeyhint="next" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
               <div class="err-msg" id="deskPhoneErr">เบอร์ต้องมี 10 หลัก</div>
             </div>
             <div class="form-group">
@@ -172,7 +172,7 @@
             <div class="form-group full">
               <label>เลขบัตรจอดรถ (Ticket No.) <span class="req">*</span></label>
               <div class="input-row">
-                <input type="text" class="form-control" id="deskTicket" placeholder="17 หลัก" maxlength="17" required oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
+                <input type="text" class="form-control" id="deskTicket" placeholder="17 หลัก" maxlength="17" required enterkeyhint="done" oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
                 <button type="button" class="btn btn-o" onclick="scanTicket('desk')" title="สแกนบาร์โค้ด">📷</button>
               </div>
               <div class="err-msg" id="deskTicketErr">กรุณากรอกเลขบัตร 17 หลัก</div>
@@ -322,16 +322,16 @@
           <div class="form-grid">
             <div class="form-group">
               <label>ชื่อ-นามสกุล <span class="req">*</span></label>
-              <input type="text" class="form-control" id="mobName" list="mobNameList" placeholder="สมชาย ใจดี" required>
+              <input type="text" class="form-control" id="mobName" list="mobNameList" placeholder="สมชาย ใจดี" required enterkeyhint="next">
               <div class="err-msg" id="mobNameErr">กรุณากรอกชื่อ-นามสกุล</div>
             </div>
             <div class="form-group">
               <label>ชื่อเล่น</label>
-              <input type="text" class="form-control" id="mobNickname" list="mobNickList" placeholder="ชาย">
+              <input type="text" class="form-control" id="mobNickname" list="mobNickList" placeholder="ชาย" enterkeyhint="next">
             </div>
             <div class="form-group">
               <label>เบอร์ติดต่อ</label>
-              <input type="tel" class="form-control" id="mobPhone" list="mobPhoneList" placeholder="0812345678" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <input type="tel" class="form-control" id="mobPhone" list="mobPhoneList" placeholder="0812345678" maxlength="10" inputmode="numeric" enterkeyhint="next" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
               <div class="err-msg" id="mobPhoneErr">เบอร์ต้องมี 10 หลัก</div>
             </div>
             <div class="form-group">
@@ -362,7 +362,7 @@
             <div class="form-group full">
               <label>เลขบัตรจอดรถ <span class="req">*</span></label>
               <div class="input-row">
-                <input type="text" class="form-control" id="mobTicket" placeholder="17 หลัก" maxlength="17" required oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
+                <input type="text" class="form-control" id="mobTicket" placeholder="17 หลัก" maxlength="17" required enterkeyhint="done" oninput="this.value=this.value.replace(/[^0-9a-zA-Z]/g,'').toUpperCase()">
                 <button type="button" class="btn btn-o" onclick="scanTicket('mob')" title="สแกนบาร์โค้ด">📷</button>
               </div>
               <div class="err-msg" id="mobTicketErr">กรุณากรอกเลขบัตร 17 หลัก</div>
@@ -1692,6 +1692,19 @@ resetForm('desk');resetForm('mob');initDatalists()
 if(gasUrl() && getToken())refresh()
 if(getToken())renderUserMgmt()
 removeLegacyPinKeys()
+
+// ===================================================================
+//  MOBILE KEYBOARD — เลื่อนช่องกรอกให้พ้นแป้นพิมพ์ตอน focus (มือถือ)
+//  แป้นพิมพ์บนมือถือกินพื้นที่จอ → เลื่อน input ที่ focus ขึ้นกลางจอให้เห็นชัด
+//  (รอ 350ms ให้แป้นพิมพ์เลื่อนขึ้นเสร็จก่อน แล้วค่อย scroll ไปหา field)
+// ===================================================================
+if (window.matchMedia('(max-width:767px)').matches && 'scrollIntoView' in document.documentElement) {
+  document.querySelectorAll('.form-control').forEach(el => {
+    el.addEventListener('focus', () => {
+      setTimeout(() => { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }) } catch (e) {} }, 350);
+    });
+  });
+}
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
 <script src="toast-enhancements.js"></script>

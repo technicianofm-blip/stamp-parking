@@ -179,8 +179,10 @@ select.form-control{
   padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;
   border:none;cursor:pointer;transition:.2s;text-decoration:none
 }
-.btn-p{background:var(--p);color:#fff}.btn-p:hover{background:var(--pd);box-shadow:var(--sh)}
-.btn-s{background:var(--s);color:#fff}.btn-s:hover{background:#047857;box-shadow:var(--sh)}
+/* ปุ่ม solid ใช้ gradient แนว 135° ให้ลุคดูมีมิติ (คง background-color ไว้เป็น fallback)
+   — เฉพาะปุ่มหลัก (.btn-p/.btn-s); ปุ่ม outline (.btn-o/.btn-d) ยังเป็นสีทึบตาม design เดิม */
+.btn-p{background-color:var(--p);background-image:linear-gradient(135deg,var(--p),#1e40af);color:#fff}.btn-p:hover{background-color:var(--pd);background-image:linear-gradient(135deg,var(--pd),#1e3a8a);box-shadow:var(--sh)}
+.btn-s{background-color:var(--s);background-image:linear-gradient(135deg,var(--s),#047857);color:#fff}.btn-s:hover{background-color:#047857;background-image:linear-gradient(135deg,#047857,#065f46);box-shadow:var(--sh)}
 .btn-d{background:#fff;color:var(--d);border:1.5px solid var(--d)}.btn-d:hover{background:#fef2f2}
 .btn-o{background:#fff;color:var(--g600);border:1.5px solid var(--g300)}.btn-o:hover{background:var(--g50)}
 /* Setup page specific buttons - Pastel tones */
