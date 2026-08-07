@@ -1482,6 +1482,20 @@ function renderPager(){
 }
 
 // ===================================================================
+//  DATE RANGE DEFAULT — ค่าเริ่มต้นตัวกรองช่วงวันที่ = วันนี้
+//  (ผู้ใช้สามารถล้าง/เลือกช่วงอื่นได้เองภายหลัง)
+// ===================================================================
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function initDateDefaults(){
+  const t=todayStr()
+  ;['desk','mob'].forEach(p=>{
+    const f=document.getElementById(p+'FDateFrom'),to=document.getElementById(p+'FDateTo')
+    if(f)f.value=t
+    if(to)to.value=t
+  })
+}
+
+// ===================================================================
 //  NOTIFICATION CENTER — กด bell เปิดรายการข้อมูลใหม่ (หลัง seenAt)
 // ===================================================================
 function toggleNotifPanel(){
@@ -1962,7 +1976,8 @@ window.clearAllData = () => {
 }
 // ตั้งค่าเริ่มต้นฟอร์ม
 resetForm('desk');resetForm('mob');initDatalists()
-// filter วันที่ (จาก/ถึง) เริ่มต้นว่าง = แสดงทั้งหมด (advanced search)
+// filter วันที่ (จาก/ถึง) ค่าเริ่มต้น = วันนี้ (โชว์ข้อมูลวันนี้) — ผู้ใช้เปลี่ยน/ล้างได้เอง
+initDateDefaults()
 // โหลดข้อมูล Dashboard เฉพาะเมื่อมี token (ล็อกอินแล้ว) เท่านั้น
 // ผู้ใช้ทั่วไปที่แค่บันทึกข้อมูลไม่ต้องเรียก getAll (ที่ต้อง auth) → เลี่ยง 401 ที่ทำให้เด้ง "เชื่อมต่อไม่ได้"
 if(gasUrl() && getToken())refresh()
