@@ -413,6 +413,14 @@ tr:hover td{background:var(--g50)}
 .heat-legend{font-size:11px;color:var(--g600);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .heat-swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
 
+/* ============================================================
+   COLLAPSIBLE CARDS — หัวการ์ดกดพับ/ขยายเนื้อหา (Dashboard)
+   ============================================================ */
+.card.collapsible .card-title{cursor:pointer;user-select:none}
+.card.collapsible.collapsed .analytics-canvas,
+.card.collapsible.collapsed .heatmap{display:none}
+.collapse-chev{font-size:12px;color:var(--g500);margin-left:8px}
+
 /* Notif panel มือถือ — ดรอปจากหัวด้านบนกินทั้งความกว้าง */
 @media(max-width:767px){
   .notif-panel{top:56px;left:12px;right:12px;width:auto}
