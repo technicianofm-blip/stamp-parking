@@ -123,6 +123,10 @@ body{
     padding:1px 5px;border-radius:7px;min-width:16px;text-align:center;
   }
   .bottom-item-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+
+  /* Touch target — ปุ่ม/ช่องกรอกบนมือถือสูง ≥44px (Apple/Google guideline) */
+  .btn,.btn-sm,.form-control,.toolbar select{min-height:44px}
+  .bell-btn{min-width:44px;min-height:44px}
 }
 
 /* ============================================================
@@ -347,3 +351,65 @@ tr:hover td{background:var(--g50)}
 .bell-btn:hover{background:var(--g100)}
 .bell-badge{display:none;position:absolute;top:-2px;right:-2px;background:var(--d);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .bell-badge.show{display:block}
+
+/* ============================================================
+   DASHBOARD ANALYTICS — กราฟย้อนหลัง 7 วัน (canvas ไม่พึ่ง library)
+   ============================================================ */
+.chart-card{overflow:hidden}
+.analytics-canvas{width:100%;height:180px;display:block}
+.chart-legend{display:inline-flex;gap:12px;font-size:12px;font-weight:400;color:var(--g600);align-items:center;white-space:nowrap}
+.chart-legend .lg-ofm{color:#3b82f6}.chart-legend .lg-pcs{color:#d946ef}
+
+/* ============================================================
+   THEME SYSTEM — Dark / Light
+   ใช้ data-theme บน <html> — เก็บค่าใน localStorage 'sp_theme'
+   ปุ่ม toggle: .theme-btn (sidebar desktop + mobile header)
+   ============================================================ */
+.theme-btn{
+  background:none;border:none;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  font-size:14px;font-weight:500;color:var(--g700);
+  padding:8px 12px;border-radius:8px;transition:background .2s;white-space:nowrap;
+}
+.theme-btn:hover{background:var(--g100)}
+.sidebar .theme-btn{color:rgba(255,255,255,.85)}
+.sidebar .theme-btn:hover{background:rgba(255,255,255,.08)}
+.mobile-header .theme-btn{color:#fff;font-size:13px;padding:6px 10px}
+.mobile-header .theme-btn:hover{background:rgba(255,255,255,.12)}
+
+/* — Dark theme: override tokens (ทุก var(--g*) ปรับตามอัตโนมัติ) + พื้นผิวที่ hardcode สีอ่อน — */
+html[data-theme="dark"]{
+  --g50:#0f172a;--g100:#1e293b;--g200:#334155;--g300:#475569;
+  --g400:#94a3b8;--g500:#94a3b8;--g600:#cbd5e1;--g700:#e2e8f0;--g800:#f1f5f9;
+  --pl:#16243c;
+  --sh:0 1px 3px rgba(0,0,0,.5);--shl:0 4px 20px rgba(0,0,0,.55);
+}
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .stat,
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .toolbar select,
+html[data-theme="dark"] .status-select,
+html[data-theme="dark"] .discount-select,
+html[data-theme="dark"] .modal-box,
+html[data-theme="dark"] .bottom-nav,
+html[data-theme="dark"] .enhanced-toast,
+html[data-theme="dark"] .btn-o,
+html[data-theme="dark"] .btn-d{background:#1e293b}
+html[data-theme="dark"] .btn-o:hover{background:#334155}
+html[data-theme="dark"] .btn-d:hover{background:#3a1d21}
+html[data-theme="dark"] .dropzone{background:#16243c}
+html[data-theme="dark"] .dropzone:hover{background:#1e2d4f}
+html[data-theme="dark"] .overlay{background:rgba(2,6,23,.8)}
+html[data-theme="dark"] .setup-banner{background:#3a2f0a;border-color:#6b5315}
+html[data-theme="dark"] .setup-banner h4{color:#fbbf24}
+html[data-theme="dark"] .setup-banner p{color:#fcd34d}
+html[data-theme="dark"] .enhanced-toast-action-btn{background:#1e3a5f}
+html[data-theme="dark"] .enhanced-toast-action-btn:hover{background:#25466b}
+/* badges — ปรับเป็นสีเข้มอ่านง่าย */
+html[data-theme="dark"] .badge-ofm{background:#1e3a5f;color:#93c5fd}
+html[data-theme="dark"] .badge-pcs{background:#4a1d38;color:#f9a8d4}
+html[data-theme="dark"] .badge-in,html[data-theme="dark"] .badge-approved,html[data-theme="dark"] .badge-free{background:#0f2e24;color:#6ee7b7}
+html[data-theme="dark"] .badge-out,html[data-theme="dark"] .badge-pending,html[data-theme="dark"] .badge-disc{background:#3a2f0a;color:#fcd34d}
+html[data-theme="dark"] .badge-bike{background:#1e2a4f;color:#a5b4fc}
+html[data-theme="dark"] .badge-car{background:#3b1d4a;color:#d8b4fe}
+html[data-theme="dark"] .badge-rejected{background:#3a1d21;color:#fda4af}

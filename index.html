@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
 <link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
@@ -51,6 +52,9 @@
       <div style="flex:1"></div>
       <button class="sidebar-item" data-page="setup" onclick="go('setup')">
         ⚙️ ตั้งค่า
+      </button>
+      <button class="sidebar-item" onclick="toggleTheme()" title="สลับธีมมืด/สว่าง">
+        <span class="th-icon">🌙</span><span class="th-label">โหมดมืด</span>
       </button>
     </nav>
     <div class="sidebar-conn">
@@ -214,6 +218,12 @@
         <div class="stat red"><div class="v" id="deskStCar">0</div><div class="l">🚗 รถยนต์</div></div>
         <div class="stat"><div class="v" id="deskStToday">0</div><div class="l">📅 วันนี้</div></div>
       </div>
+      <div class="card chart-card">
+        <div class="card-title">📈 สถิติย้อนหลัง 7 วัน <span style="flex:1"></span>
+          <span class="chart-legend"><span class="lg-ofm">▮ OFM</span><span class="lg-pcs">▮ PCS</span></span>
+        </div>
+        <canvas id="deskChart" class="analytics-canvas"></canvas>
+      </div>
       <div class="sync-bar">
         <span class="sync-text" id="deskSync">🔄 —</span>
         <div class="sync-actions">
@@ -256,6 +266,9 @@
       Stamp Parking
       <span class="conn-dot" id="mobConnDot"></span>
     </div>
+    <button class="theme-btn" onclick="toggleTheme()" title="สลับธีมมืด/สว่าง">
+      <span class="th-icon">🌙</span><span class="th-label">โหมดมืด</span>
+    </button>
   </div>
   <div class="offline-bar" id="mobOffline">⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์</div>
 
@@ -401,6 +414,12 @@
         <div class="stat purple"><div class="v" id="mobStBike">0</div><div class="l">🏍 จักรยาน</div></div>
         <div class="stat red"><div class="v" id="mobStCar">0</div><div class="l">🚗 รถยนต์</div></div>
         <div class="stat"><div class="v" id="mobStToday">0</div><div class="l">📅 วันนี้</div></div>
+      </div>
+      <div class="card chart-card">
+        <div class="card-title">📈 7 วัน <span style="flex:1"></span>
+          <span class="chart-legend"><span class="lg-ofm">▮ OFM</span><span class="lg-pcs">▮ PCS</span></span>
+        </div>
+        <canvas id="mobChart" class="analytics-canvas"></canvas>
       </div>
       <div class="sync-bar">
         <span class="sync-text" id="mobSync">🔄 —</span>
@@ -1331,6 +1350,69 @@ function markSeen(){
   toast('✅ ทำเครื่องหมายว่าอ่านแล้ว','s')
 }
 
+// ===================================================================
+//  DASHBOARD ANALYTICS — กราฟย้อนหลัง 7 วัน (แท่ง OFM / PCS)
+//  วาดด้วย canvas เอง (ไม่พึ่ง library) — scale ตาม devicePixelRatio
+// ===================================================================
+function renderChart(){
+  const cv=document.getElementById((isDesktop()?'desk':'mob')+'Chart')
+  if(!cv)return
+  const w=cv.clientWidth
+  if(!w)return
+  const r=cacheR()
+  const days=[]
+  const today=new Date();today.setHours(0,0,0,0)
+  const thaiDay=['อา','จ','อ','พ','พฤ','ศ','ส']
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i)
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+    days.push({key,date:d,ofm:0,pcs:0})
+  }
+  const byDay={};days.forEach(d=>byDay[d.key]=d)
+  r.forEach(x=>{
+    const d=new Date(x.createdAt)
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+    const b=byDay[key]
+    if(!b)return
+    if(x.department==='OFM')b.ofm++
+    else if(x.department==='PCS')b.pcs++
+  })
+  const h=180
+  const dpr=window.devicePixelRatio||1
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px'
+  const ctx=cv.getContext('2d')
+  ctx.setTransform(dpr,0,0,dpr,0,0)
+  ctx.clearRect(0,0,w,h)
+  const padL=30,padR=6,padT=12,padB=24
+  const cw=w-padL-padR,ch=h-padT-padB
+  const max=Math.max(1,...days.map(d=>Math.max(d.ofm,d.pcs)))
+  // grid + y labels
+  ctx.font='10px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle'
+  for(let i=0;i<=4;i++){
+    const y=padT+ch-(ch*i/4)
+    ctx.strokeStyle='rgba(148,163,184,.25)';ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke()
+    ctx.fillStyle='#94a3b8';ctx.fillText(String(Math.round(max*i/4)),padL-4,y)
+  }
+  // bars + x labels (วันที่ + ชื่อวันไทย)
+  const groupW=cw/days.length,barW=Math.max(6,Math.min(14,groupW*.26)),gap=3
+  days.forEach((d,i)=>{
+    const cx=padL+groupW*i+groupW/2
+    const hOfm=d.ofm?Math.max(2,ch*d.ofm/max):0
+    const hPcs=d.pcs?Math.max(2,ch*d.pcs/max):0
+    if(hOfm){ctx.fillStyle='#3b82f6';ctx.fillRect(cx-barW-gap,padT+ch-hOfm,barW,hOfm)}
+    if(hPcs){ctx.fillStyle='#d946ef';ctx.fillRect(cx+gap,padT+ch-hPcs,barW,hPcs)}
+    ctx.fillStyle='#94a3b8';ctx.textAlign='center';ctx.textBaseline='alphabetic'
+    ctx.fillText(thaiDay[d.date.getDay()],cx,padT+ch+13)
+    ctx.fillText(String(d.date.getDate()),cx,padT+ch+23)
+  })
+  if(days.every(d=>!d.ofm&&!d.pcs)){
+    ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle'
+    ctx.fillText('📭 ยังไม่มีข้อมูลใน 7 วันที่ผ่านมา',w/2,padT+ch/2)
+  }
+}
+// วาดกราฟใหม่เมื่อย่อ/ขยายหน้าต่าง (หน้าจอเปลี่ยนความกว้าง)
+window.addEventListener('resize',()=>{ if(getToken()) setTimeout(renderChart,100) })
+
 function render(){
   const isD=isDesktop()
   const prefix=isD?'desk':'mob'
@@ -1362,6 +1444,7 @@ function render(){
   setStat(prefix+'StBike',a.filter(x=>x.vehicleType==='รถจักรยานยนต์').length)
   setStat(prefix+'StCar',a.filter(x=>x.vehicleType==='รถยนต์').length)
   setStat(prefix+'StToday',a.filter(x=>{const d=new Date(x.createdAt),n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()}).length)
+  renderChart()
 
   // Table
   const tbody=document.getElementById(prefix+'Tbody')
@@ -1705,6 +1788,22 @@ if (window.matchMedia('(max-width:767px)').matches && 'scrollIntoView' in docume
     });
   });
 }
+
+// ===================================================================
+//  THEME SYSTEM — Dark / Light (toggle ที่ sidebar + mobile header)
+// ===================================================================
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t)
+  try{localStorage.setItem('sp_theme',t)}catch(e){}
+  document.querySelectorAll('.th-icon').forEach(el=>el.textContent=t==='dark'?'☀️':'🌙')
+  document.querySelectorAll('.th-label').forEach(el=>el.textContent=t==='dark'?'โหมดสว่าง':'โหมดมืด')
+}
+function toggleTheme(){
+  const cur=(document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark'
+  applyTheme(cur)
+}
+// init: <head> กัน FOUC ไปแล้ว — ที่นี่อัปเดต label ปุ่มให้ตรงกับธีมปัจจุบัน
+applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
 <script src="toast-enhancements.js"></script>
