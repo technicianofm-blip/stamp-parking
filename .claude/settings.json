@@ -43,7 +43,12 @@
       "Bash(curl -sL \"https://script.google.com/macros/s/AKfycby5UPCxERJuDAwDOSlhOSoJNQQ4lpSV9_AhAPELlMr24Cqc3f4s4p4izqEYjQ0WRWul3w/exec?action=getAll&pin=086079\")",
       "Bash(code --list-extensions)",
       "Bash(findstr /i \"delete\\\\|redeploy\\\\|deploy\")",
-      "Bash(clasp redeploy *)"
+      "Bash(clasp redeploy *)",
+      "Bash(git log *)",
+      "Bash(gh api *)",
+      "Bash(curl -s --max-time 25 \"https://technicianofm-blip.github.io/stamp-parking/\" -o /tmp/sp_live.html)",
+      "Bash(echo \"exit=$?\")",
+      "Read(//tmp/**)"
     ]
   }
 }

@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stamp-parking-local-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const http = require('http'); const fs = require('fs'); const path = require('path'); const url = require('url'); const server = http.createServer((req, res) => { const parsedUrl = url.parse(req.url, true); let pathname = parsedUrl.pathname; if (pathname === '/') pathname = '/index.html'; const filePath = path.join(__dirname, pathname); fs.readFile(filePath, (err, data) => { if (err) { if (err.code === 'ENOENT') { res.writeHead(404); res.end('404 - File not found: ' + pathname); } else { res.writeHead(500); res.end('500 - Internal server error'); } } else { const ext = path.extname(filePath); const contentType = ext === '.html' ? 'text/html' : ext === '.css' ? 'text/css' : ext === '.js' ? 'application/javascript' : 'text/plain'; res.writeHead(200); res.end(data); } }); }); server.listen(3000, () => { console.log('Stamp Parking Local Server Ready on port 3000'); console.log('Open http://localhost:3000 to test frontend'); }); server.on('error', (err) => { if (err.code === 'EADDRINUSE') { console.error('Port 3000 is in use'); } else { console.error('Server error:', err); } });"
+      ],
+      "port": 3000
+    }
+  ]
+}

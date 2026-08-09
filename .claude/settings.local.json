@@ -38,7 +38,15 @@
       "Bash(node -e ' *)",
       "Bash(node --check /tmp/app.js)",
       "Bash(node --check \"C:/Users/OFM-Admin/app_check.js\")",
-      "Bash(rm -f \"C:/Users/OFM-Admin/app_check.js\")"
+      "Bash(rm -f \"C:/Users/OFM-Admin/app_check.js\")",
+      "WebFetch(domain:docs.google.com)",
+      "Bash(netstat -ano)",
+      "Bash(node test-auth.js)",
+      "Bash(cp gas-code.gs /tmp/gas-check.js)",
+      "Bash(node --check /tmp/gas-check.js)",
+      "Bash(node --check index.js)",
+      "Bash(node --check test-auth.js)",
+      "Bash(node __verify.js)"
     ]
   }
 }
