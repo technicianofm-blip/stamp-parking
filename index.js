@@ -320,9 +320,11 @@ async function handleApiRequest(req, res, pathname, method, query) {
 }
 
 // วันที่แบบ Asia/Bangkok (UTC+7 คงที่ ไม่มี DST) → 'yyyy-MM-dd' — mirror gas-code.gs findDuplicateToday
+// ถ้า iso ไม่ใช่วันเวลา (createdAt เก่า/ว่าง) → คืน '' แทน throw (backend ยังบังคับเช็คซ้ำอยู่)
 function bkkDay(iso) {
-  const ms = new Date(iso).getTime() + 7 * 3600 * 1000;
-  return new Date(ms).toISOString().slice(0, 10);
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return '';
+  return new Date(t + 7 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
 function handleCreateRecord(res, body) {

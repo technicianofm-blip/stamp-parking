@@ -1539,7 +1539,7 @@ function renderPager(){
 // ===================================================================
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 // วันที่แบบ Asia/Bangkok (UTC+7 คงที่ ไม่มี DST) → 'yyyy-MM-dd' — เช็คข้อมูลซ้ำให้ตรงกับ backend
-function bkkDay(iso){const ms=new Date(iso).getTime()+7*3600*1000;return new Date(ms).toISOString().slice(0,10)}
+function bkkDay(iso){const t=new Date(iso).getTime();if(isNaN(t))return '';return new Date(t+7*3600*1000).toISOString().slice(0,10)}
 function initDateDefaults(){
   const t=todayStr()
   ;['desk','mob'].forEach(p=>{
@@ -1569,7 +1569,7 @@ function buildNotifList(){
     const d=new Date(x.createdAt)
     const tstr=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})
     return `<button class="notif-item" onclick="notifOpen('${esc(x.id)}')" title="ดูรายละเอียด">
-      <span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${x.department}</span>
+      <span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${esc(x.department)}</span>
       <span class="notif-name">${esc(x.name)}</span>
       <span class="notif-meta">${tstr} · ${esc(x.ticketNo)}${x.photo?' · 📷':''}</span>
     </button>`
@@ -1747,10 +1747,10 @@ function render(){
       return `<tr>
         <td>${startIdx+i+1}</td>
         <td><strong>${esc(x.name)}</strong></td>
-        <td><span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${x.department}</span></td>
-        <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
-        <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${x.vehicleType}</span></td>
-        <td style="font-family:monospace;font-size:12px;cursor:pointer" onclick="copyTicket('${esc(x.ticketNo)}')" title="คลิกเพื่อคัดลอก">${esc(x.ticketNo)}</td>
+        <td><span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${esc(x.department)}</span></td>
+        <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${esc(x.timeType)}</span></td>
+        <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${esc(x.vehicleType)}</span></td>
+        <td style="font-family:monospace;font-size:12px;cursor:pointer" onclick="copyTicket(this.dataset.tk)" data-tk="${esc(x.ticketNo)}" title="คลิกเพื่อคัดลอก">${esc(x.ticketNo)}</td>
         <td>
           <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)">
             <option value="" ${!x.discount?'selected':''}>—</option>
@@ -1778,7 +1778,7 @@ function render(){
       return `<tr>
         <td>${startIdx+i+1}</td>
         <td>${esc(x.name)}</td>
-        <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${x.timeType}</span></td>
+        <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${esc(x.timeType)}</span></td>
         <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
         <td>
           <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)" style="width:65px;font-size:11px;padding:3px">
@@ -1969,7 +1969,8 @@ function exportCSV(){
   const h='ชื่อ-นามสกุล,ชื่อเล่น,เบอร์ติดต่อ,หน่วยงาน,การลงเวลา,ยานพาหนะ,เลขบัตรจอดรถ,ส่วนลด,สถานะ,วันที่'
   const rows=r.map(x=>{
     const d=new Date(x.createdAt).toLocaleString('th-TH')
-    return `"${x.name}","${x.nickname||''}","${x.phone||''}","${x.department}","${x.timeType}","${x.vehicleType}","${x.ticketNo}","${x.discount||''}","${x.status}","${d}"`
+    // csvField: escape " ภายใน + กัน formula injection (ฟิลด์ขึ้นต้น = + - @ → ใส่ ' นำหน้า)
+    return [x.name,x.nickname,x.phone,x.department,x.timeType,x.vehicleType,x.ticketNo,x.discount,x.status,d].map(csvField).join(',')
   })
   const csv='﻿'+[h,...rows].join('\n')
   const b=new Blob([csv],{type:'text/csv;charset=utf-8'})
@@ -1982,6 +1983,12 @@ function exportCSV(){
 //  UTILITY
 // ===================================================================
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+// CSV field: ล้อม " + เอา " ภายในออกเป็น "" + กัน formula injection (= + - @ ขึ้นต้น → ใส่ ' นำหน้า)
+function csvField(s){
+  let v=s==null?'':String(s)
+  if(/^[=+\-@\t\r]/.test(v)) v="'"+v
+  return '"'+v.replace(/"/g,'""')+'"'
+}
 function toast(msg,t='s'){
   const c=document.getElementById('toasts');const el=document.createElement('div')
   el.className='toast '+t;el.textContent=msg;c.appendChild(el)

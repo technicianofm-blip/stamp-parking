@@ -7,9 +7,11 @@
 const { spawn } = require('child_process');
 
 // --- A) unit test bkkDay (คัดลอก logic จาก index.js เพื่อทดสอบตรงๆ) ---
+// ถ้า iso ไม่ใช่วันเวลา (createdAt เก่า/ว่าง) → คืน '' แทน throw (mirror index.js ที่แก้กัน RangeError)
 function bkkDay(iso) {
-  const ms = new Date(iso).getTime() + 7 * 3600 * 1000;
-  return new Date(ms).toISOString().slice(0, 10);
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return '';
+  return new Date(t + 7 * 3600 * 1000).toISOString().slice(0, 10);
 }
 let unitOk = 0, unitBad = 0;
 function u(name, got, want) {
@@ -25,6 +27,8 @@ u('00:30 ไทย ข้ามเป็นวันที่ 10', bkkDay('2026-
 u('เที่ยง ไทย วันที่ 9', bkkDay('2026-08-09T05:00:00.000Z'), '2026-08-09');
 // ข้อมูลเก่า (วันที่ 3) — ต้องไม่โดนบล็อก เพราะคนละวัน
 u('ข้อมูลเก่า วันที่ 3', bkkDay('2026-08-03T10:00:00.000Z'), '2026-08-03');
+// createdAt ไม่ใช่วันเวลา (เก่า/ว่าง) — ต้องคืน '' ไม่ใช่ throw RangeError
+u('createdAt ไม่ใช่วันเวลา → คืน "" ไม่ throw', bkkDay(''), '');
 
 // --- B) E2E mock ---
 const BASE = 'http://localhost:3005/api';
