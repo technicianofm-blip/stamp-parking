@@ -71,7 +71,7 @@
 3. **Deploy > New deployment**
    - **Type:** Web app
    - **Execute as:** `Me`
-   - **Who has access:** `Anyone`
+   - **Who has access:** `Anyone` (ใครก็ได้ ไม่ต้องมี Google account)
 4. กด **Deploy** → อนุญาตสิทธิ์ (Authorize)
 5. **คัดลอก Web App URL**:
    ```
@@ -84,6 +84,10 @@
    (รหัสผ่านจะไม่ถูกส่งกลับใน HTTP response เพื่อกันคนนอกแอบเรียกแล้วขโมย — ดูได้ผ่าน log เท่านั้น)
 8. ใส่ **Sheet ID** และ **Folder ID** ใน ⚙️ Project Settings → **Script Properties**
    (หรือปล่อยเป็นค่า default ที่ hardcode อยู่ในโค้ดก็ได้)
+
+> **หมายเหตุ (ถ้า deploy ผ่าน clasp):** access ของ Web App ถูกยึดจาก `appsscript.json` → `webapp.access` ตอน redeploy.
+> - `ANYONE` = ต้องมี Google account (anonymous จะโดน redirect ไปหน้า login)
+> - `ANYONE_ANONYMOUS` = ใครก็ได้ ไม่ต้องล็อกอิน (**ค่าที่ public form ต้องการ** — แก้ใน `appsscript.json` แล้ว `clasp push --force` + `clasp version` + `clasp redeploy`)
 
 ## 4️⃣ ตั้งค่า Cloudinary (สำหรับอัปโหลดรูป)
 1. ไปที่ [cloudinary.com](https://cloudinary.com) → **Sign Up** (ฟรี)

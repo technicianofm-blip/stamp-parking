@@ -58,7 +58,7 @@ node --check index.js
 ## 🔐 ระบบ Auth (สำคัญมาก)
 
 - หลัง migration ล่าสุด: **PIN → Username/Password + HMAC token**
-- ✅ **production รัน backend ใหม่แล้ว** (deployment `AKfycbwEK_...` @ **version 64**, access = Anyone)
+- ✅ **production รัน backend ใหม่แล้ว** (deployment `AKfycbwEK_...` @ **version 67**, access = `ANYONE_ANONYMOUS`)
   → ยืนยันผ่าน `node test-production.js <password>`: login / getAll (409 records) / no-token → 401 ทำงานปกติ
 - **Token:** `base64url(username|expiryMs)` + HMAC-SHA256 signature, เซ็นด้วย `AUTH_SECRET` (Script Properties)
   → **ห้ามลบ `AUTH_SECRET`** ถ้าหาย token ทั้งหมดใช้ไม่ได้
@@ -79,7 +79,9 @@ node --check index.js
 5. แก้ behavior auth → ต้องอัปเดต `test-auth.js` ด้วย และต้องรันให้ผ่าน
 6. CSS อยู่ที่ `style.css` (แยกจาก index.html แล้ว) — index.html เหลือแค่ HTML + inline JS → **เพิ่ม/แก้ style ต้องไปที่ `style.css`** (ยกเว้น `style=""` แบบ inline บน element ที่อยู่กับ HTML)
 7. `appsscript.json` เปิด `executionApi.access: ANYONE` — ถ้าเกี่ยวข้องกับความปลอดภัย ควรพิจารณาจำกัด
-8. **clasp gotchas (เจอจริงทุกครั้งที่ deploy):** `clasp push` มักตอบ "Skipping push" แม้แก้ไฟล์แล้ว → ใช้ `clasp push --force`; `clasp redeploy <id> -V @HEAD` fails ("Read-only deployments may not be modified") → ต้อง `clasp version "desc"` ก่อน แล้ว redeploy ด้วยเลข version จริง; **หลัง redeploy ทุกครั้ง deployment กลับไปเป็น private** → ต้องตั้ง Who has access = Anyone ใหม่
+8. **clasp gotchas (เจอจริงทุกครั้งที่ deploy):** `clasp push` มักตอบ "Skipping push" แม้แก้ไฟล์แล้ว → ใช้ `clasp push --force`; `clasp redeploy <id> -V @HEAD` fails ("Read-only deployments may not be modified") → ต้อง `clasp version "desc"` ก่อน แล้ว redeploy ด้วยเลข version จริง
+   - ⚠️ **Access ของ Web App ถูกยึดจาก `appsscript.json` → `webapp.access` ตอน redeploy** (ไม่ใช่ค่าเดิมที่ตั้งไว้ใน UI): หลัง redeploy ทุกครั้ง access จะกลับไปตาม manifest — **`ANYONE` = ต้องมี Google account (anonymous → 302 ไป ServiceLogin)**, `ANYONE_ANONYMOUS` = ใครก็ได้ไม่ต้องล็อกอิน (ที่ public form ต้องใช้ตัวนี้) → ถ้า redeploy แล้ว public form เข้าไม่ได้ ให้เช็ค manifest ก่อน
+   - ⚠️ **Apps Script API v1 ตั้ง access ผ่าน API ไม่ได้** (ยืนยันจาก discovery doc แล้ว: `DeploymentConfig` มีแค่ scriptId/versionNumber/manifestFileName/description, `WebAppEntryPoint` ไม่มีฟิลด์ access) → การแก้ access ทำได้ 2 ทาง: (ก) แก้ manifest + push + version + redeploy (รวดเร็ว, ค่าตาม manifest) หรือ (ข) `clasp open` → Deploy → Manage deployments → pencil ที่ deployment → Who has access
 9. **CacheService จำกัด 100KB/key:** ถ้า payload ข้อมูลเกิน 100KB (หลายร้อย record) `cache.put` จะ throw ("Argument too large: value") → ต้อง wrap try/catch ข้าม cache แต่อย่ายอมให้ throw จน API ล่ม (เคยเจอที่ getAll ~409 records)
 10. **เลขบัตรจอดรถซ้ำในวันเดียวกันถูกบล็อก:** `doPost` ตรวจ `findDuplicateToday()` (นับวันตาม Asia/Bangkok) ก่อน appendRow → คืน **409** `{duplicate:true, existing}`. ถ้าจำเป็นจริงๆ ผู้ใช้กด "จำเป็นต้องบันทึก" ใน modal `dupModal` → frontend ส่ง `forceDuplicate=true` → ข้ามบล็อก + เขียน `AuditLog` (action `forceDuplicateSave`, actor `public`). ถ้าแก้ ให้ sync 3 ที่: `gas-code.gs` ↔ `index.js` (mirror ด้วย `bkkDay()`) ↔ `index.html` (saveRec→submitRecord, state `_dupResume`) และรัน `node test-duplicate.js` ให้ผ่าน
 
