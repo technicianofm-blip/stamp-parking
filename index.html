@@ -539,7 +539,7 @@
   <div class="modal-box" style="max-width:380px">
     <div class="modal-hd"><h3>⚠️ พบข้อมูลซ้ำ</h3><button class="modal-close" onclick="closeModal('dupModal')" aria-label="ปิด">&times;</button></div>
     <div class="modal-bd">
-      <p style="text-align:center;color:var(--d);margin-bottom:12px;font-weight:600">เลขบัตรนี้ถูกบันทึกไปแล้วในวันนี้<br>ไม่สามารถบันทึกซ้ำได้</p>
+      <p style="text-align:center;color:var(--d);margin-bottom:12px;font-weight:600">เลขบัตรนี้ถูกบันทึกไปแล้วในวันนี้<br>ถ้าจำเป็นจริงๆ กด "จำเป็นต้องบันทึก" ได้</p>
       <div id="dupPhotoWrap" style="display:none;text-align:center;margin-bottom:10px">
         <img id="dupPhoto" src="" alt="รูปภาพที่บันทึกไว้" style="max-width:140px;max-height:140px;border-radius:8px;object-fit:cover;border:1px solid var(--g200)">
       </div>
@@ -553,6 +553,7 @@
       </table>
       <div class="confirm-actions" style="margin-top:14px">
         <button class="btn btn-o" onclick="closeModal('dupModal')">ปิด</button>
+        <button class="btn btn-p" onclick="forceSaveDuplicate()">จำเป็นต้องบันทึก</button>
       </div>
     </div>
   </div>
@@ -1230,8 +1231,10 @@ function closeScan(){
   const m=document.getElementById('scanModal');if(m)m.classList.remove('show')
 }
 
-async function saveRec(e){
-  e.preventDefault()
+// สถานะฟอร์มที่ค้างอยู่ตอนเจอซ้ำ — ไว้กด "จำเป็นต้องบันทึก" แล้วส่งต่อ
+let _dupResume=null
+async function saveRec(e,force){
+  e&&e.preventDefault()
   const p=isDesktop()?'desk':'mob'
   await healUrl(); // ตรวจสอบ/สลับ URL หาก URL เก่าพัง
   // Clear errors
@@ -1265,32 +1268,40 @@ async function saveRec(e){
   if(!ok) return
   if(!gasUrl()) return toast('⚠️ ยังไม่ได้ตั้งค่า API','e')
 
-  // 🔁 ตรวจซ้ำฝั่ง client (best-effort จาก cache) ก่อนอัปโหลดรูป — เจอแล้วบล็อกทันที ไม่เสียค่าอัปโหลด
-  const dupC=cacheR().find(x=>x.ticketNo===tk&&bkkDay(x.createdAt)===bkkDay(new Date().toISOString()))
-  if(dupC){showDuplicate(dupC);return}
+  // 🔁 ตรวจซ้ำฝั่ง client (best-effort จาก cache) ก่อนอัปโหลดรูป — เจอแล้วขึ้น modal รอตัดสินใจ (ยกเว้นกำลัง force)
+  if(!force){
+    const dupC=cacheR().find(x=>x.ticketNo===tk&&bkkDay(x.createdAt)===bkkDay(new Date().toISOString()))
+    if(dupC){_dupResume={p,n,nn,ph,d,t,v,tk,photo};showDuplicate(dupC);return}
+  }
+  await submitRecord({p,n,nn,ph,d,t,v,tk,photo,force:!!force})
+}
 
+// 🔁 บันทึกข้อมูลจริง (upload รูป + POST) — แยกจาก saveRec เพื่อให้ modal "จำเป็นต้องบันทึก" เรียกซ้ำได้
+async function submitRecord(st){
+  const p=st.p
   const btn=document.getElementById(p+'SubmitBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังบันทึก...'
 
-  // ☁️ อัปโหลดรูปไป Cloudinary ก่อนส่งข้อมูล (ไม่ต้องผ่าน GAS)
-  let photoUrl = ''
-  if (photo) {
+  // ☁️ อัปโหลดรูปไป Cloudinary ก่อนส่งข้อมูล (ไม่ต้องผ่าน GAS) — ข้ามถ้ามี photoUrl อยู่แล้ว (กรณี force หลังเจอซ้ำ backend)
+  let photoUrl=st.photoUrl||''
+  if(st.photo && !photoUrl){
     btn.innerHTML='<span class="spin"></span> กำลังอัปโหลดรูป...'
-    photoUrl = await uploadToCloudinary(photo)
-    if (!photoUrl) toast('⚠️ อัปโหลดรูปไม่สำเร็จ จะบันทึกเฉพาะข้อมูล','i')
+    photoUrl=await uploadToCloudinary(st.photo)
+    if(!photoUrl) toast('⚠️ อัปโหลดรูปไม่สำเร็จ จะบันทึกเฉพาะข้อมูล','i')
   }
 
   try{
-    const r=await post({name:n,nickname:nn,phone:ph,department:d,timeType:t,vehicleType:v,ticketNo:tk,photoUrl})
-    // 🔁 เจอข้อมูลซ้ำฝั่ง backend (บล็อกการบันทึก) → แสดง modal ข้อมูลเดิม
-    if(r.duplicate && r.existing){showDuplicate(r.existing);return}
+    const r=await post({name:st.n,nickname:st.nn,phone:st.ph,department:st.d,timeType:st.t,vehicleType:st.v,ticketNo:st.tk,photoUrl,forceDuplicate:st.force||false})
+    // 🔁 เจอข้อมูลซ้ำฝั่ง backend → เก็บสถานะไว้ แล้วแสดง modal (กด "จำเป็นต้องบันทึก" จะส่งต่อแบบ force)
+    if(r.duplicate && r.existing){_dupResume={...st,photoUrl};showDuplicate(r.existing);return}
     if(r.success){
-      if(photoUrl) toast('✅ '+r.message+' 📸','s')
+      if(r.forced) toast('✅ '+r.message+' (ข้ามข้อมูลซ้ำ)','s')
+      else if(photoUrl) toast('✅ '+r.message+' 📸','s')
       else toast('✅ '+r.message,'s')
-      saveFormHistory(n,nn,ph);resetForm(p);_photoData[p]=null
+      saveFormHistory(st.n,st.nn,st.ph);resetForm(p);_photoData[p]=null
       // อัปเดต cache ท้องถิ่นจาก response POST (ไม่ต้อง refresh -> getAll ที่ต้อง auth)
       if(r.id){
         const c=cacheR()
-        c.unshift({id:r.id,name:n,nickname:nn,phone:ph,department:d,timeType:t,vehicleType:v,ticketNo:tk,photo:r.photoUrl||'',createdAt:new Date().toISOString(),status:'รออนุมัติ',discount:''})
+        c.unshift({id:r.id,name:st.n,nickname:st.nn,phone:st.ph,department:st.d,timeType:st.t,vehicleType:st.v,ticketNo:st.tk,photo:r.photoUrl||'',createdAt:new Date().toISOString(),status:'รออนุมัติ',discount:''})
         setCache(c)
       }
       updBadge();render();updateBell()
@@ -1298,6 +1309,13 @@ async function saveRec(e){
     else toast('❌ '+(r.error||'บันทึกไม่สำเร็จ'),'e')
   }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
   finally{btn.disabled=false;btn.innerHTML='💾 '+(p==='desk'?'บันทึกข้อมูล':'บันทึก')}
+}
+
+// 🔁 กด "จำเป็นต้องบันทึก" ใน modal ข้อมูลซ้ำ → ส่งต่อฟอร์มแบบ force (ข้ามเช็คซ้ำ)
+function forceSaveDuplicate(){
+  closeModal('dupModal')
+  const st=_dupResume;_dupResume=null
+  if(st) submitRecord({...st,force:true})
 }
 
 // ===================================================================

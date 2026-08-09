@@ -1,7 +1,7 @@
 // ===================================================================
 // test-duplicate.js — ทดสอบ feature ตรวจเลขบัตรจอดรถซ้ำ (วันเดียวกัน)
 //   A) unit test bkkDay (วันแบบ Asia/Bangkok) — จุดเสี่ยงเรื่องวันข้ามเขตเวลา
-//   B) E2E ผ่าน mock server: login → create → duplicate → status/discount → delete
+//   B) E2E ผ่าน mock server: login → create → duplicate(บล็อก) → force(จำเป็นต้องบันทึก) → status/discount → delete
 // วิธีใช้: node test-duplicate.js   (มันจะ spawn server เองที่ port 3005)
 // ===================================================================
 const { spawn } = require('child_process');
@@ -77,29 +77,38 @@ async function main() {
     r = await apiPost({ name: 'บุคลากร หนึ่ง', ticketNo: ticket, department: 'OFM', timeType: 'เข้างาน', vehicleType: 'รถจักรยานยนต์' });
     record('V4 ticket ซ้ำ → 409 + duplicate + existing', r.status === 409 && r.json.success === false && r.json.duplicate === true && !!r.json.existing && r.json.existing.id === newId, 'status=' + r.status + ' existingId=' + (r.json.existing ? r.json.existing.id : 'none'));
 
+    // force duplicate — ส่ง forceDuplicate="true" ("จำเป็นต้องบันทึก") → ต้องบันทึกสำเร็จ
+    r = await apiPost({ name: 'บุคลากร หนึ่ง', ticketNo: ticket, department: 'OFM', timeType: 'เข้างาน', vehicleType: 'รถจักรยานยนต์', forceDuplicate: 'true' });
+    record('V5 forceDuplicate → บันทึกสำเร็จ (200 + forced)', r.status === 200 && r.json.success === true && r.json.forced === true, 'id=' + (r.json.id || '') + ' forced=' + r.json.forced);
+
+    // getAll → ต้องมี 2 record ที่มีบัตรเดียวกัน (บันทึกปกติ + force)
+    r = await apiGet('getAll', token);
+    const sameTicket = (r.json.data || []).filter(x => x.ticketNo === ticket).length;
+    record('V6 getAll → มี 2 record บัตรเดียวกัน', sameTicket === 2, 'sameTicket=' + sameTicket);
+
     // updateStatus
     r = await apiGet('updateStatus', token, { id: newId, status: 'อนุมัติ' });
-    record('V5 updateStatus → สำเร็จ', r.json.success === true, '');
+    record('V7 updateStatus → สำเร็จ', r.json.success === true, '');
     r = await apiGet('getAll', token);
     const upd = (r.json.data || []).find(x => x.id === newId);
-    record('V6 getAll → สถานะเปลี่ยน', !!upd && upd.status === 'อนุมัติ', 'status=' + (upd ? upd.status : 'none'));
+    record('V8 getAll → สถานะเปลี่ยน', !!upd && upd.status === 'อนุมัติ', 'status=' + (upd ? upd.status : 'none'));
 
     // updateDiscount
     r = await apiGet('updateDiscount', token, { id: newId, discount: '9' });
-    record('V7 updateDiscount → สำเร็จ', r.json.success === true, '');
+    record('V9 updateDiscount → สำเร็จ', r.json.success === true, '');
     r = await apiGet('getAll', token);
     const upd2 = (r.json.data || []).find(x => x.id === newId);
-    record('V8 getAll → discount=9', !!upd2 && upd2.discount === '9', 'discount=' + (upd2 ? upd2.discount : 'none'));
+    record('V10 getAll → discount=9', !!upd2 && upd2.discount === '9', 'discount=' + (upd2 ? upd2.discount : 'none'));
 
     // delete
     r = await apiGet('delete', token, { id: newId });
-    record('V9 delete → สำเร็จ', r.json.success === true, '');
+    record('V11 delete → สำเร็จ', r.json.success === true, '');
     r = await apiGet('getAll', token);
-    record('V10 getAll → ลบแล้ว (ไม่พบ id)', !(r.json.data || []).some(x => x.id === newId), 'count=' + (r.json.data || []).length);
+    record('V12 getAll → ลบแล้ว (ไม่พบ id)', !(r.json.data || []).some(x => x.id === newId), 'count=' + (r.json.data || []).length);
 
     // create ไร้ token (สาธารณะ) ยังทำงาน
     r = await apiPost({ name: 'คนผ่านทาง', ticketNo: '99887766554433221' });
-    record('V11 create สาธารณะ (ไม่ล็อกอิน) → สำเร็จ', r.json.success === true, 'id=' + (r.json.id || ''));
+    record('V13 create สาธารณะ (ไม่ล็อกอิน) → สำเร็จ', r.json.success === true, 'id=' + (r.json.id || ''));
   } catch (e) {
     record('TEST RUNNER ERROR', false, e.message);
   } finally {

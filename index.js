@@ -332,9 +332,11 @@ function handleCreateRecord(res, body) {
   if (!ticketNo || ticketNo.length !== 17) { sendJson(res, { success: false, error: 'เลขบัตรจอดรถต้องมี 17 หลัก' }, 400); return; }
 
   // 🔁 ตรวจข้อมูลซ้ำ — เลขบัตรซ้ำกันในวันเดียวกัน → บล็อก (mirror gas-code.gs)
+  //    (ยกเว้น body.forceDuplicate=true = "จำเป็นต้องบันทึก" → อนุญาต + เขียน AuditLog)
+  const forceDup = String(body.forceDuplicate).toLowerCase() === 'true';
   const todayStr = bkkDay(new Date().toISOString());
   const existing = records.find(r => r.ticketNo === ticketNo && bkkDay(r.createdAt) === todayStr);
-  if (existing) {
+  if (existing && !forceDup) {
     console.log(`[API] DUPLICATE blocked: ticket=${ticketNo} existingId=${existing.id}`);
     sendJson(res, {
       success: false,
@@ -365,7 +367,11 @@ function handleCreateRecord(res, body) {
   };
   records.push(rec);
   console.log('[API] Created record: ' + rec.id + ' (' + name + ')');
-  sendJson(res, { success: true, id: rec.id, photoUrl: rec.photo, message: '✅ บันทึกข้อมูลสำเร็จ' });
+  if (existing && forceDup) {
+    appendAudit('public', 'forceDuplicateSave', JSON.stringify({ ticketNo: ticketNo, recordId: rec.id, existingId: existing.id }));
+    console.log(`[API] FORCE duplicate saved: ticket=${ticketNo} existingId=${existing.id} newId=${rec.id}`);
+  }
+  sendJson(res, { success: true, id: rec.id, photoUrl: rec.photo, forced: !!(existing && forceDup), message: '✅ บันทึกข้อมูลสำเร็จ' });
 }
 
 function handleGetAll(res, query, authed) {

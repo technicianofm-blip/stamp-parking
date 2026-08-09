@@ -599,8 +599,10 @@ function doPost(e) {
     const sheet = getSheet(sheetId);
 
     // 🔁 ตรวจข้อมูลซ้ำ — เลขบัตร 17 หลักซ้ำกันในวันเดียวกัน → บล็อกการบันทึก
+    //    (ยกเว้น frontend ส่ง forceDuplicate=true = "จำเป็นต้องบันทึก" → อนุญาต + เขียน AuditLog)
     const existing = findDuplicateToday(sheet, ticketNo);
-    if (existing) {
+    const forceDup = String(data.forceDuplicate).toLowerCase() === 'true';
+    if (existing && !forceDup) {
       console.log('[doPost] DUPLICATE blocked: ticket=' + ticketNo + ' existingId=' + existing.id);
       return jsonResponse({
         success: false,
@@ -629,7 +631,12 @@ function doPost(e) {
 
     clearRecordCache(sheetId);
     console.log('[doPost] created: ' + id + ' (' + name + ') photo=' + (photoUrl ? 'yes' : 'no'));
-    return jsonResponse({ success: true, id, photoUrl, message: '✅ บันทึกข้อมูลสำเร็จ' });
+    // 📝 เขียน AuditLog เมื่อมีการบังคับบันทึกข้อมูลซ้ำ (จำเป็นต้องบันทึก) — ไว้ตรวจสอบภายหลัง
+    if (existing && forceDup) {
+      appendAudit('public', 'forceDuplicateSave', JSON.stringify({ ticketNo: ticketNo, recordId: id, existingId: existing.id }));
+      console.log('[doPost] FORCE duplicate saved: ticket=' + ticketNo + ' existingId=' + existing.id + ' newId=' + id);
+    }
+    return jsonResponse({ success: true, id, photoUrl, forced: !!(existing && forceDup), message: '✅ บันทึกข้อมูลสำเร็จ' });
   } catch (err) {
     console.error('[doPost] error: ' + err.toString());
     return jsonResponse({ success: false, error: err.toString() }, 500);
