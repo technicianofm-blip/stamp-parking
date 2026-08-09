@@ -319,11 +319,35 @@ async function handleApiRequest(req, res, pathname, method, query) {
   sendJson(res, { success: false, error: 'Unknown action' }, 400);
 }
 
+// วันที่แบบ Asia/Bangkok (UTC+7 คงที่ ไม่มี DST) → 'yyyy-MM-dd' — mirror gas-code.gs findDuplicateToday
+function bkkDay(iso) {
+  const ms = new Date(iso).getTime() + 7 * 3600 * 1000;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
 function handleCreateRecord(res, body) {
   const name = String(body.name || '').trim();
   const ticketNo = String(body.ticketNo || '').trim();
   if (!name) { sendJson(res, { success: false, error: 'กรุณากรอกชื่อ-นามสกุล' }, 400); return; }
   if (!ticketNo || ticketNo.length !== 17) { sendJson(res, { success: false, error: 'เลขบัตรจอดรถต้องมี 17 หลัก' }, 400); return; }
+
+  // 🔁 ตรวจข้อมูลซ้ำ — เลขบัตรซ้ำกันในวันเดียวกัน → บล็อก (mirror gas-code.gs)
+  const todayStr = bkkDay(new Date().toISOString());
+  const existing = records.find(r => r.ticketNo === ticketNo && bkkDay(r.createdAt) === todayStr);
+  if (existing) {
+    console.log(`[API] DUPLICATE blocked: ticket=${ticketNo} existingId=${existing.id}`);
+    sendJson(res, {
+      success: false,
+      duplicate: true,
+      error: '⚠️ เลขบัตรนี้ถูกบันทึกไปแล้วในวันนี้ ไม่สามารถบันทึกซ้ำได้',
+      existing: {
+        id: existing.id, name: existing.name, department: existing.department,
+        timeType: existing.timeType, vehicleType: existing.vehicleType,
+        photo: existing.photo || '', createdAt: existing.createdAt, status: existing.status
+      }
+    }, 409);
+    return;
+  }
 
   const rec = {
     id: 'rec_' + Date.now().toString(36),

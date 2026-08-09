@@ -534,6 +534,30 @@
   </div>
 </div>
 
+<!-- ===== Modal ข้อมูลซ้ำ (เลขบัตรซ้ำในวันเดียวกัน) ===== -->
+<div class="modal" id="dupModal" onclick="if(event.target===this)closeModal('dupModal')">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-hd"><h3>⚠️ พบข้อมูลซ้ำ</h3><button class="modal-close" onclick="closeModal('dupModal')" aria-label="ปิด">&times;</button></div>
+    <div class="modal-bd">
+      <p style="text-align:center;color:var(--d);margin-bottom:12px;font-weight:600">เลขบัตรนี้ถูกบันทึกไปแล้วในวันนี้<br>ไม่สามารถบันทึกซ้ำได้</p>
+      <div id="dupPhotoWrap" style="display:none;text-align:center;margin-bottom:10px">
+        <img id="dupPhoto" src="" alt="รูปภาพที่บันทึกไว้" style="max-width:140px;max-height:140px;border-radius:8px;object-fit:cover;border:1px solid var(--g200)">
+      </div>
+      <table style="width:100%;font-size:13px">
+        <tr><td style="padding:4px 8px;color:var(--g500);white-space:nowrap">ชื่อ-นามสกุล</td><td><strong id="dupName">—</strong></td></tr>
+        <tr><td style="padding:4px 8px;color:var(--g500);white-space:nowrap">หน่วยงาน</td><td id="dupDept">—</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--g500);white-space:nowrap">ประเภทการลงเวลา</td><td id="dupTimeType">—</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--g500);white-space:nowrap">ยานพาหนะ</td><td id="dupVehicle">—</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--g500);white-space:nowrap">เวลาที่ลง</td><td id="dupCreated">—</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--g500);white-space:nowrap">สถานะ</td><td id="dupStatus">—</td></tr>
+      </table>
+      <div class="confirm-actions" style="margin-top:14px">
+        <button class="btn btn-o" onclick="closeModal('dupModal')">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== Notification Center ===== -->
 <div class="notif-panel" id="notifPanel">
   <div class="notif-hd"><span>🔔 ข้อมูลใหม่</span>
@@ -1241,6 +1265,10 @@ async function saveRec(e){
   if(!ok) return
   if(!gasUrl()) return toast('⚠️ ยังไม่ได้ตั้งค่า API','e')
 
+  // 🔁 ตรวจซ้ำฝั่ง client (best-effort จาก cache) ก่อนอัปโหลดรูป — เจอแล้วบล็อกทันที ไม่เสียค่าอัปโหลด
+  const dupC=cacheR().find(x=>x.ticketNo===tk&&bkkDay(x.createdAt)===bkkDay(new Date().toISOString()))
+  if(dupC){showDuplicate(dupC);return}
+
   const btn=document.getElementById(p+'SubmitBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังบันทึก...'
 
   // ☁️ อัปโหลดรูปไป Cloudinary ก่อนส่งข้อมูล (ไม่ต้องผ่าน GAS)
@@ -1253,6 +1281,8 @@ async function saveRec(e){
 
   try{
     const r=await post({name:n,nickname:nn,phone:ph,department:d,timeType:t,vehicleType:v,ticketNo:tk,photoUrl})
+    // 🔁 เจอข้อมูลซ้ำฝั่ง backend (บล็อกการบันทึก) → แสดง modal ข้อมูลเดิม
+    if(r.duplicate && r.existing){showDuplicate(r.existing);return}
     if(r.success){
       if(photoUrl) toast('✅ '+r.message+' 📸','s')
       else toast('✅ '+r.message,'s')
@@ -1490,6 +1520,8 @@ function renderPager(){
 //  (ผู้ใช้สามารถล้าง/เลือกช่วงอื่นได้เองภายหลัง)
 // ===================================================================
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+// วันที่แบบ Asia/Bangkok (UTC+7 คงที่ ไม่มี DST) → 'yyyy-MM-dd' — เช็คข้อมูลซ้ำให้ตรงกับ backend
+function bkkDay(iso){const ms=new Date(iso).getTime()+7*3600*1000;return new Date(ms).toISOString().slice(0,10)}
 function initDateDefaults(){
   const t=todayStr()
   ;['desk','mob'].forEach(p=>{
@@ -1589,6 +1621,17 @@ function toggleCard(el){
 //  ACCESSIBILITY — focus trap modal + auto label + openModal (โฟกัส)
 // ===================================================================
 let _lastFocus=null
+// 🔁 แสดง modal ข้อมูลซ้ำ — ข้อมูลเดิมที่ลงไว้ก่อนหน้า (ไม่ใช้ innerHTML กัน XSS)
+function showDuplicate(ex){
+  const fmt=d=>{const t=new Date(d);return isNaN(t)?'—':t.toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v}
+  set('dupName',ex.name||'—');set('dupDept',ex.department||'—')
+  set('dupTimeType',ex.timeType||'—');set('dupVehicle',ex.vehicleType||'—')
+  set('dupCreated',fmt(ex.createdAt));set('dupStatus',ex.status||'—')
+  const wrap=document.getElementById('dupPhotoWrap'),img=document.getElementById('dupPhoto')
+  if(ex.photo&&img){img.src=ex.photo;if(wrap)wrap.style.display='block'}else if(wrap){wrap.style.display='none'}
+  openModal('dupModal')
+}
 function openModal(id){
   const m=document.getElementById(id)
   if(!m)return

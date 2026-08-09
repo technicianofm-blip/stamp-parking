@@ -21,6 +21,7 @@
 | `index.js` | Mock server (Node, port **3005**) จำลอง GAS สำหรับทดสอบ auth ในเครื่อง |
 | `test-auth.js` | Test suite ระบบ auth (22 cases) — เป็น **ground truth** ของ contract |
 | `test-production.js` | Smoke test production ผ่าน GAS Web App URL จริง — ตรวจ login / getAll / 401 (รัน: `node test-production.js <password> [gasUrl]`) |
+| `test-duplicate.js` | Test feature ตรวจเลขบัตรซ้ำวันเดียวกัน — unit `bkkDay` + E2E mock (รัน: `node test-duplicate.js` ควรได้ 4/4 + 11/11) |
 | `toast-enhancements.js` | Enhanced toast UI — โหลด **ท้าย `</body>` หลัง inline script** เพื่อ override `window.toast` |
 | `.clasp.json` | ตั้งค่า clasp (scriptId — อย่าแก้ rootDir ไปจากเดิม) |
 | `appsscript.json` | GAS config (V8, ANYONE, executeAs USER_DEPLOYING) |
@@ -30,6 +31,9 @@
 ```bash
 # ✅ ทดสอบ auth (spawn server เองที่ port 3005) — ควรได้ 22/22
 node test-auth.js
+
+# 🔁 ทดสอบ feature ตรวจเลขบัตรซ้ำวันเดียวกัน (unit bkkDay + E2E mock) — ควรได้ 4/4 + 11/11
+node test-duplicate.js
 
 # 🧪 รัน mock server ทดสอบหน้าเว็บ (เปิด http://localhost:3005)
 node index.js
@@ -45,7 +49,10 @@ clasp run initScriptProperties              # ครั้งแรก: สร�
 node test-production.js <password> [gasUrl]
 
 # 🔍 Syntax check (ตรวจ JS ที่อยู่ข้างในไฟล์ที่ไม่ใช่ .js เช่น gas-code.gs)
-node --check <file>
+# ⚠️ Node ≥ 22 (โดยเฉพาะ v26) ไม่โหลดนามสกุล .gs → throw ERR_UNKNOWN_FILE_EXTENSION
+#    ต้องก๊อปเป็น .js ชั่วคราวก่อนเช็ค (CommonJS) แล้วลบทิ้ง:
+cp gas-code.gs __check_tmp.js && node --check __check_tmp.js && rm -f __check_tmp.js
+node --check index.js
 ```
 
 ## 🔐 ระบบ Auth (สำคัญมาก)
@@ -74,6 +81,7 @@ node --check <file>
 7. `appsscript.json` เปิด `executionApi.access: ANYONE` — ถ้าเกี่ยวข้องกับความปลอดภัย ควรพิจารณาจำกัด
 8. **clasp gotchas (เจอจริงทุกครั้งที่ deploy):** `clasp push` มักตอบ "Skipping push" แม้แก้ไฟล์แล้ว → ใช้ `clasp push --force`; `clasp redeploy <id> -V @HEAD` fails ("Read-only deployments may not be modified") → ต้อง `clasp version "desc"` ก่อน แล้ว redeploy ด้วยเลข version จริง; **หลัง redeploy ทุกครั้ง deployment กลับไปเป็น private** → ต้องตั้ง Who has access = Anyone ใหม่
 9. **CacheService จำกัด 100KB/key:** ถ้า payload ข้อมูลเกิน 100KB (หลายร้อย record) `cache.put` จะ throw ("Argument too large: value") → ต้อง wrap try/catch ข้าม cache แต่อย่ายอมให้ throw จน API ล่ม (เคยเจอที่ getAll ~409 records)
+10. **เลขบัตรจอดรถซ้ำในวันเดียวกันถูกบล็อก:** `doPost` ตรวจ `findDuplicateToday()` (นับวันตาม Asia/Bangkok) ก่อน appendRow → คืน **409** `{duplicate:true, existing}`. ถ้าแก้ ให้ sync 3 ที่: `gas-code.gs` ↔ `index.js` (mirror ด้วย `bkkDay()`) ↔ `index.html` (เช็คซ้ำจาก cache ก่อนอัปโหลดรูป + modal `dupModal`) และรัน `node test-duplicate.js` ให้ผ่าน
 
 ## แนวปฏิบัติ
 

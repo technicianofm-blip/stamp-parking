@@ -597,6 +597,19 @@ function doPost(e) {
 
     // บันทึกลง Google Sheet
     const sheet = getSheet(sheetId);
+
+    // 🔁 ตรวจข้อมูลซ้ำ — เลขบัตร 17 หลักซ้ำกันในวันเดียวกัน → บล็อกการบันทึก
+    const existing = findDuplicateToday(sheet, ticketNo);
+    if (existing) {
+      console.log('[doPost] DUPLICATE blocked: ticket=' + ticketNo + ' existingId=' + existing.id);
+      return jsonResponse({
+        success: false,
+        duplicate: true,
+        error: '⚠️ เลขบัตรนี้ถูกบันทึกไปแล้วในวันนี้ ไม่สามารถบันทึกซ้ำได้',
+        existing: existing
+      }, 409);
+    }
+
     const rowData = [
       id, name,
       String(data.nickname || '').trim(),
@@ -778,6 +791,37 @@ function ensureStatusColumn(sheet) {
   if (!d || d === '') {
     sheet.getRange(1, COL.discount + 1).setValue('ส่วนลด');
   }
+}
+
+// ============================================================
+// 🔁 ตรวจข้อมูลซ้ำ — เลขบัตรจอดรถ 17 หลักซ้ำกันในวันเดียวกัน (Asia/Bangkok)
+//    ใช้ใน doPost ก่อน appendRow เพื่อบล็อกการลงข้อมูลซ้ำ
+// ============================================================
+function findDuplicateToday(sheet, ticketNo) {
+  const data = sheet.getDataRange().getValues();
+  const today = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyy-MM-dd');
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[COL.id]) continue;
+    if (String(row[COL.ticketNo] || '') !== ticketNo) continue;
+    const ts = row[COL.createdAt];
+    let day = '';
+    if (ts instanceof Date) day = Utilities.formatDate(ts, 'Asia/Bangkok', 'yyyy-MM-dd');
+    else if (ts) day = String(ts).substring(0, 10);
+    if (day === today) {
+      return {
+        id: String(row[COL.id] || ''),
+        name: String(row[COL.name] || ''),
+        department: String(row[COL.dept] || ''),
+        timeType: String(row[COL.timeType] || ''),
+        vehicleType: String(row[COL.vehicle] || ''),
+        photo: String(row[COL.photo] || ''),
+        createdAt: ts instanceof Date ? ts.toISOString() : String(ts || ''),
+        status: String(row[COL.status] || 'รออนุมัติ')
+      };
+    }
+  }
+  return null;
 }
 
 // ============================================================
