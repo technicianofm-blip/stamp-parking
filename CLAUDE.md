@@ -23,6 +23,7 @@
 | `test-production.js` | Smoke test production ผ่าน GAS Web App URL จริง — ตรวจ login / getAll / 401 (รัน: `node test-production.js <password> [gasUrl]`) |
 | `test-duplicate.js` | Test feature ตรวจเลขบัตรซ้ำวันเดียวกัน — unit `bkkDay` (รวม guard invalid date) + E2E mock (รัน: `node test-duplicate.js` ควรได้ 5/5 + 13/13) |
 | `test-healurl.js` | Test logic `healUrl()` (self-heal URL) — extract โค้ดจริงจาก index.html มาทดสอบ 6 เคส (รัน: `node test-healurl.js` ควรได้ 15/15): dead-URL no-probe / fast-path 0 request / probe 1 ครั้ง / localhost ข้าม / broken → fallback / 401 ข้าม |
+| `test-announce.js` | Test `initAnnounce()` (ประกาศแบนเนอร์) — DOM mock จำลองโครงสร้าง `page > .card > form` ตรวจว่า banner ถูกแทรกใน `.card` ก่อน form (ไม่ย้าย form หลุด) + ปุ่มปิด/ซ่อน (รัน: `node test-announce.js` ควรได้ 10/10) |
 | `toast-enhancements.js` | Enhanced toast UI — โหลด **ท้าย `</body>` หลัง inline script** เพื่อ override `window.toast` |
 | `.clasp.json` | ตั้งค่า clasp (scriptId — อย่าแก้ rootDir ไปจากเดิม) |
 | `appsscript.json` | GAS config (V8, ANYONE, executeAs USER_DEPLOYING) |
@@ -38,6 +39,9 @@ node test-duplicate.js
 
 # 🌐 ทดสอบ logic healUrl() (self-heal URL ของ GAS backend) — ควรได้ 15/15
 node test-healurl.js
+
+# 📢 ทดสอบ initAnnounce() (ประกาศแบนเนอร์, DOM mock) — ควรได้ 10/10
+node test-announce.js
 
 # 🧪 รัน mock server ทดสอบหน้าเว็บ (เปิด http://localhost:3005)
 node index.js
