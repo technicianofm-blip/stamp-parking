@@ -502,7 +502,7 @@ html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
   pointer-events:auto; /* ตัวกล่อง: คลิกที่ข้อความไม่ปิด (ปิดด้วย ✕ / พื้นที่ว่าง / Esc เท่านั้น) */
   animation:announceIn .25s ease-out;
 }
-.announce-banner .announce-text{flex:1}
+.announce-banner .announce-text{flex:1;white-space:pre-line} /* รักษา \n ใน ANNOUNCE_TEXT → ขึ้นบรรทัดใหม่ */
 .announce-banner .announce-close{
   flex:none;width:26px;height:26px;border:none;border-radius:50%;
   background:rgba(147,197,253,.85);color:#1e3a8a;font-size:13px;line-height:1;cursor:pointer;

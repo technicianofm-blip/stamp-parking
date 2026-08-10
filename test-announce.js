@@ -17,7 +17,7 @@ const fs = require('fs');
 // บล็อก: `const ANNOUNCE_TEXT...` ถึง `}` ปิด initAnnounce() (คอลัมน์ 0)
 // ครอบ: ANNOUNCE_TEXT, initAnnounce() — อ้างอิงแค่ document → mock ได้ครบ ไม่ติด DOM ภายนอก
 const html = fs.readFileSync('index.html', 'utf8');
-const snippet = html.match(/const ANNOUNCE_TEXT = '.*?'[\s\S]*?^}/m)[0];
+const snippet = html.match(/const ANNOUNCE_TEXT = [`'][\s\S]*?^}/m)[0];
 if (!snippet.includes('initAnnounce')) {
   console.error('❌ ไม่พบ initAnnounce() ใน index.html — ตรวจ regex extract อีกที');
   process.exit(1);
@@ -139,7 +139,7 @@ const run = (pages, storage) => {
 
   // T5: ANNOUNCE_TEXT ว่าง → ข้ามทั้งหมด (ไม่สร้าง banner)
   { const pages = buildDom(); const storage = {};
-    const emptySnippet = snippet.replace(/const ANNOUNCE_TEXT = '.*?'/, "const ANNOUNCE_TEXT = ''");
+    const emptySnippet = snippet.replace(/const ANNOUNCE_TEXT = [`'][\s\S]*?[`']/, "const ANNOUNCE_TEXT = ''");
     const body = makeEl('body');
     const document = { body, getElementById: id => pages[id] ?? null, createElement: tag => makeEl(tag), querySelector: () => null };
     const r = new Function('document', 'localStorage', emptySnippet + '; return {initAnnounce};')

@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260818">
+<link rel="stylesheet" href="style.css?v=20260819">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260818">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260819">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260818">
+<link rel="shortcut icon" href="favicon.ico?v=20260819">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260818">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260818">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260818">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260818">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260818">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260819">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260819">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260819">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260819">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260819">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260818">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260819">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260818">
+<link rel="manifest" href="manifest.json?v=20260819">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260818">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260819">
 
 </head>
 <body>
@@ -2082,7 +2082,19 @@ window.clearAllData = () => {
 //  ตั้ง ANNOUNCE_TEXT='' = ปิดการแสดง (ไม่ต้องลบโค้ด)
 //  ปิดด้วยวิธีไหนก็ไม่จดจำ — refresh/โหลดหน้าใหม่ → แบนเนอร์กลับมาทุกครั้ง
 // ===================================================================
-const ANNOUNCE_TEXT = '📢 ประกาศ: กรุณาตรวจสอบเลขบัตรจอดรถ 17 หลักให้ถูกต้องก่อนกดบันทึก';
+const ANNOUNCE_TEXT = `📢 ประกาศ : แจ้งเพื่อทราบ มีการเปลี่ยนแปลง Web App
+
+ผู้ที่ต้องการแสตมป์บัตรจอดรถ (ทั้งรถจักรยานยนต์และรถยนต์)
+กรุณากรอกข้อมูลผ่าน Form ให้ครบถ้วน
+
+รอบเวลาการแสตมป์บัตรจอดรถ เวลา 14.00 น.(เท่านั้น)
+
+โดยสามารถแสตมป์ได้ สูงสุด 12 ชั่วโมง/วัน
+(เฉพาะทีมงานที่ปฏิบัติงานเป็นควงกะเท่านั้น)
+
+หมายเหตุ
+กรุณากรอกข้อมูลให้เรียบร้อยก่อนถึงรอบเวลาที่กำหนด
+หากไม่กรอกข้อมูลภายในเวลาที่กำหนด จะถือว่าไม่ปฏิบัติตามระเบียบ`;
 function initAnnounce(){
   if(!ANNOUNCE_TEXT) return;
   if(document.querySelector('.announce-banner')) return; // กันแทรกซ้ำ
@@ -2162,6 +2174,6 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260818"></script>
+<script src="toast-enhancements.js?v=20260819"></script>
 </body>
 </html>
