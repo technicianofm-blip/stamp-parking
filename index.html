@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260819">
+<link rel="stylesheet" href="style.css?v=20260821">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260819">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260821">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260819">
+<link rel="shortcut icon" href="favicon.ico?v=20260821">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260819">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260819">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260819">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260819">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260819">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260821">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260821">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260821">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260821">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260821">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260819">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260821">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260819">
+<link rel="manifest" href="manifest.json?v=20260821">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260819">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260821">
 
 </head>
 <body>
@@ -2095,6 +2095,8 @@ const ANNOUNCE_TEXT = `📢 ประกาศ : แจ้งเพื่อท�
 หมายเหตุ
 กรุณากรอกข้อมูลให้เรียบร้อยก่อนถึงรอบเวลาที่กำหนด
 หากไม่กรอกข้อมูลภายในเวลาที่กำหนด จะถือว่าไม่ปฏิบัติตามระเบียบ`;
+// ข้อความที่จะไฮไลท์สีแดง — ต้องตรงกับข้อความใน ANNOUNCE_TEXT เป๊ะ (ถ้าไม่เจอจะไม่ไฮไลท์ ไม่พัง)
+const ANNOUNCE_RED = 'รอบเวลาการแสตมป์บัตรจอดรถ เวลา 14.00 น.(เท่านั้น)';
 function initAnnounce(){
   if(!ANNOUNCE_TEXT) return;
   if(document.querySelector('.announce-banner')) return; // กันแทรกซ้ำ
@@ -2107,7 +2109,20 @@ function initAnnounce(){
   b.setAttribute('role','status');
   const c=document.createElement('span');
   c.className='announce-text';
-  c.textContent=ANNOUNCE_TEXT;
+  // ข้อความทั้งก้อน + แยกส่วน ANNOUNCE_RED ใส่ span สีแดง
+  // ใช้ textContent / createTextNode (ไม่ใช้ innerHTML) → ปลอดภัยแม้เปลี่ยนข้อความ
+  const redIdx=ANNOUNCE_TEXT.indexOf(ANNOUNCE_RED);
+  if(redIdx>=0){
+    if(redIdx>0) c.appendChild(document.createTextNode(ANNOUNCE_TEXT.slice(0,redIdx)));
+    const h=document.createElement('span');
+    h.className='announce-highlight';
+    h.textContent=ANNOUNCE_RED;
+    c.appendChild(h);
+    const after=ANNOUNCE_TEXT.slice(redIdx+ANNOUNCE_RED.length);
+    if(after) c.appendChild(document.createTextNode(after));
+  }else{
+    c.textContent=ANNOUNCE_TEXT; // ANNOUNCE_RED ไม่ตรงกับข้อความ → โชว์เต็ม ไม่ไฮไลท์
+  }
   const x=document.createElement('button');
   x.className='announce-close';x.type='button';x.setAttribute('aria-label','ปิดประกาศ');x.textContent='✕';
   // ฉากหลังหรี่ (ลดแสงข้างหลัง ~50% — แบนเนอร์อยู่ z 1000 → สว่างเต็ม 100%)
@@ -2174,6 +2189,6 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260819"></script>
+<script src="toast-enhancements.js?v=20260821"></script>
 </body>
 </html>

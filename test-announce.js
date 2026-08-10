@@ -1,6 +1,6 @@
 // ===================================================================
 // test-announce.js — เทสต์ initAnnounce() (ประกาศแบนเนอร์) ด้วย DOM mock
-// วิธีใช้: node test-announce.js   → ควรได้ 24 ผ่าน / 0 ไม่ผ่าน
+// วิธีใช้: node test-announce.js   → ควรได้ 26 ผ่าน / 0 ไม่ผ่าน
 //
 // banner เป็น overlay ลอยกลางจอ → แนบ document.body (ไม่อยู่ใน .card แล้ว)
 // + มีฉากหลังหรี่ (.announce-backdrop) ลดแสงข้างหลัง ~50% — ลบพร้อมกันทุกทาง
@@ -9,6 +9,7 @@
 // ตรวจ: banner อยู่ใน body (ไม่ย้าย form หลุดการ์ด) + แสดงครั้งเดียว
 //       + ค้างจนกว่าจะปิด: ✕ / Esc / กดพื้นที่ว่าง (ฉากหลัง) = ปิดครั้งนี้ ไม่จด (refresh กลับมา)
 //       + คีย์เก่า sp_announce_dismissed หลงเหลือ → ไม่บล็อกการแสดง
+//       + ANNOUNCE_RED แยกเป็น span .announce-highlight (ไม่ตรงกับข้อความ → โชว์ธรรมดา ไม่พัง)
 //       + โครงสร้าง HTML เปลี่ยนไม่ throw
 // ===================================================================
 const fs = require('fs');
@@ -26,7 +27,16 @@ if (!snippet.includes('initAnnounce')) {
 // ---- DOM mock (พอเพียงกับที่ initAnnounce ใช้) ----
 function makeEl(tag) {
   return {
-    tag, className: '', type: '', textContent: '', attrs: {}, children: [], parentNode: null,
+    tag, className: '', type: '', attrs: {}, children: [], parentNode: null,
+    // textContent คำนวณจากลูก (เลียนแบบ DOM จริง) — ตั้งตรงๆ = ข้อความตรงตัว + ล้างลูก
+    get textContent() {
+      if (this._text !== undefined) return this._text;
+      return this.children.map(ch => ch.textContent ?? '').join('');
+    },
+    set textContent(v) {
+      this._text = String(v);
+      this.children = [];
+    },
     setAttribute(k, v) { this.attrs[k] = v; },
     getAttribute(k) { return this.attrs[k] ?? null; },
     appendChild(ch) { ch.parentNode = this; this.children.push(ch); return ch; },
@@ -71,6 +81,7 @@ const run = (pages, storage) => {
     body,
     getElementById: id => pages[id] ?? null,
     createElement: tag => makeEl(tag),
+    createTextNode: t => ({ textContent: String(t), children: [] }),
     querySelector: sel => sel === '.announce-banner'
       ? (body.children.find(c => c.className === 'announce-banner') || null) : null,
     addEventListener: (t, h) => { (handlers[t] = handlers[t] || []).push(h); },
@@ -81,7 +92,7 @@ const run = (pages, storage) => {
     setItem: (k, v) => { storage[k] = String(v); },
     removeItem: k => { delete storage[k]; }
   };
-  const api = new Function('document', 'localStorage', snippet + '; return {initAnnounce, ANNOUNCE_TEXT};')
+  const api = new Function('document', 'localStorage', snippet + '; return {initAnnounce, ANNOUNCE_TEXT, ANNOUNCE_RED};')
     (document, localStorage);
   return { ...api, body, handlers };
 };
@@ -109,14 +120,16 @@ const run = (pages, storage) => {
     check('T1f ฉากหลังอยู่ใต้แบนเนอร์ (แบนเนอร์สว่างเต็ม 100%)', body.children.indexOf(backdropOf(body)) < body.children.indexOf(b));
   }
 
-  // T2: เนื้อหา banner ถูกต้อง (role=status, ข้อความ = ANNOUNCE_TEXT, มีปุ่มปิด)
+  // T2: เนื้อหา banner ถูกต้อง (role=status, ข้อความ = ANNOUNCE_TEXT, มีปุ่มปิด) + ไฮไลท์แดง
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce();
     const b = bannerOf(api.body);
     const textEl = b.children.find(c => c.className === 'announce-text');
     const closeBtn = b.children.find(c => c.className === 'announce-close');
+    const redEl = textEl && textEl.children.find(ch => ch.className === 'announce-highlight');
     check('T2 banner: role=status + ข้อความถูก + มีปุ่มปิด', b.getAttribute('role') === 'status'
       && textEl && textEl.textContent === api.ANNOUNCE_TEXT && closeBtn && closeBtn.textContent === '✕');
+    check('T2b ANNOUNCE_RED แยกเป็น span .announce-highlight (สีแดง)', !!redEl && redEl.textContent === api.ANNOUNCE_RED);
   }
 
   // T3: กดปิด (✕) → ปิดครั้งนี้เท่านั้น (ไม่จด localStorage) + banner ถูกลบ
@@ -147,6 +160,24 @@ const run = (pages, storage) => {
     r.initAnnounce();
     check('T5 ANNOUNCE_TEXT=ว่าง → body ไม่มี banner', bannerCount(body) === 0);
     check('T5b ANNOUNCE_TEXT=ว่าง → ไม่มีฉากหลังหรี่', !backdropOf(body));
+  }
+
+  // T5c: ANNOUNCE_RED ไม่ตรงกับข้อความ (แก้ข้อความแล้วลืมแก้ red) → โชว์เต็ม ไม่ไฮไลท์ ไม่ throw
+  { const pages = buildDom(); const storage = {};
+    const noRedSnippet = snippet.replace(/const ANNOUNCE_RED = '.*?'/, "const ANNOUNCE_RED = 'ข้อความที่ไม่มีอยู่ในแบนเนอร์'");
+    const body = makeEl('body');
+    const document = { body, getElementById: id => pages[id] ?? null, createElement: tag => makeEl(tag),
+      createTextNode: t => ({ textContent: String(t), children: [] }), querySelector: () => null,
+      addEventListener: () => {}, removeEventListener: () => {} };
+    const r = new Function('document', 'localStorage', noRedSnippet + '; return {initAnnounce};')
+      (document, { getItem: k => null, setItem: () => {}, removeItem: () => {} });
+    r.initAnnounce();
+    const b = bannerOf(body);
+    const textEl = b && b.children.find(c => c.className === 'announce-text');
+    const fullText = noRedSnippet.match(/const ANNOUNCE_TEXT = [`']([\s\S]*?)[`']/)[1];
+    check('T5c ANNOUNCE_RED ไม่ตรง → ไม่ throw + ไม่มี span ไฮไลท์ + ข้อความครบ',
+      !!b && !!textEl && !textEl.children.some(ch => ch.className === 'announce-highlight')
+      && textEl.textContent === fullText);
   }
 
   // T6: page หรือ form หาย (โครงสร้าง HTML เปลี่ยน) → ไม่ throw

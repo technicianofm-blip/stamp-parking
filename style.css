@@ -492,7 +492,8 @@ html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
   z-index:1000;display:flex;align-items:center;gap:10px;
   max-width:min(92vw,480px);width:max-content;
-  padding:14px 16px;border-radius:14px;
+  padding:46px 16px 14px; /* เหลือที่ว่างด้านบนให้ปุ่ม ✕ (มุมขวาบน) ไม่ทับข้อความ */
+  border-radius:14px;
   border:1px solid rgba(147,197,253,.7); /* กรอบสี่เหลี่ยม */
   /* glass: พื้นหลังกึ่งโปร่งแสง + blur → เห็นฟอร์มด้านหลังลางๆ อ่านง่าย */
   background:rgba(219,234,254,.75);
@@ -503,7 +504,9 @@ html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
   animation:announceIn .25s ease-out;
 }
 .announce-banner .announce-text{flex:1;white-space:pre-line} /* รักษา \n ใน ANNOUNCE_TEXT → ขึ้นบรรทัดใหม่ */
+.announce-banner .announce-highlight{color:#dc2626;font-weight:600} /* ไฮไลท์แดง (ส่วน ANNOUNCE_RED) */
 .announce-banner .announce-close{
+  position:absolute;top:8px;right:8px; /* มุมขวาบนของแบนเนอร์ */
   flex:none;width:26px;height:26px;border:none;border-radius:50%;
   background:rgba(147,197,253,.85);color:#1e3a8a;font-size:13px;line-height:1;cursor:pointer;
   pointer-events:auto; /* ปุ่มปิดยังกดได้ */
@@ -517,6 +520,7 @@ html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
 html[data-theme="dark"] .announce-banner{background:rgba(30,58,95,.75);color:#bfdbfe;border-color:rgba(59,130,246,.6)}
 html[data-theme="dark"] .announce-banner .announce-close{background:rgba(59,130,246,.8);color:#dbeafe}
 html[data-theme="dark"] .announce-banner .announce-close:hover{background:#3b82f6}
+html[data-theme="dark"] .announce-banner .announce-highlight{color:#f87171} /* แดงอ่อน อ่านชัดบนพื้นเข้ม */
 /* ฉากหลังหรี่ — ลดแสงข้างหลังแบนเนอร์ ~50% (แบนเนอร์ z 1000 → สว่างเต็ม 100%) */
 .announce-backdrop{
   position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);
