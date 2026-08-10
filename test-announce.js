@@ -1,11 +1,12 @@
 // ===================================================================
 // test-announce.js — เทสต์ initAnnounce() (ประกาศแบนเนอร์) ด้วย DOM mock
-// วิธีใช้: node test-announce.js   → ควรได้ 11 ผ่าน / 0 ไม่ผ่าน
+// วิธีใช้: node test-announce.js   → ควรได้ 18 ผ่าน / 0 ไม่ผ่าน
 //
 // banner เป็น overlay ลอยกลางจอ → แนบ document.body (ไม่อยู่ใน .card แล้ว)
-// mock จำลอง: page > .card > form + document.body + document.querySelector
-// ตรวจว่า: banner อยู่ใน body (ไม่ย้าย form หลุดการ์ด) + แสดงครั้งเดียว
-//          + ปุ่มปิด/ซ่อน + ANNOUNCE_TEXT ว่าง + โครงสร้าง HTML เปลี่ยนไม่ throw
+// mock: page > .card > form + document.body + document.querySelector
+//       + document.addEventListener/removeEventListener + setTimeout/clearTimeout
+// ตรวจ: banner อยู่ใน body (ไม่ย้าย form หลุดการ์ด) + แสดงครั้งเดียว
+//       + ปุ่มปิด (จดถาวร) / auto-hide 8 วิ / กด Esc (ไม่จด) + โครงสร้าง HTML เปลี่ยนไม่ throw
 // ===================================================================
 const fs = require('fs');
 
@@ -59,16 +60,19 @@ const buildDom = () => {
   return pages;
 };
 
-// run(): สร้าง context + document.mock (มี body + querySelector) แล้วคืน API + body
+// run(): สร้าง context + document.mock (body, querySelector, event handlers)
+// แล้วคืน API + body + handlers (ตัวจับ addEventListener)
 const run = (pages, storage) => {
   const body = makeEl('body');
+  const handlers = {};
   const document = {
     body,
     getElementById: id => pages[id] ?? null,
     createElement: tag => makeEl(tag),
-    // querySelector ใช้ใน initAnnounce เพื่อกันแทรกซ้ำ (.announce-banner)
     querySelector: sel => sel === '.announce-banner'
       ? (body.children.find(c => c.className === 'announce-banner') || null) : null,
+    addEventListener: (t, h) => { (handlers[t] = handlers[t] || []).push(h); },
+    removeEventListener: (t, h) => { handlers[t] = (handlers[t] || []).filter(x => x !== h); },
   };
   const localStorage = {
     getItem: k => storage[k] ?? null,
@@ -77,7 +81,7 @@ const run = (pages, storage) => {
   };
   const api = new Function('document', 'localStorage', snippet + '; return {initAnnounce, ANNOUNCE_TEXT};')
     (document, localStorage);
-  return { ...api, body };
+  return { ...api, body, handlers };
 };
 
 (async () => {
@@ -110,13 +114,14 @@ const run = (pages, storage) => {
       && textEl && textEl.textContent === api.ANNOUNCE_TEXT && closeBtn && closeBtn.textContent === '✕');
   }
 
-  // T3: กดปิด → บันทึก localStorage + banner ถูกลบ (remove จาก body)
+  // T3: กดปิด (✕) → จด localStorage ถาวร + banner ถูกลบ
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce();
     const b = bannerOf(api.body);
     const closeBtn = b.children.find(c => c.className === 'announce-close');
     closeBtn.onclick();
-    check('T3 ปิดแล้ว: sp_announce_dismissed=1 + banner ถูก remove', storage['sp_announce_dismissed'] === '1' && b.parentNode === null);
+    check('T3 กด ✕ → sp_announce_dismissed=1 (ถาวร) + banner ถูก remove',
+      storage['sp_announce_dismissed'] === '1' && b.parentNode === null);
   }
 
   // T4: ปิดแล้วโหลดหน้าใหม่ → ไม่สร้าง banner อีก
@@ -149,6 +154,34 @@ const run = (pages, storage) => {
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce(); api.initAnnounce(); api.initAnnounce();
     check('T7 เรียกซ้ำ 3 รอบ → body มีแค่ 1 banner', bannerCount(api.body) === 1);
+  }
+
+  // T8: auto-hide ครบ 8 วิ → banner ถูกลบ (โดยไม่จด "ไม่แสดงอีก")
+  { const pages = buildDom(); const storage = {};
+    const timers = [];
+    const oldSet = global.setTimeout, oldClear = global.clearTimeout;
+    global.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+    global.clearTimeout = () => {};
+    try {
+      const api = run(pages, storage); api.initAnnounce();
+      check('T8a ตั้ง auto-hide 8,000ms', timers.length === 1 && timers[0].ms === 8000);
+      const b = bannerOf(api.body);
+      timers[0].fn(); // จำลองเวลาผ่านไป 8 วิ
+      check('T8b ครบ 8 วิ → banner ถูกลบ', b.parentNode === null);
+      check('T8c auto-hide → ไม่จด localStorage (กลับมาโชว์คราวหน้า)', storage['sp_announce_dismissed'] == null);
+    } finally { global.setTimeout = oldSet; global.clearTimeout = oldClear; }
+  }
+
+  // T9: กด Esc → banner ถูกลบ (ไม่จด localStorage) + ยกเลิก listener (ไม่รั่ว)
+  { const pages = buildDom(); const storage = {};
+    const api = run(pages, storage); api.initAnnounce();
+    const b = bannerOf(api.body);
+    const keyHandler = (api.handlers['keydown'] || [])[0];
+    check('T9a มี keydown listener', !!keyHandler);
+    keyHandler({ key: 'Escape' });
+    check('T9b Esc → banner ถูกลบ', b.parentNode === null);
+    check('T9c Esc → ไม่จด localStorage', storage['sp_announce_dismissed'] == null);
+    check('T9d Esc → listener ถูกลบ (ไม่รั่ว)', !(api.handlers['keydown'] || []).length);
   }
 
   console.log(`\n===== สรุป initAnnounce DOM test =====`);

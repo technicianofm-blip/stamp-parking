@@ -493,18 +493,29 @@ html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
   z-index:1000;display:flex;align-items:center;gap:10px;
   max-width:min(92vw,480px);width:max-content;
   padding:14px 16px;border-radius:14px;
-  border:1px solid #93c5fd; /* กรอบสี่เหลี่ยม */
-  background:#dbeafe;color:#1e3a8a; /* พื้นหลังสีฟ้าพาเทล */
-  font-size:14px;line-height:1.5;
+  border:1px solid rgba(147,197,253,.7); /* กรอบสี่เหลี่ยม */
+  /* glass: พื้นหลังกึ่งโปร่งแสง + blur → เห็นฟอร์มด้านหลังลางๆ อ่านง่าย */
+  background:rgba(219,234,254,.75);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  color:#1e3a8a;font-size:14px;line-height:1.5;
   box-shadow:0 10px 30px rgba(0,0,0,.15);
   pointer-events:none; /* ไม่บังการกรอกฟอร์มด้านหลัง (คลิกทะลุ) */
+  animation:announceIn .25s ease-out;
 }
 .announce-banner .announce-text{flex:1}
 .announce-banner .announce-close{
   flex:none;width:26px;height:26px;border:none;border-radius:50%;
-  background:#93c5fd;color:#1e3a8a;font-size:13px;line-height:1;cursor:pointer;
+  background:rgba(147,197,253,.85);color:#1e3a8a;font-size:13px;line-height:1;cursor:pointer;
   pointer-events:auto; /* ปุ่มปิดยังกดได้ */
 }
-.announce-banner .announce-close:hover{background:#7fb3f9}
-html[data-theme="dark"] .announce-banner{background:#1e3a5f;color:#bfdbfe;border-color:#3b82f6}
-html[data-theme="dark"] .announce-banner .announce-close{background:#3b82f6;color:#dbeafe}
+.announce-banner .announce-close:hover{background:#93c5fd}
+.announce-banner .announce-close:focus-visible{outline:2px solid var(--p);outline-offset:2px}
+@keyframes announceIn{
+  from{opacity:0;transform:translate(-50%,-46%) scale(.96)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+html[data-theme="dark"] .announce-banner{background:rgba(30,58,95,.75);color:#bfdbfe;border-color:rgba(59,130,246,.6)}
+html[data-theme="dark"] .announce-banner .announce-close{background:rgba(59,130,246,.8);color:#dbeafe}
+html[data-theme="dark"] .announce-banner .announce-close:hover{background:#3b82f6}
+/* ผู้ใช้ที่ปิด motion → ไม่มี animation */
+@media (prefers-reduced-motion:reduce){.announce-banner{animation:none}}
