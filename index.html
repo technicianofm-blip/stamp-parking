@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260816">
+<link rel="stylesheet" href="style.css?v=20260818">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260816">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260818">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260816">
+<link rel="shortcut icon" href="favicon.ico?v=20260818">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260816">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260816">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260816">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260816">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260816">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260818">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260818">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260818">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260818">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260818">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260816">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260818">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260816">
+<link rel="manifest" href="manifest.json?v=20260818">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260816">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260818">
 
 </head>
 <body>
@@ -2080,12 +2080,11 @@ window.clearAllData = () => {
 //  ประกาศแบนเนอร์ (Announcement) — ฝังในโค้ด ไม่เกี่ยวกับ Backend
 //  📌 เปลี่ยนข้อความที่ ANNOUNCE_TEXT (แก้ที่เดียว ใช้ทั้ง desktop + mobile)
 //  ตั้ง ANNOUNCE_TEXT='' = ปิดการแสดง (ไม่ต้องลบโค้ด)
-//  ผู้ใช้ปิดได้ (✕) → จำใน localStorage ต่อเครื่อง (ANNOUNCE_KEY)
+//  ปิดด้วยวิธีไหนก็ไม่จดจำ — refresh/โหลดหน้าใหม่ → แบนเนอร์กลับมาทุกครั้ง
 // ===================================================================
 const ANNOUNCE_TEXT = '📢 ประกาศ: กรุณาตรวจสอบเลขบัตรจอดรถ 17 หลักให้ถูกต้องก่อนกดบันทึก';
-const ANNOUNCE_KEY = 'sp_announce_dismissed';
 function initAnnounce(){
-  if(!ANNOUNCE_TEXT || localStorage.getItem(ANNOUNCE_KEY)) return;
+  if(!ANNOUNCE_TEXT) return;
   if(document.querySelector('.announce-banner')) return; // กันแทรกซ้ำ
   // banner เป็น overlay ลอยกลางจอ → แนบ document.body (ไม่ต้องย้าย form/พึ่ง card)
   const page=document.getElementById('desk-page-form')||document.getElementById('mob-page-form');
@@ -2100,7 +2099,7 @@ function initAnnounce(){
   const x=document.createElement('button');
   x.className='announce-close';x.type='button';x.setAttribute('aria-label','ปิดประกาศ');x.textContent='✕';
   // ฉากหลังหรี่ (ลดแสงข้างหลัง ~50% — แบนเนอร์อยู่ z 1000 → สว่างเต็ม 100%)
-  // pointer-events:none → คลิกทะลุไปกรอกฟอร์มได้เหมือนเดิม
+  // pointer-events:auto (CSS) → กดพื้นที่ว่างข้างนอก → ปิดแบนเนอร์
   const back=document.createElement('div');
   back.className='announce-backdrop';
   back.setAttribute('aria-hidden','true');
@@ -2108,15 +2107,17 @@ function initAnnounce(){
   document.body.appendChild(back);
   document.body.appendChild(b);
   // ——— ปิด/แสดงผล ———
-  // ค้างไว้จนกว่าผู้ใช้จะปิดเอง (✕ = จำ "ไม่แสดงอีก" ถาวร / Esc = แค่ปิดครั้งนี้)
+  // ค้างไว้จนกว่าผู้ใช้จะปิดเอง — ปิดด้วยวิธีไหนก็แค่ปิดครั้งนี้ (ไม่จดจำ)
+  // ✕ / Esc / กดพื้นที่ว่างข้างนอก (ฉากหลังหรี่) = ปิดเหมือนกันหมด
+  // refresh/โหลดหน้าใหม่ → แบนเนอร์กลับมาทุกครั้ง
   // ⚠️ ไม่ auto-hide — เกรงผู้ใช้จะอ่านข้อความไม่ทัน
-  const onKey=e=>{ if(e.key==='Escape') dismiss(false); };
-  const dismiss=persist=>{
+  const onKey=e=>{ if(e.key==='Escape') dismiss(); };
+  const dismiss=()=>{
     document.removeEventListener('keydown',onKey);
     b.remove();back.remove();
-    if(persist) localStorage.setItem(ANNOUNCE_KEY,'1');
   };
-  x.onclick=()=>dismiss(true);
+  x.onclick=dismiss;
+  back.onclick=dismiss; // กดพื้นที่ว่าง (ฉากหลังหรี่) → ปิดครั้งนี้
   document.addEventListener('keydown',onKey);
 }
 // ตั้งค่าเริ่มต้นฟอร์ม
@@ -2161,6 +2162,6 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260816"></script>
+<script src="toast-enhancements.js?v=20260818"></script>
 </body>
 </html>

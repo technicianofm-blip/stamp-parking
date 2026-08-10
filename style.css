@@ -499,7 +499,7 @@ html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
   color:#1e3a8a;font-size:14px;line-height:1.5;
   box-shadow:0 10px 30px rgba(0,0,0,.15);
-  pointer-events:none; /* ไม่บังการกรอกฟอร์มด้านหลัง (คลิกทะลุ) */
+  pointer-events:auto; /* ตัวกล่อง: คลิกที่ข้อความไม่ปิด (ปิดด้วย ✕ / พื้นที่ว่าง / Esc เท่านั้น) */
   animation:announceIn .25s ease-out;
 }
 .announce-banner .announce-text{flex:1}
@@ -520,7 +520,7 @@ html[data-theme="dark"] .announce-banner .announce-close:hover{background:#3b82f
 /* ฉากหลังหรี่ — ลดแสงข้างหลังแบนเนอร์ ~50% (แบนเนอร์ z 1000 → สว่างเต็ม 100%) */
 .announce-backdrop{
   position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);
-  pointer-events:none; /* คลิกทะลุ — ยังกรอกฟอร์มได้ ไม่บังการใช้งาน */
+  pointer-events:auto; /* กดพื้นที่ว่างข้างนอก → ปิดแบนเนอร์ (ปิดก่อนแล้วค่อยแตะฟอร์ม) */
   animation:announceBackIn .25s ease-out;
 }
 @keyframes announceBackIn{from{opacity:0}to{opacity:1}}

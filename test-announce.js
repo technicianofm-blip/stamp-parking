@@ -1,20 +1,21 @@
 // ===================================================================
 // test-announce.js — เทสต์ initAnnounce() (ประกาศแบนเนอร์) ด้วย DOM mock
-// วิธีใช้: node test-announce.js   → ควรได้ 21 ผ่าน / 0 ไม่ผ่าน
+// วิธีใช้: node test-announce.js   → ควรได้ 24 ผ่าน / 0 ไม่ผ่าน
 //
 // banner เป็น overlay ลอยกลางจอ → แนบ document.body (ไม่อยู่ใน .card แล้ว)
 // + มีฉากหลังหรี่ (.announce-backdrop) ลดแสงข้างหลัง ~50% — ลบพร้อมกันทุกทาง
 // mock: page > .card > form + document.body + document.querySelector
 //       + document.addEventListener/removeEventListener
 // ตรวจ: banner อยู่ใน body (ไม่ย้าย form หลุดการ์ด) + แสดงครั้งเดียว
-//       + ค้างจนกว่าจะปิด: ✕ จดถาวร / Esc ไม่จด + โครงสร้าง HTML เปลี่ยนไม่ throw
+//       + ค้างจนกว่าจะปิด: ✕ / Esc / กดพื้นที่ว่าง (ฉากหลัง) = ปิดครั้งนี้ ไม่จด (refresh กลับมา)
+//       + คีย์เก่า sp_announce_dismissed หลงเหลือ → ไม่บล็อกการแสดง
+//       + โครงสร้าง HTML เปลี่ยนไม่ throw
 // ===================================================================
 const fs = require('fs');
 
 // ---- Extract โค้ดจริงจาก index.html ----
 // บล็อก: `const ANNOUNCE_TEXT...` ถึง `}` ปิด initAnnounce() (คอลัมน์ 0)
-// ครอบ: ANNOUNCE_TEXT, ANNOUNCE_KEY, initAnnounce() — อ้างอิงแค่
-//       localStorage/document → mock ได้ครบ ไม่ติด DOM ภายนอก
+// ครอบ: ANNOUNCE_TEXT, initAnnounce() — อ้างอิงแค่ document → mock ได้ครบ ไม่ติด DOM ภายนอก
 const html = fs.readFileSync('index.html', 'utf8');
 const snippet = html.match(/const ANNOUNCE_TEXT = '.*?'[\s\S]*?^}/m)[0];
 if (!snippet.includes('initAnnounce')) {
@@ -118,22 +119,22 @@ const run = (pages, storage) => {
       && textEl && textEl.textContent === api.ANNOUNCE_TEXT && closeBtn && closeBtn.textContent === '✕');
   }
 
-  // T3: กดปิด (✕) → จด localStorage ถาวร + banner ถูกลบ
+  // T3: กดปิด (✕) → ปิดครั้งนี้เท่านั้น (ไม่จด localStorage) + banner ถูกลบ
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce();
     const b = bannerOf(api.body);
     const closeBtn = b.children.find(c => c.className === 'announce-close');
     closeBtn.onclick();
-    check('T3 กด ✕ → sp_announce_dismissed=1 (ถาวร) + banner ถูก remove',
-      storage['sp_announce_dismissed'] === '1' && b.parentNode === null);
+    check('T3 กด ✕ → banner ถูก remove (ปิดครั้งนี้) + ไม่จด localStorage',
+      b.parentNode === null && storage['sp_announce_dismissed'] == null);
     check('T3b กด ✕ → ฉากหลังหรี่ถูกลบด้วย', backdropOf(api.body) == null);
   }
 
-  // T4: ปิดแล้วโหลดหน้าใหม่ → ไม่สร้าง banner อีก
+  // T4: คีย์เก่า (sp_announce_dismissed) หลงเหลือจากเวอร์ชันเดิม → ไม่บล็อกการแสดง (refresh ต้องกลับมา)
   { const pages = buildDom(); const storage = { sp_announce_dismissed: '1' };
     const api = run(pages, storage); api.initAnnounce();
-    check('T4 dismissed แล้ว → body ไม่มี banner', bannerCount(api.body) === 0);
-    check('T4b dismissed → ไม่มีฉากหลังหรี่', !backdropOf(api.body));
+    check('T4 มีคีย์เก่าใน localStorage → banner ยังโชว์ (ไม่โดนบล็อก)', bannerCount(api.body) === 1);
+    check('T4b มีคีย์เก่า → ฉากหลังหรี่ยังมีด้วย', !!backdropOf(api.body));
   }
 
   // T5: ANNOUNCE_TEXT ว่าง → ข้ามทั้งหมด (ไม่สร้าง banner)
@@ -174,6 +175,17 @@ const run = (pages, storage) => {
     check('T8c Esc → ไม่จด localStorage', storage['sp_announce_dismissed'] == null);
     check('T8d Esc → listener ถูกลบ (ไม่รั่ว)', !(api.handlers['keydown'] || []).length);
     check('T8e Esc → ฉากหลังหรี่ถูกลบด้วย', backdropOf(api.body) == null);
+  }
+
+  // T9: กดพื้นที่ว่าง (ฉากหลังหรี่) → ปิดแบนเนอร์ (ไม่จดถาวร เหมือน Esc)
+  { const pages = buildDom(); const storage = {};
+    const api = run(pages, storage); api.initAnnounce();
+    const b = bannerOf(api.body);
+    const back = backdropOf(api.body);
+    back.onclick();
+    check('T9a กดฉากหลัง → banner ถูกลบ', b.parentNode === null);
+    check('T9b กดฉากหลัง → ไม่จด localStorage (ปิดครั้งนี้)', storage['sp_announce_dismissed'] == null);
+    check('T9c กดฉากหลัง → ฉากหลังหรี่ถูกลบด้วย', backdropOf(api.body) == null);
   }
 
   console.log(`\n===== สรุป initAnnounce DOM test =====`);
