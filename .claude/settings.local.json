@@ -46,7 +46,9 @@
       "Bash(node --check /tmp/gas-check.js)",
       "Bash(node --check index.js)",
       "Bash(node --check test-auth.js)",
-      "Bash(node __verify.js)"
+      "Bash(node __verify.js)",
+      "Bash(node test-duplicate.js)",
+      "Bash(node check-html.js)"
     ]
   }
 }

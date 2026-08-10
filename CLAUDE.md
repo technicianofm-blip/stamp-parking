@@ -72,7 +72,7 @@ node --check index.js
 
 ## ⚠️ Gotchas / กติกาที่ห้ามละเมิด
 
-1. **`GAS_URL_DEFAULT`** ใน `index.html` (~บรรทัด 505) ต้องอัปเดตให้ตรง deployment ใหม่**ทุกครั้ง**ที่ deploy GAS
+1. **`GAS_URL_DEFAULT`** ใน `index.html` ต้องอัปเดตให้ตรง deployment ใหม่**ทุกครั้ง**ที่ deploy GAS + **ย้าย URL เดิมที่ตายแล้ว (HTTP 404) ไปใส่ใน `DEAD_GAS_URLS`** (ข้างๆ กัน) เพื่อให้ `healUrl()` สลับ URL เก่าให้เครื่องที่เคย Favorite/ติดตั้งไว้หน้า Home ได้อัตโนมัติแบบไม่ต้อง probe — และ**อัปเดต version stamp `?v=YYYYMMDD`** ที่ asset ใน `index.html` + `start_url` ใน `manifest.json` (cache-busting กัน HTML เก่า/แคช PWA) ตรวจ URL ว่าตายจริงด้วย `curl -o /dev/null -w "%{http_code}" <url>?action=getAll` (404 = ใส่ลิสต์, 302 = ยังใช้ได้)
 2. **`healUrl()`** ถือว่า 401 Unauthorized = URL ยังใช้ได้ (แค่ยังไม่ล็อกอิน) — อย่าแก้กลับให้ heal บน 401
 3. `recovery-codes.txt` = 2FA recovery codes — **gitignored แล้ว ห้าม commit** (เช่นเดียวกับ `node.pid`/`server.log`)
 4. เพิ่ม/แก้ฟีเจอร์ auth ต้องทำให้ **3 ที่สอดคล้องกัน**: `gas-code.gs` (จริง) ↔ `index.js` (mock) ↔ `index.html` (frontend)
