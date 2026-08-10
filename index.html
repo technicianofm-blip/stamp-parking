@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260810">
+<link rel="stylesheet" href="style.css?v=20260811">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260810">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260811">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260810">
+<link rel="shortcut icon" href="favicon.ico?v=20260811">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260810">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260810">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260810">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260810">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260810">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260811">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260811">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260811">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260811">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260811">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260810">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260811">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260810">
+<link rel="manifest" href="manifest.json?v=20260811">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260810">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260811">
 
 </head>
 <body>
@@ -2076,8 +2076,37 @@ window.clearAllData = () => {
   toast('🧹 ล้าง localStorage ทั้งหมดแล้ว - โหลดหน้าใหม่','s');
   setTimeout(() => location.reload(), 1000);
 }
+// ===================================================================
+//  ประกาศแบนเนอร์ (Announcement) — ฝังในโค้ด ไม่เกี่ยวกับ Backend
+//  📌 เปลี่ยนข้อความที่ ANNOUNCE_TEXT (แก้ที่เดียว ใช้ทั้ง desktop + mobile)
+//  ตั้ง ANNOUNCE_TEXT='' = ปิดการแสดง (ไม่ต้องลบโค้ด)
+//  ผู้ใช้ปิดได้ (✕) → จำใน localStorage ต่อเครื่อง (ANNOUNCE_KEY)
+// ===================================================================
+const ANNOUNCE_TEXT = '📢 ประกาศ: กรุณาตรวจสอบเลขบัตรจอดรถ 17 หลักให้ถูกต้องก่อนกดบันทึก';
+const ANNOUNCE_KEY = 'sp_announce_dismissed';
+function initAnnounce(){
+  if(!ANNOUNCE_TEXT || localStorage.getItem(ANNOUNCE_KEY)) return;
+  ['desk-page-form','mob-page-form'].forEach(id=>{
+    const page=document.getElementById(id);
+    const form=page&&page.querySelector('form');
+    if(!form) return;
+    const b=document.createElement('div');
+    b.className='announce-banner';
+    b.setAttribute('role','status');
+    const c=document.createElement('span');
+    c.className='announce-text';
+    c.textContent=ANNOUNCE_TEXT;
+    const x=document.createElement('button');
+    x.className='announce-close';x.type='button';x.setAttribute('aria-label','ปิดประกาศ');x.textContent='✕';
+    x.onclick=()=>{localStorage.setItem(ANNOUNCE_KEY,'1');b.remove()};
+    b.appendChild(c);b.appendChild(x);
+    page.insertBefore(b, form);
+  });
+}
 // ตั้งค่าเริ่มต้นฟอร์ม
 resetForm('desk');resetForm('mob');initDatalists()
+// ประกาศแบนเนอร์ (ข้อความจาก ANNOUNCE_TEXT — ฝังในโค้ด)
+initAnnounce()
 // filter วันที่ (จาก/ถึง) ค่าเริ่มต้น = วันนี้ (โชว์ข้อมูลวันนี้) — ผู้ใช้เปลี่ยน/ล้างได้เอง
 initDateDefaults()
 // โหลดข้อมูล Dashboard เฉพาะเมื่อมี token (ล็อกอินแล้ว) เท่านั้น
@@ -2116,6 +2145,6 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260810"></script>
+<script src="toast-enhancements.js?v=20260811"></script>
 </body>
 </html>

@@ -486,3 +486,10 @@ html[data-theme="dark"] .badge-rejected{background:#3a1d21;color:#fda4af}
 html[data-theme="dark"] .stat.purple .v{color:#a78bfa}
 html[data-theme="dark"] .stat.red .v{color:#f87171}
 html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
+/* ===== ประกาศแบนเนอร์ (Announcement — ฝังในโค้ด, ข้อความจาก ANNOUNCE_TEXT ใน index.html) ===== */
+.announce-banner{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--w);color:#fff;font-size:14px;line-height:1.5}
+.announce-banner .announce-text{flex:1}
+.announce-banner .announce-close{flex:none;width:22px;height:22px;border:none;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:12px;line-height:1;cursor:pointer}
+.announce-banner .announce-close:hover{background:rgba(255,255,255,.4)}
+/* mobile: card มี padding ในตัว → banner อยู่ใน card แล้ว กัน margin บนเกิน */
+html[data-theme="dark"] .announce-banner{background:#7c4d12}
