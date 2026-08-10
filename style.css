@@ -487,9 +487,24 @@ html[data-theme="dark"] .stat.purple .v{color:#a78bfa}
 html[data-theme="dark"] .stat.red .v{color:#f87171}
 html[data-theme="dark"] .btn-d{color:#f87171;border-color:#f87171}
 /* ===== ประกาศแบนเนอร์ (Announcement — ฝังในโค้ด, ข้อความจาก ANNOUNCE_TEXT ใน index.html) ===== */
-.announce-banner{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--w);color:#fff;font-size:14px;line-height:1.5}
+.announce-banner{
+  /* overlay ลอยกลางจอ อยู่หน้าเสมอ (z-index สูงกว่า modal 200 / toast 300) */
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:1000;display:flex;align-items:center;gap:10px;
+  max-width:min(92vw,480px);width:max-content;
+  padding:14px 16px;border-radius:14px;
+  border:1px solid #93c5fd; /* กรอบสี่เหลี่ยม */
+  background:#dbeafe;color:#1e3a8a; /* พื้นหลังสีฟ้าพาเทล */
+  font-size:14px;line-height:1.5;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  pointer-events:none; /* ไม่บังการกรอกฟอร์มด้านหลัง (คลิกทะลุ) */
+}
 .announce-banner .announce-text{flex:1}
-.announce-banner .announce-close{flex:none;width:22px;height:22px;border:none;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:12px;line-height:1;cursor:pointer}
-.announce-banner .announce-close:hover{background:rgba(255,255,255,.4)}
-/* mobile: card มี padding ในตัว → banner อยู่ใน card แล้ว กัน margin บนเกิน */
-html[data-theme="dark"] .announce-banner{background:#7c4d12}
+.announce-banner .announce-close{
+  flex:none;width:26px;height:26px;border:none;border-radius:50%;
+  background:#93c5fd;color:#1e3a8a;font-size:13px;line-height:1;cursor:pointer;
+  pointer-events:auto; /* ปุ่มปิดยังกดได้ */
+}
+.announce-banner .announce-close:hover{background:#7fb3f9}
+html[data-theme="dark"] .announce-banner{background:#1e3a5f;color:#bfdbfe;border-color:#3b82f6}
+html[data-theme="dark"] .announce-banner .announce-close{background:#3b82f6;color:#dbeafe}

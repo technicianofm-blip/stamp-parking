@@ -2,7 +2,7 @@
   "name": "Stamp Parking",
   "short_name": "Stamp Parking",
   "description": "ระบบบันทึกข้อมูลที่จอดรถ Stamp Parking",
-  "start_url": "./?v=20260812",
+  "start_url": "./?v=20260813",
   "display": "standalone",
   "background_color": "#2563eb",
   "theme_color": "#2563eb",

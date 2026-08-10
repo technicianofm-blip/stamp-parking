@@ -1,11 +1,11 @@
 // ===================================================================
 // test-announce.js — เทสต์ initAnnounce() (ประกาศแบนเนอร์) ด้วย DOM mock
-// วิธีใช้: node test-announce.js   → ควรได้ 7 ผ่าน / 0 ไม่ผ่าน
+// วิธีใช้: node test-announce.js   → ควรได้ 11 ผ่าน / 0 ไม่ผ่าน
 //
-// จำลองโครงสร้างจริง: <div id="desk-page-form"> > .card > form#deskForm
-//                   <div id="mob-page-form">  > .card > form#mobForm
-// ตรวจว่า banner ถูกแทรกใน .card ก่อน form (ไม่ย้าย form หลุดจากการ์ด —
-// ซึ่งเป็นบัคที่ทำให้ "แบนเนอร์ไม่แสดงข้อมูล") + ปุ่มปิดทำงาน
+// banner เป็น overlay ลอยกลางจอ → แนบ document.body (ไม่อยู่ใน .card แล้ว)
+// mock จำลอง: page > .card > form + document.body + document.querySelector
+// ตรวจว่า: banner อยู่ใน body (ไม่ย้าย form หลุดการ์ด) + แสดงครั้งเดียว
+//          + ปุ่มปิด/ซ่อน + ANNOUNCE_TEXT ว่าง + โครงสร้าง HTML เปลี่ยนไม่ throw
 // ===================================================================
 const fs = require('fs');
 
@@ -59,15 +59,25 @@ const buildDom = () => {
   return pages;
 };
 
+// run(): สร้าง context + document.mock (มี body + querySelector) แล้วคืน API + body
 const run = (pages, storage) => {
-  const document = { getElementById: id => pages[id] ?? null, createElement: tag => makeEl(tag) };
+  const body = makeEl('body');
+  const document = {
+    body,
+    getElementById: id => pages[id] ?? null,
+    createElement: tag => makeEl(tag),
+    // querySelector ใช้ใน initAnnounce เพื่อกันแทรกซ้ำ (.announce-banner)
+    querySelector: sel => sel === '.announce-banner'
+      ? (body.children.find(c => c.className === 'announce-banner') || null) : null,
+  };
   const localStorage = {
     getItem: k => storage[k] ?? null,
     setItem: (k, v) => { storage[k] = String(v); },
     removeItem: k => { delete storage[k]; }
   };
-  return new Function('document', 'localStorage', snippet + '; return {initAnnounce, ANNOUNCE_TEXT};')
+  const api = new Function('document', 'localStorage', snippet + '; return {initAnnounce, ANNOUNCE_TEXT};')
     (document, localStorage);
+  return { ...api, body };
 };
 
 (async () => {
@@ -77,62 +87,68 @@ const run = (pages, storage) => {
     else { fail++; console.log('❌ FAIL', name); }
   };
   const cardOf = (pages, id) => pages[id].children[0]; // .card
-  const bannerOf = card => card.children.find(c => c.className === 'announce-banner');
+  const bannerOf = body => body.children.find(c => c.className === 'announce-banner');
+  const bannerCount = body => body.children.filter(c => c.className === 'announce-banner').length;
 
-  // T1: banner ถูกแทรกใน .card ก่อน form — form ยังอยู่ในการ์ด (บัคเดิมพังตรงนี้)
+  // T1: banner แนบ document.body (ไม่ฝังในการ์ด) — form ยังอยู่ใน .card ทั้ง 2 หน้า
   { const pages = buildDom(); const storage = {};
-    const api = run(pages, storage); api.initAnnounce();
-    for (const id of ['desk-page-form', 'mob-page-form']) {
-      const card = cardOf(pages, id); const form = card._form;
-      const b = bannerOf(card);
-      check(`T1 ${id}: banner อยู่ใน .card ก่อน form`, b != null && card.children[0] === b && card.children[1] === form);
-      check(`T1b ${id}: form.parentNode ยังเป็น .card (ไม่ถูกย้าย)`, form.parentNode === card);
-    }
+    const { body, initAnnounce } = run(pages, storage); initAnnounce();
+    const b = bannerOf(body);
+    check('T1 banner อยู่ที่ document.body (overlay ลอยกลางจอ)', b != null && body.children.includes(b));
+    check('T1b มีแค่ 1 banner (ไม่ซ้ำ 2 หน้า)', bannerCount(body) === 1);
+    check('T1c desk: form.parentNode ยังเป็น .card (ไม่ถูกย้าย)', cardOf(pages, 'desk-page-form')._form.parentNode === cardOf(pages, 'desk-page-form'));
+    check('T1d mob: form.parentNode ยังเป็น .card', cardOf(pages, 'mob-page-form')._form.parentNode === cardOf(pages, 'mob-page-form'));
   }
 
-  // T2: เนื้อหา banner ถูกต้อง (role=status, ข้อความ = ANNOUNCE_TEXT)
+  // T2: เนื้อหา banner ถูกต้อง (role=status, ข้อความ = ANNOUNCE_TEXT, มีปุ่มปิด)
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce();
-    const card = cardOf(pages, 'desk-page-form'); const b = bannerOf(card);
+    const b = bannerOf(api.body);
     const textEl = b.children.find(c => c.className === 'announce-text');
     const closeBtn = b.children.find(c => c.className === 'announce-close');
     check('T2 banner: role=status + ข้อความถูก + มีปุ่มปิด', b.getAttribute('role') === 'status'
       && textEl && textEl.textContent === api.ANNOUNCE_TEXT && closeBtn && closeBtn.textContent === '✕');
   }
 
-  // T3: กดปิด → บันทึก localStorage + banner ถูกลบ
+  // T3: กดปิด → บันทึก localStorage + banner ถูกลบ (remove จาก body)
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce();
-    const b = bannerOf(cardOf(pages, 'desk-page-form'));
+    const b = bannerOf(api.body);
     const closeBtn = b.children.find(c => c.className === 'announce-close');
     closeBtn.onclick();
     check('T3 ปิดแล้ว: sp_announce_dismissed=1 + banner ถูก remove', storage['sp_announce_dismissed'] === '1' && b.parentNode === null);
   }
 
-  // T4: ปิดแล้วโหลดหน้าใหม่ → ไม่แทรกซ้ำ
+  // T4: ปิดแล้วโหลดหน้าใหม่ → ไม่สร้าง banner อีก
   { const pages = buildDom(); const storage = { sp_announce_dismissed: '1' };
     const api = run(pages, storage); api.initAnnounce();
-    check('T4 dismissed แล้ว → ไม่แทรก banner (children เหลือแค่ form)', cardOf(pages, 'desk-page-form').children.length === 1 && cardOf(pages, 'mob-page-form').children.length === 1);
+    check('T4 dismissed แล้ว → body ไม่มี banner', bannerCount(api.body) === 0);
   }
 
-  // T5: ANNOUNCE_TEXT ว่าง → ข้ามทั้งหมด (ไม่แทรก banner)
+  // T5: ANNOUNCE_TEXT ว่าง → ข้ามทั้งหมด (ไม่สร้าง banner)
   { const pages = buildDom(); const storage = {};
     const emptySnippet = snippet.replace(/const ANNOUNCE_TEXT = '.*?'/, "const ANNOUNCE_TEXT = ''");
+    const body = makeEl('body');
+    const document = { body, getElementById: id => pages[id] ?? null, createElement: tag => makeEl(tag), querySelector: () => null };
     const r = new Function('document', 'localStorage', emptySnippet + '; return {initAnnounce};')
-      ({ getElementById: id => pages[id], createElement: () => makeEl('div') }, storage);
+      (document, { getItem: k => null, setItem: () => {}, removeItem: () => {} });
     r.initAnnounce();
-    check('T5 ANNOUNCE_TEXT=ว่าง → children เหลือแค่ form (ไม่มี banner)',
-      cardOf(pages, 'desk-page-form').children.length === 1 && cardOf(pages, 'mob-page-form').children.length === 1);
+    check('T5 ANNOUNCE_TEXT=ว่าง → body ไม่มี banner', bannerCount(body) === 0);
   }
 
   // T6: page หรือ form หาย (โครงสร้าง HTML เปลี่ยน) → ไม่ throw
-  { const storage = {};
-    const api = run({}, storage);
+  { const api = run({}, {});
     try { api.initAnnounce(); check('T6 หา page ไม่เจอ → ไม่ throw', true); }
-    catch (e) { check('T6 หา page ไม่เจอ → ไม่ throw', false); }
-    const partial = buildDom(); delete partial['mob-page-form']._form;
-    try { run(partial, {}); check('T6b form หายในหน้าเดียว → หน้าเดียวยังทำงาน', true); }
+    catch (e) { console.log('   ⚠️ T6 error:', e && e.message); check('T6 หา page ไม่เจอ → ไม่ throw', false); }
+    const partial = buildDom(); delete partial['mob-page-form']._form; // mob ไม่มี form แล้ว
+    try { run(partial, {}).initAnnounce(); check('T6b form หายในหน้าเดียว → หน้าเดียวยังทำงาน', true); }
     catch (e) { console.log('   ⚠️ T6b error:', e && e.message); check('T6b form หายในหน้าเดียว → หน้าเดียวยังทำงาน', false); }
+  }
+
+  // T7: เรียก initAnnounce ซ้ำ → ยังมีแค่ 1 banner (guard document.querySelector)
+  { const pages = buildDom(); const storage = {};
+    const api = run(pages, storage); api.initAnnounce(); api.initAnnounce(); api.initAnnounce();
+    check('T7 เรียกซ้ำ 3 รอบ → body มีแค่ 1 banner', bannerCount(api.body) === 1);
   }
 
   console.log(`\n===== สรุป initAnnounce DOM test =====`);
