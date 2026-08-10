@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260821">
+<link rel="stylesheet" href="style.css?v=20260811">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260821">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260811">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260821">
+<link rel="shortcut icon" href="favicon.ico?v=20260811">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260821">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260821">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260821">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260821">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260821">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260811">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260811">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260811">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260811">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260811">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260821">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260811">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260821">
+<link rel="manifest" href="manifest.json?v=20260811">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260821">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260811">
 
 </head>
 <body>
@@ -1320,7 +1320,9 @@ async function submitRecord(st){
         c.unshift({id:r.id,name:st.n,nickname:st.nn,phone:st.ph,department:st.d,timeType:st.t,vehicleType:st.v,ticketNo:st.tk,photo:r.photoUrl||'',createdAt:new Date().toISOString(),status:'รออนุมัติ',discount:''})
         setCache(c)
       }
-      updBadge();render();updateBell()
+      updBadge();render()
+      // ข้อมูลที่ผู้ใช้บันทึกเอง ไม่ควรแจ้งเตือนตัวเอง → กัน badge ขึ้น + เสียงเตือนหลังกดบันทึก (markSeen → updateBell ข้างใน)
+      markSeen()
     }
     else toast('❌ '+(r.error||'บันทึกไม่สำเร็จ'),'e')
   }catch{toast('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์','e')}
@@ -1400,6 +1402,7 @@ function getNewCount(){
   const t=new Date(seenAt).getTime()
   return cacheR().filter(r=>new Date(r.createdAt).getTime()>t).length
 }
+let _bellN=0 // จำนวนข้อมูลใหม่รอบล่าสุด — กันเสียงแจ้งเตือนซ้ำ (กดรีเฟรช/สลับหน้า)
 function updateBell(){
   const n=getNewCount()
   ;['deskBellBadge','mobBellBadge'].forEach(id=>{
@@ -1408,7 +1411,8 @@ function updateBell(){
     if(n>0){el.textContent=n;el.classList.add('show')}
     else el.classList.remove('show')
   })
-  if(n>0) playNewDataSound(n)
+  if(n>0 && n>_bellN) playNewDataSound(n) // 🔊 เล่นเสียงเฉพาะตอนมีข้อมูลใหม่เพิ่มขึ้น (ไม่เล่นซ้ำทุก refresh)
+  _bellN=n
 }
 // AudioContext singleton - created lazily on first user interaction
 let audioCtx = null;
@@ -1575,11 +1579,12 @@ function toggleNotifPanel(){
 }
 function buildNotifList(){
   const c=cfg();const t=new Date(c.seenAt||0).getTime()
-  const list=cacheR().filter(r=>new Date(r.createdAt).getTime()>t)
-    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,20)
+  const all=cacheR().filter(r=>new Date(r.createdAt).getTime()>t)
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+  const list=all.slice(0,20)
   const el=document.getElementById('notifList')
   const empty=document.getElementById('notifEmpty')
-  if(!list.length){el.innerHTML='';empty.style.display='block';return}
+  if(!list.length){el.innerHTML='';empty.style.display='block';empty.textContent='ไม่มีข้อมูลใหม่';return}
   empty.style.display='none'
   el.innerHTML=list.map(x=>{
     const d=new Date(x.createdAt)
@@ -1590,6 +1595,8 @@ function buildNotifList(){
       <span class="notif-meta">${tstr} · ${esc(x.ticketNo)}${x.photo?' · 📷':''}</span>
     </button>`
   }).join('')
+  // มีข้อมูลใหม่เกิน 20 → บอกจำนวนที่เหลือ (กันตัวเลข badge มากกว่าจำนวนที่เห็นในลิสต์)
+  if(all.length>list.length){empty.style.display='block';empty.textContent='…และอีก '+(all.length-list.length)+' รายการ'}
 }
 function notifOpen(id){
   const r=cacheR().find(x=>x.id===id)
@@ -2189,6 +2196,6 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260821"></script>
+<script src="toast-enhancements.js?v=20260811"></script>
 </body>
 </html>

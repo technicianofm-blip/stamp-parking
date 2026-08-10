@@ -24,6 +24,7 @@
 | `test-duplicate.js` | Test feature ตรวจเลขบัตรซ้ำวันเดียวกัน — unit `bkkDay` (รวม guard invalid date) + E2E mock (รัน: `node test-duplicate.js` ควรได้ 5/5 + 13/13) |
 | `test-healurl.js` | Test logic `healUrl()` (self-heal URL) — extract โค้ดจริงจาก index.html มาทดสอบ 6 เคส (รัน: `node test-healurl.js` ควรได้ 15/15): dead-URL no-probe / fast-path 0 request / probe 1 ครั้ง / localhost ข้าม / broken → fallback / 401 ข้าม |
 | `test-announce.js` | Test `initAnnounce()` (ประกาศแบนเนอร์) — DOM mock จำลอง `page > .card > form` + `document.body` ตรวจว่า banner แนบ body (overlay ลอยกลางจอ ไม่ย้าย form หลุดการ์ด) + ฉากหลังหรี่ (`.announce-backdrop` ลดแสงข้างหลัง ~50%) ลบพร้อมกันทุกทาง + แสดงครั้งเดียว + ค้างจนกว่าจะปิด: ✕ / Esc / กดพื้นที่ว่าง (ฉากหลัง) = ปิดครั้งนี้ ไม่จด (refresh กลับมาทุกครั้ง) + คีย์เก่า `sp_announce_dismissed` หลงเหลือไม่บล็อกการแสดง + `ANNOUNCE_RED` แยกเป็น span `.announce-highlight` (ไม่ตรงกับข้อความ → โชว์ธรรมดา ไม่พัง) (รัน: `node test-announce.js` ควรได้ 26/26) |
+| `test-bell.js` | Test 🔔 Notification Badge — extract โค้ดจริง (บล็อก BELL NOTIFICATION + NOTIFICATION CENTER) มา eval พร้อม AudioContext mock (นับ oscillator = นับเสียง) + Date mock (กันขึ้นกับเวลาจริง) ตรวจ `getNewCount`/`updateBell`/`markSeen`/`buildNotifList`: badge ขึ้น/ซ่อน, **เสียงเล่นเฉพาะตอนจำนวนเพิ่ม (กันซ้ำตอน refresh)**, บันทึกของตัวเองไม่แจ้งเตือน (markSeen), ลิสต์เกิน 20 → note "…และอีก N รายการ", ไม่มีใหม่ → "ไม่มีข้อมูลใหม่" (รัน: `node test-bell.js` ควรได้ 20/20) |
 | `toast-enhancements.js` | Enhanced toast UI — โหลด **ท้าย `</body>` หลัง inline script** เพื่อ override `window.toast` |
 | `.clasp.json` | ตั้งค่า clasp (scriptId — อย่าแก้ rootDir ไปจากเดิม) |
 | `appsscript.json` | GAS config (V8, ANYONE, executeAs USER_DEPLOYING) |
@@ -42,6 +43,9 @@ node test-healurl.js
 
 # 📢 ทดสอบ initAnnounce() (ประกาศแบนเนอร์, DOM mock) — ควรได้ 26/26
 node test-announce.js
+
+# 🔔 ทดสอบ Notification Badge (เสียงเล่นเฉพาะตอนมีใหม่ + badge/markSeen + ลิสต์เกิน 20) — ควรได้ 20/20
+node test-bell.js
 
 # 🧪 รัน mock server ทดสอบหน้าเว็บ (เปิด http://localhost:3005)
 node index.js
