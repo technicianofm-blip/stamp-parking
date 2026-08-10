@@ -1,12 +1,13 @@
 // ===================================================================
 // test-announce.js — เทสต์ initAnnounce() (ประกาศแบนเนอร์) ด้วย DOM mock
-// วิธีใช้: node test-announce.js   → ควรได้ 18 ผ่าน / 0 ไม่ผ่าน
+// วิธีใช้: node test-announce.js   → ควรได้ 21 ผ่าน / 0 ไม่ผ่าน
 //
 // banner เป็น overlay ลอยกลางจอ → แนบ document.body (ไม่อยู่ใน .card แล้ว)
+// + มีฉากหลังหรี่ (.announce-backdrop) ลดแสงข้างหลัง ~50% — ลบพร้อมกันทุกทาง
 // mock: page > .card > form + document.body + document.querySelector
-//       + document.addEventListener/removeEventListener + setTimeout/clearTimeout
+//       + document.addEventListener/removeEventListener
 // ตรวจ: banner อยู่ใน body (ไม่ย้าย form หลุดการ์ด) + แสดงครั้งเดียว
-//       + ปุ่มปิด (จดถาวร) / auto-hide 8 วิ / กด Esc (ไม่จด) + โครงสร้าง HTML เปลี่ยนไม่ throw
+//       + ค้างจนกว่าจะปิด: ✕ จดถาวร / Esc ไม่จด + โครงสร้าง HTML เปลี่ยนไม่ throw
 // ===================================================================
 const fs = require('fs');
 
@@ -93,6 +94,7 @@ const run = (pages, storage) => {
   const cardOf = (pages, id) => pages[id].children[0]; // .card
   const bannerOf = body => body.children.find(c => c.className === 'announce-banner');
   const bannerCount = body => body.children.filter(c => c.className === 'announce-banner').length;
+  const backdropOf = body => body.children.find(c => c.className === 'announce-backdrop');
 
   // T1: banner แนบ document.body (ไม่ฝังในการ์ด) — form ยังอยู่ใน .card ทั้ง 2 หน้า
   { const pages = buildDom(); const storage = {};
@@ -102,6 +104,8 @@ const run = (pages, storage) => {
     check('T1b มีแค่ 1 banner (ไม่ซ้ำ 2 หน้า)', bannerCount(body) === 1);
     check('T1c desk: form.parentNode ยังเป็น .card (ไม่ถูกย้าย)', cardOf(pages, 'desk-page-form')._form.parentNode === cardOf(pages, 'desk-page-form'));
     check('T1d mob: form.parentNode ยังเป็น .card', cardOf(pages, 'mob-page-form')._form.parentNode === cardOf(pages, 'mob-page-form'));
+    check('T1e มีฉากหลังหรี่ (.announce-backdrop)', !!backdropOf(body));
+    check('T1f ฉากหลังอยู่ใต้แบนเนอร์ (แบนเนอร์สว่างเต็ม 100%)', body.children.indexOf(backdropOf(body)) < body.children.indexOf(b));
   }
 
   // T2: เนื้อหา banner ถูกต้อง (role=status, ข้อความ = ANNOUNCE_TEXT, มีปุ่มปิด)
@@ -122,12 +126,14 @@ const run = (pages, storage) => {
     closeBtn.onclick();
     check('T3 กด ✕ → sp_announce_dismissed=1 (ถาวร) + banner ถูก remove',
       storage['sp_announce_dismissed'] === '1' && b.parentNode === null);
+    check('T3b กด ✕ → ฉากหลังหรี่ถูกลบด้วย', backdropOf(api.body) == null);
   }
 
   // T4: ปิดแล้วโหลดหน้าใหม่ → ไม่สร้าง banner อีก
   { const pages = buildDom(); const storage = { sp_announce_dismissed: '1' };
     const api = run(pages, storage); api.initAnnounce();
     check('T4 dismissed แล้ว → body ไม่มี banner', bannerCount(api.body) === 0);
+    check('T4b dismissed → ไม่มีฉากหลังหรี่', !backdropOf(api.body));
   }
 
   // T5: ANNOUNCE_TEXT ว่าง → ข้ามทั้งหมด (ไม่สร้าง banner)
@@ -139,6 +145,7 @@ const run = (pages, storage) => {
       (document, { getItem: k => null, setItem: () => {}, removeItem: () => {} });
     r.initAnnounce();
     check('T5 ANNOUNCE_TEXT=ว่าง → body ไม่มี banner', bannerCount(body) === 0);
+    check('T5b ANNOUNCE_TEXT=ว่าง → ไม่มีฉากหลังหรี่', !backdropOf(body));
   }
 
   // T6: page หรือ form หาย (โครงสร้าง HTML เปลี่ยน) → ไม่ throw
@@ -156,32 +163,17 @@ const run = (pages, storage) => {
     check('T7 เรียกซ้ำ 3 รอบ → body มีแค่ 1 banner', bannerCount(api.body) === 1);
   }
 
-  // T8: auto-hide ครบ 8 วิ → banner ถูกลบ (โดยไม่จด "ไม่แสดงอีก")
-  { const pages = buildDom(); const storage = {};
-    const timers = [];
-    const oldSet = global.setTimeout, oldClear = global.clearTimeout;
-    global.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
-    global.clearTimeout = () => {};
-    try {
-      const api = run(pages, storage); api.initAnnounce();
-      check('T8a ตั้ง auto-hide 8,000ms', timers.length === 1 && timers[0].ms === 8000);
-      const b = bannerOf(api.body);
-      timers[0].fn(); // จำลองเวลาผ่านไป 8 วิ
-      check('T8b ครบ 8 วิ → banner ถูกลบ', b.parentNode === null);
-      check('T8c auto-hide → ไม่จด localStorage (กลับมาโชว์คราวหน้า)', storage['sp_announce_dismissed'] == null);
-    } finally { global.setTimeout = oldSet; global.clearTimeout = oldClear; }
-  }
-
-  // T9: กด Esc → banner ถูกลบ (ไม่จด localStorage) + ยกเลิก listener (ไม่รั่ว)
+  // T8: กด Esc → banner ถูกลบ (ไม่จด localStorage) + ยกเลิก listener (ไม่รั่ว)
   { const pages = buildDom(); const storage = {};
     const api = run(pages, storage); api.initAnnounce();
     const b = bannerOf(api.body);
     const keyHandler = (api.handlers['keydown'] || [])[0];
-    check('T9a มี keydown listener', !!keyHandler);
+    check('T8a มี keydown listener', !!keyHandler);
     keyHandler({ key: 'Escape' });
-    check('T9b Esc → banner ถูกลบ', b.parentNode === null);
-    check('T9c Esc → ไม่จด localStorage', storage['sp_announce_dismissed'] == null);
-    check('T9d Esc → listener ถูกลบ (ไม่รั่ว)', !(api.handlers['keydown'] || []).length);
+    check('T8b Esc → banner ถูกลบ', b.parentNode === null);
+    check('T8c Esc → ไม่จด localStorage', storage['sp_announce_dismissed'] == null);
+    check('T8d Esc → listener ถูกลบ (ไม่รั่ว)', !(api.handlers['keydown'] || []).length);
+    check('T8e Esc → ฉากหลังหรี่ถูกลบด้วย', backdropOf(api.body) == null);
   }
 
   console.log(`\n===== สรุป initAnnounce DOM test =====`);

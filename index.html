@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260814">
+<link rel="stylesheet" href="style.css?v=20260816">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260814">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260816">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260814">
+<link rel="shortcut icon" href="favicon.ico?v=20260816">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260814">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260814">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260814">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260814">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260814">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260816">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260816">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260816">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260816">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260816">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260814">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260816">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260814">
+<link rel="manifest" href="manifest.json?v=20260816">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260814">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260816">
 
 </head>
 <body>
@@ -2099,22 +2099,24 @@ function initAnnounce(){
   c.textContent=ANNOUNCE_TEXT;
   const x=document.createElement('button');
   x.className='announce-close';x.type='button';x.setAttribute('aria-label','ปิดประกาศ');x.textContent='✕';
+  // ฉากหลังหรี่ (ลดแสงข้างหลัง ~50% — แบนเนอร์อยู่ z 1000 → สว่างเต็ม 100%)
+  // pointer-events:none → คลิกทะลุไปกรอกฟอร์มได้เหมือนเดิม
+  const back=document.createElement('div');
+  back.className='announce-backdrop';
+  back.setAttribute('aria-hidden','true');
   b.appendChild(c);b.appendChild(x);
+  document.body.appendChild(back);
   document.body.appendChild(b);
   // ——— ปิด/แสดงผล ———
-  // dismiss(persist): persist=true (กด ✕) → จำ "ไม่แสดงอีก" ถาวรในเครื่อง
-  //                  persist=false (auto-hide/Esc) → แค่ปิดครั้งนี้ กลับมาโชว์คราวหน้า
-  let timer;
+  // ค้างไว้จนกว่าผู้ใช้จะปิดเอง (✕ = จำ "ไม่แสดงอีก" ถาวร / Esc = แค่ปิดครั้งนี้)
+  // ⚠️ ไม่ auto-hide — เกรงผู้ใช้จะอ่านข้อความไม่ทัน
   const onKey=e=>{ if(e.key==='Escape') dismiss(false); };
   const dismiss=persist=>{
-    clearTimeout(timer);
     document.removeEventListener('keydown',onKey);
-    b.remove();
+    b.remove();back.remove();
     if(persist) localStorage.setItem(ANNOUNCE_KEY,'1');
   };
   x.onclick=()=>dismiss(true);
-  // ข้อความไม่วิกฤต → auto-hide 8 วิ (หลักการ toast) + กด Esc ปิดได้
-  timer=setTimeout(()=>dismiss(false),8000);
   document.addEventListener('keydown',onKey);
 }
 // ตั้งค่าเริ่มต้นฟอร์ม
@@ -2159,6 +2161,6 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260814"></script>
+<script src="toast-enhancements.js?v=20260816"></script>
 </body>
 </html>
