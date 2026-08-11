@@ -25,6 +25,8 @@
 | `test-healurl.js` | Test logic `healUrl()` (self-heal URL) — extract โค้ดจริงจาก index.html มาทดสอบ 7 เคส (รัน: `node test-healurl.js` ควรได้ 20/20): dead-URL no-probe / fast-path 0 request / probe 1 ครั้ง / localhost ข้าม / broken → fallback / 401 ข้าม / **anonymous dead-URL + default 401 → ยัง heal** |
 | `test-announce.js` | Test `initAnnounce()` (ประกาศแบนเนอร์) — DOM mock จำลอง `page > .card > form` + `document.body` ตรวจว่า banner แนบ body (overlay ลอยกลางจอ ไม่ย้าย form หลุดการ์ด) + ฉากหลังหรี่ (`.announce-backdrop` ลดแสงข้างหลัง ~50%) ลบพร้อมกันทุกทาง + แสดงครั้งเดียว + ค้างจนกว่าจะปิด: ✕ / Esc / กดพื้นที่ว่าง (ฉากหลัง) = ปิดครั้งนี้ ไม่จด (refresh กลับมาทุกครั้ง) + คีย์เก่า `sp_announce_dismissed` หลงเหลือไม่บล็อกการแสดง + `ANNOUNCE_RED` แยกเป็น span `.announce-highlight` (ไม่ตรงกับข้อความ → โชว์ธรรมดา ไม่พัง) (รัน: `node test-announce.js` ควรได้ 26/26) |
 | `test-bell.js` | Test 🔔 Notification Badge — extract โค้ดจริง (บล็อก BELL NOTIFICATION + NOTIFICATION CENTER) มา eval พร้อม AudioContext mock (นับ oscillator = นับเสียง) + Date mock (กันขึ้นกับเวลาจริง) ตรวจ `getNewCount`/`updateBell`/`markSeen`/`buildNotifList`: badge ขึ้น/ซ่อน, **เสียงเล่นเฉพาะตอนจำนวนเพิ่ม (กันซ้ำตอน refresh)**, บันทึกของตัวเองไม่แจ้งเตือน (markSeen), ลิสต์เกิน 20 → note "…และอีก N รายการ", ไม่มีใหม่ → "ไม่มีข้อมูลใหม่" (รัน: `node test-bell.js` ควรได้ 20/20) |
+| `test-copy.js` | Test `copyTicket()`/`legacyCopyText()` (คัดลอกเลขบัตรจอดรถ) — ลอง Clipboard API (async) ก่อน → fallback textarea + `execCommand('copy')` ครอบมือถือเก่า (iOS Safari <13.4 / Android WebView / ไม่ใช่ https) + ตรวจว่า render ทั้ง desktop และ mobile มี copy wiring (data-tk XSS-safe) (รัน: `node test-copy.js` ควรได้ 13/13) |
+| `test-moblogout.js` | Test `setConn()` อัปเดตสถานะล็อกอิน (desktop sidebar + แถบมือถือ) — ดึง setConn() จริงมา eval พร้อม document mock ตรวจแถบ auth โชว์/ซ่อนตาม token, label ชื่อผู้ใช้, auth แยกจาก connection, จุดเชื่อมต่อ/offline bar ยังทำงาน (รัน: `node test-moblogout.js` ควรได้ 11/11) |
 | `toast-enhancements.js` | Enhanced toast UI — โหลด **ท้าย `</body>` หลัง inline script** เพื่อ override `window.toast` |
 | `sw.js` | Service worker — **บังคับ PWA ที่ติดตั้งหน้า Home โหลด HTML ใหม่ทุกครั้งที่เปิด** (network-first เฉพาะ navigation request + `skipWaiting`/`clients.claim`) — `SHELL_CACHE` ต้องตรงกับ `?v=` ทุก deploy |
 | `.clasp.json` | ตั้งค่า clasp (scriptId — อย่าแก้ rootDir ไปจากเดิม) |
@@ -47,6 +49,12 @@ node test-announce.js
 
 # 🔔 ทดสอบ Notification Badge (เสียงเล่นเฉพาะตอนมีใหม่ + badge/markSeen + ลิสต์เกิน 20) — ควรได้ 20/20
 node test-bell.js
+
+# 📋 ทดสอบ logic copyTicket() (คัดลอกเลขบัตร — fallback มือถือเก่า + wiring ทั้ง 2 ฝั่ง) — ควรได้ 13/13
+
+# 🚪 ทดสอบ setConn() สถานะล็อกอิน (desktop + แถบมือถือ มีปุ่มออกจากระบบ) — ควรได้ 11/11
+node test-moblogout.js
+node test-copy.js
 
 # 🧪 รัน mock server ทดสอบหน้าเว็บ (เปิด http://localhost:3005)
 node index.js

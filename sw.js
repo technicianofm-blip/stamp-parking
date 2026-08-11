@@ -12,7 +12,7 @@
 //                ขออื่น (GAS cross-origin, รูป Cloudinary, asset) → ปล่อยผ่าน ไม่แตะ
 // ⚠️ ต้องอัปเดต SHELL_CACHE ตัวเลขให้ตรงกับ ?v= ทุกครั้งที่ deploy (ดู CLAUDE.md gotcha #1)
 // ===================================================================
-const SHELL_CACHE = 'sp-shell-v20260811';
+const SHELL_CACHE = 'sp-shell-v20260812';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting(); // ขึ้นควบคุมทันที

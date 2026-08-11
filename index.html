@@ -4,30 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stamp Parking</title>
-<link rel="stylesheet" href="style.css?v=20260811">
+<link rel="stylesheet" href="style.css?v=20260812">
 <script>try{var t=localStorage.getItem('sp_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
 
 <!-- ===== OFM Favicon System ===== -->
 <!-- Primary: SVG (Modern browsers, scalable, dark mode) -->
-<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260811">
+<link rel="icon" type="image/svg+xml" href="ofm-favicon.svg?v=20260812">
 <!-- Fallback: ICO (Legacy browsers) -->
-<link rel="shortcut icon" href="favicon.ico?v=20260811">
+<link rel="shortcut icon" href="favicon.ico?v=20260812">
 <!-- PNG Sizes (Explicit for caching/performance) -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260811">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260811">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260811">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260811">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260811">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=20260812">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260812">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png?v=20260812">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20260812">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=20260812">
 <!-- Apple Touch Icons (iOS PWA) -->
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260811">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=20260812">
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json?v=20260811">
+<link rel="manifest" href="manifest.json?v=20260812">
 <!-- Theme Color (Browser UI: address bar, tab bar) -->
 <meta name="theme-color" content="#6366f1">
 <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: dark)">
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#6366f1">
-<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260811">
+<meta name="msapplication-TileImage" content="icons/icon-144.png?v=20260812">
 
 </head>
 <body>
@@ -287,6 +287,11 @@
     <button class="theme-btn" onclick="toggleTheme()" aria-label="สลับธีมมืด/สว่าง" title="สลับธีมมืด/สว่าง">
       <span class="th-icon">🌙</span><span class="th-label">โหมดมืด</span>
     </button>
+  </div>
+  <!-- Auth status / Logout (มือถือ — โชว์เมื่อล็อกอินเท่านั้น) -->
+  <div class="mob-auth" id="mobAuthStatus" style="display:none">
+    <span class="mob-auth-label" id="mobAuthLabel">🔒 เข้าสู่ระบบแล้ว</span>
+    <button class="btn btn-o btn-sm" onclick="logout()">🚪 ออกจากระบบ</button>
   </div>
   <div class="offline-bar" id="mobOffline">⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์</div>
 
@@ -1783,7 +1788,7 @@ function render(){
         <td><span class="badge ${x.department==='OFM'?'badge-ofm':'badge-pcs'}">${esc(x.department)}</span></td>
         <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${esc(x.timeType)}</span></td>
         <td><span class="badge ${x.vehicleType==='รถจักรยานยนต์'?'badge-bike':'badge-car'}">${esc(x.vehicleType)}</span></td>
-        <td style="font-family:monospace;font-size:12px;cursor:pointer" onclick="copyTicket(this.dataset.tk)" data-tk="${esc(x.ticketNo)}" title="คลิกเพื่อคัดลอก">${esc(x.ticketNo)}</td>
+        <td style="font-family:monospace;font-size:12px;cursor:pointer" class="ticket-copy" onclick="copyTicket(this.dataset.tk)" data-tk="${esc(x.ticketNo)}" title="คลิกเพื่อคัดลอก">${esc(x.ticketNo)}</td>
         <td>
           <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)">
             <option value="" ${!x.discount?'selected':''}>—</option>
@@ -1812,7 +1817,7 @@ function render(){
         <td>${startIdx+i+1}</td>
         <td>${esc(x.name)}</td>
         <td><span class="badge ${x.timeType==='เข้างาน'?'badge-in':'badge-out'}">${esc(x.timeType)}</span></td>
-        <td style="font-family:monospace;font-size:11px">${esc(x.ticketNo)}</td>
+        <td style="font-family:monospace;font-size:11px;cursor:pointer" class="ticket-copy" onclick="copyTicket(this.dataset.tk)" data-tk="${esc(x.ticketNo)}" title="คลิกเพื่อคัดลอก">${esc(x.ticketNo)}</td>
         <td>
           <select class="discount-select" data-id="${esc(x.id)}" onchange="updateDiscount(this)" style="width:65px;font-size:11px;padding:3px">
             <option value="" ${!x.discount?'selected':''}>—</option>
@@ -1924,15 +1929,22 @@ function setConn(on){
   const bar=document.getElementById('mobOffline')
   if(bar){if(!on)bar.classList.add('show');else bar.classList.remove('show')}
 
-  // Auth status visibility + แสดงชื่อผู้ใช้ที่ล็อกอิน
+  // Auth status visibility + แสดงชื่อผู้ใช้ที่ล็อกอิน (desktop sidebar + แถบมือถือ)
   const authStatus = document.getElementById('deskAuthStatus');
-  if (authStatus) {
+  const mobAuth = document.getElementById('mobAuthStatus');
+  if (authStatus || mobAuth) {
     const authed = getToken();
-    authStatus.style.display = authed ? 'flex' : 'none';
-    const label = document.getElementById('deskAuthLabel');
-    if (label) {
-      const me = getMe();
-      label.textContent = me && me.displayName ? '🔒 ' + me.displayName : '🔒 เข้าสู่ระบบแล้ว';
+    const me = getMe();
+    const name = me && me.displayName ? '🔒 ' + me.displayName : '🔒 เข้าสู่ระบบแล้ว';
+    if (authStatus) {
+      authStatus.style.display = authed ? 'flex' : 'none';
+      const label = document.getElementById('deskAuthLabel');
+      if (label) label.textContent = name;
+    }
+    if (mobAuth) {
+      mobAuth.style.display = authed ? 'flex' : 'none';
+      const label = document.getElementById('mobAuthLabel');
+      if (label) label.textContent = name;
     }
   }
 }
@@ -1994,7 +2006,30 @@ function initDatalists(){
 //  CSV
 // ===================================================================
 function copyTicket(t){
-  navigator.clipboard.writeText(t).then(()=>toast('✅ คัดลอก '+t,'s')).catch(()=>toast('⚠️ ไม่สามารถคัดลอก','e'))
+  const ok=()=>toast('✅ คัดลอก '+t,'s')
+  const err=()=>toast('⚠️ ไม่สามารถคัดลอก','e')
+  // 1) Clipboard API (async) — มีเฉพาะ secure context (https) + เบราว์เซอร์ใหม่
+  //    มือถือรุ่นเก่า/WebView ไม่มี navigator.clipboard → เรียกตรงๆ จะ throw (จับไม่ทันด้วย .catch)
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(ok).catch(()=>legacyCopyText(t)?ok():err())
+  }else{
+    // 2) ทางสำรอง (sync, ทำงานใน user gesture) — ครอบ iOS Safari <13.4 / Android WebView
+    legacyCopyText(t)?ok():err()
+  }
+}
+function legacyCopyText(t){
+  // textarea ชั่วคราวลอยนอกจอ + select → execCommand('copy')
+  // (ห้าม display:none ไม่งั้น iOS เลือกข้อความไม่ได้; API deprecate แล้วแต่ยังใช้ได้ทุกมือถือ)
+  const ta=document.createElement('textarea')
+  ta.value=t
+  ta.setAttribute('readonly','')
+  ta.style.cssText='position:fixed;top:0;left:0;width:2px;height:2px;opacity:0;pointer-events:none'
+  document.body.appendChild(ta)
+  ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length) // iOS ต้องเลือกช่วงให้ชัดเจน
+  let ok=false
+  try{ok=document.execCommand('copy')}catch(e){}
+  ta.remove()
+  return ok
 }
 function exportCSV(){
   const r=cacheR()
@@ -2206,7 +2241,7 @@ function toggleTheme(){
 applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
-<script src="toast-enhancements.js?v=20260811"></script>
+<script src="toast-enhancements.js?v=20260812"></script>
 <!-- Service Worker — บังคับ PWA/หน้า Home ที่ติดตั้งแล้วโหลด HTML เวอร์ชันใหม่ (network-first) -->
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}</script>
 </body>
