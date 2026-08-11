@@ -595,11 +595,18 @@
 const CFG_KEY='sp_config';const CACHE_KEY='sp_cache';const HIST_KEY='sp_history';
 // 🔧 ใส่ GAS URL ตรงนี้ — จะใช้เป็นค่าเริ่มต้นทุกเครื่อง ไม่ต้องตั้งซ้ำ
 const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwEK_PhSzpOIqMP8w2gPLDqRRGCE5bwF4M5aBaAdm5NbI96m3jw70ekKJxnygdXnL-5Ug/exec'
-// URL ของ GAS deployment เก่าที่ถูกยกเลิก/ตายแล้ว (ตรวจแล้วว่า HTTP 404)
+// URL ของ GAS deployment เก่าที่ถูกยกเลิก/ตายแล้ว (ตรวจแล้วว่า HTTP 404 — 2026-08-11)
 // — ถ้าผู้ใช้ยังจำไว้ใน localStorage ให้สลับเป็น default ทันทีโดยไม่ต้อง probe
 // ⚠️ เวลา deploy เปลี่ยน GAS_URL_DEFAULT ใหม่ ให้ย้าย URL เดิมที่ตายแล้วมาใส่ลิสต์นี้
 const DEAD_GAS_URLS = [
   'https://script.google.com/macros/s/AKfycbwRr997ntoBpI93DQkinNSyL8BHWCNwceuusPP7OnLMOTqiMKXQhB2V8rdtgV9wnObAIw/exec',
+  'https://script.google.com/macros/s/AKfycbwgx355bMSszx-tcXQqLGRBdrkwmiTeK_yyjUUSClXAkgwYAFR-wzXez9jEYXKIoReVkQ/exec',
+  'https://script.google.com/macros/s/AKfycbwy_2GGRdGIQHgTmO-1-coPTfapSSMyFw5P7VfW2ztW1EMc6f-D0kowRPfLdR5kukGZGA/exec',
+  'https://script.google.com/macros/s/AKfycbx4J2qPdNOzE_bmfny9-tHWYv9wxS38ksnCXAk2jhI4mRtDjm-gOnn8dhw14dnkxPTB/exec',
+  'https://script.google.com/macros/s/AKfycbxiqPxfi9IW4IRsumEUkStm0H6eds0n-glO0UZ1a3Qu9deO1o1Y7CXxyuy-Q5up0AhVPA/exec',
+  'https://script.google.com/macros/s/AKfycbyVljBq2AMV5OdW2SS5jV0C-XZpXJjvVishHL2ouAQcrgNzGSbcE79KcB7_oqg7TlkA/exec',
+  'https://script.google.com/macros/s/AKfycbysMdsSXm_q6xnWnqYHTtSBV6dKj34T2lNW4ujz2c0vvWdWoFqKM6wT8RJvuKLSxKXJNQ/exec',
+  'https://script.google.com/macros/s/AKfycbzBedCkLdCb7dv0QgxOPjqJ4QjcKENQ3jH8OVudEXEiHsbq1BVAu-RG38K5Ffm32GsPmw/exec',
 ];
 function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{url:GAS_URL_DEFAULT}}catch{return{url:GAS_URL_DEFAULT}}}
 // Self-heal: ถ้า URL ที่บันทึกใน localStorage พัง ให้ใช้ GAS_URL_DEFAULT แทนชั่วคราว
@@ -630,15 +637,18 @@ async function healUrl(){
   // ✅ 401 Unauthorized / token หมดอายุ = เซิร์ฟเวอร์ตอบกลับแล้ว (URL ยังใช้ได้)
   //    แค่ยังไม่ได้ล็อกอิน — ไม่ใช่ URL พัง → ข้าม heal (กันเสีย 2 request เปล่าทุกครั้งก่อนล็อกอิน)
   if (saved.error && /\b(unauthorized|invalid or missing token|token)\b/i.test(saved.error)) return;
-  // ลองดีฟอลต์ — ถ้าได้ คืนค่าเป็น v59 และบันทึกถาวร
+  // ลองดีฟอลต์ — ถ้ายังตอบกลับ (สำเร็จหรือ 401) ให้ใช้ GAS_URL_DEFAULT และบันทึกถาวร
   _urlOverride=GAS_URL_DEFAULT;
   const fb=await get('getAll');
-  if(fb.success){
+  // 401/token error จาก default = ยังตอบกลับอยู่ (แค่ยังไม่ล็อกอิน) → default ยังใช้ได้ → heal
+  // (แก้บัค anonymous: ผู้ใช้ไม่ล็อกอิน probe default คืน 401 เสมอ → เดิม fb.success=false
+  //  สรุปผิดว่า default ตาย → ไม่ heal → POST ไป URL ตาย → "❌ Network error")
+  if(fb.success || (fb.error && /\b(unauthorized|invalid or missing token|token)\b/i.test(fb.error))){
     const c=cfg();c.url=GAS_URL_DEFAULT;localStorage.setItem(CFG_KEY,JSON.stringify(c));
     syncSetupInputs();updateSetupUI();
     toast('🔄 อัปเดต Web App URL เป็นค่าล่าสุดเรียบร้อย','i');
   }else{
-    _urlOverride=null; // คืนค่าเดิม (ปล่อยให้แจ้ง error ตามปกติ)
+    _urlOverride=null; // default ตายจริงด้วย → คืนค่าเดิม (ปล่อยให้แจ้ง error ตามปกติ)
   }
 }
 
@@ -2197,5 +2207,7 @@ applyTheme(document.documentElement.getAttribute('data-theme')||'light')
 </script>
 <!-- Enhanced toast — โหลดหลัง inline script เพื่อ override window.toast -->
 <script src="toast-enhancements.js?v=20260811"></script>
+<!-- Service Worker — บังคับ PWA/หน้า Home ที่ติดตั้งแล้วโหลด HTML เวอร์ชันใหม่ (network-first) -->
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}</script>
 </body>
 </html>

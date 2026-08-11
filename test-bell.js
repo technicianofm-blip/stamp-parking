@@ -21,7 +21,15 @@ const fs = require('fs');
 
 // ---- Extract โค้ดจริงจาก index.html ----
 const html = fs.readFileSync('index.html', 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/g).pop().replace(/<\/?script>/g, '');
+// เลือก script block จากเนื้อหา (ไม่ใช่ตัวสุดท้าย) — มี script tag อื่นเพิ่มหลัง main inline script
+// (เช่น service worker register) → กัน .pop() ไปเจอตัวผิด
+const script = (html.match(/<script>([\s\S]*?)<\/script>/g) || [])
+  .map(s => s.replace(/<\/?script>/g, ''))
+  .find(s => s.includes('function getNewCount()'));
+if (!script) {
+  console.error('❌ ไม่พบ script ที่มี getNewCount() ใน index.html — ตรวจ extract อีกที');
+  process.exit(1);
+}
 
 // บล็อก 1: BELL NOTIFICATION — `function getNewCount()` ถึงก่อน `function renderChart()`
 // ครอบ: getNewCount, _bellN, updateBell, audioCtx, getAudioCtx, initAudioOnInteraction,

@@ -1,6 +1,6 @@
 // ===================================================================
 // test-healurl.js — เทสต์ logic healUrl() (self-heal URL ของ GAS backend)
-// วิธีใช้: node test-healurl.js   → ควรได้ 6 ผ่าน / 0 ไม่ผ่าน
+// วิธีใช้: node test-healurl.js   → ควรได้ 20 ผ่าน / 0 ไม่ผ่าน
 //
 // ดึงโค้ดจริงจาก index.html (บล็อก constants + cfg + gasUrl + healUrl)
 // มา eval ใน sandbox แล้วจำลอง localStorage/fetch — ตรวจว่า:
@@ -10,6 +10,8 @@
 //   T4 localhost                 → ข้ามทั้งหมด
 //   T5 URL ที่ probe แล้วล้ม      → ลอง default → heal + เขียน localStorage
 //   T6 URL คืน 401/token error   → ข้าม heal (ถือว่า URL ยังใช้ได้)
+//   T7 URL ตาย + default คืน 401 (ผู้ใช้ไม่ล็อกอิน) → ยังต้อง heal
+//      (บัคเก่า: fb.success=false → สรุปผิดว่า default ตาย → ไม่ heal → POST ไป URL ตาย)
 // ===================================================================
 const fs = require('fs');
 
@@ -18,7 +20,15 @@ const fs = require('fs');
 // ครอบ: GAS_URL_DEFAULT, DEAD_GAS_URLS, cfg(), _urlOverride, gasUrl(),
 //       _urlHealTried, healUrl() — ไม่ติด DOM อื่น
 const html = fs.readFileSync('index.html', 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/g).pop().replace(/<\/?script>/g, '');
+// เลือก script block จากเนื้อหา (ไม่ใช่ตัวสุดท้าย) — มี script tag อื่นเพิ่มหลัง main inline script
+// (เช่น service worker register) → กัน .pop() ไปเจอตัวผิด
+const script = (html.match(/<script>([\s\S]*?)<\/script>/g) || [])
+  .map(s => s.replace(/<\/?script>/g, ''))
+  .find(s => s.includes('GAS_URL_DEFAULT') && s.includes('healUrl'));
+if (!script) {
+  console.error('❌ ไม่พบ script ที่มี GAS_URL_DEFAULT/healUrl ใน index.html — ตรวจ extract อีกที');
+  process.exit(1);
+}
 // CFG_KEY นิยามที่บรรทัด 595 (ก่อน GAS_URL_DEFAULT) — cfg() ใน healUrl ใช้มัน
 // แต่อยู่นอกช่วง extract → ต้องเติมเอง ไม่งั้น ReferenceError → cfg() ตก catch → คืน default เสมอ (เทสต์ผิดทั้งก้อน)
 const snippet = "const CFG_KEY = 'sp_config';\n" + script.match(/const GAS_URL_DEFAULT = '.*?'[\s\S]*?^}/m)[0];
@@ -121,6 +131,26 @@ const build = () => {
     await api.healUrl();
     check('T6 401/token error → probe 1 ครั้ง แล้วข้าม (ไม่ลอง default)', calls.filter(c => c[0] === 'get').length === 1);
     check('T6b URL ไม่เปลี่ยน', api.cfg().url === 'https://script.google.com/macros/s/VALID_BUT_401/exec');
+  }
+
+  // T7: URL ตาย (unknown) + default probe คืน 401 (จำลองผู้ใช้ไม่ล็อกอิน) → ยังต้อง heal
+  //     เดิม: fb.success=false → สรุปผิดว่า "default ก็ตาย" → ไม่ heal → POST ไป URL ตาย → Network error
+  { const getReal = async (action) => {
+      calls.push(['get', action]);
+      if (calls.filter(c => c[0] === 'get').length === 1) return {success: false, error: 'Could not fetch url: Http failure'};
+      return {success: false, error: 'Unauthorized: Invalid or missing token'};
+    };
+    const ctx = new Function('localStorage', 'toast', 'syncSetupInputs', 'updateSetupUI', 'get',
+      snippet + '; return {healUrl, cfg, gasUrl, GAS_URL_DEFAULT};');
+    const api = ctx(localStorage, toast, syncSetupInputs, updateSetupUI, getReal);
+    storage['sp_config'] = JSON.stringify({url: 'https://script.google.com/macros/s/DEAD_ANON/exec'});
+    calls = [];
+    await api.healUrl();
+    check('T7 URL ตาย + default probe 401 (anonymous) → เรียก get 2 ครั้ง (เดิม+default)', calls.filter(c => c[0] === 'get').length === 2);
+    check('T7b heal สำเร็จ → cfg เปลี่ยนเป็น default (แม้ default คืน 401 = ยังใช้ได้)', api.cfg().url === api.GAS_URL_DEFAULT);
+    check('T7c localStorage ถูกเขียน URL ใหม่', JSON.parse(storage['sp_config']).url === api.GAS_URL_DEFAULT);
+    check('T7d gasUrl() คืน default (POST ครั้งถัดไปไปที่ default ไม่ใช่ URL ตาย)', api.gasUrl() === api.GAS_URL_DEFAULT);
+    check('T7e มี toast แจ้งอัปเดต', calls.some(c => c[0] === 'toast'));
   }
 
   console.log(`\n===== สรุป healUrl logic test =====`);

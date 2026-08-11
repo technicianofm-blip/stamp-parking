@@ -22,10 +22,11 @@
 | `test-auth.js` | Test suite ระบบ auth (22 cases) — เป็น **ground truth** ของ contract |
 | `test-production.js` | Smoke test production ผ่าน GAS Web App URL จริง — ตรวจ login / getAll / 401 (รัน: `node test-production.js <password> [gasUrl]`) |
 | `test-duplicate.js` | Test feature ตรวจเลขบัตรซ้ำวันเดียวกัน — unit `bkkDay` (รวม guard invalid date) + E2E mock (รัน: `node test-duplicate.js` ควรได้ 5/5 + 13/13) |
-| `test-healurl.js` | Test logic `healUrl()` (self-heal URL) — extract โค้ดจริงจาก index.html มาทดสอบ 6 เคส (รัน: `node test-healurl.js` ควรได้ 15/15): dead-URL no-probe / fast-path 0 request / probe 1 ครั้ง / localhost ข้าม / broken → fallback / 401 ข้าม |
+| `test-healurl.js` | Test logic `healUrl()` (self-heal URL) — extract โค้ดจริงจาก index.html มาทดสอบ 7 เคส (รัน: `node test-healurl.js` ควรได้ 20/20): dead-URL no-probe / fast-path 0 request / probe 1 ครั้ง / localhost ข้าม / broken → fallback / 401 ข้าม / **anonymous dead-URL + default 401 → ยัง heal** |
 | `test-announce.js` | Test `initAnnounce()` (ประกาศแบนเนอร์) — DOM mock จำลอง `page > .card > form` + `document.body` ตรวจว่า banner แนบ body (overlay ลอยกลางจอ ไม่ย้าย form หลุดการ์ด) + ฉากหลังหรี่ (`.announce-backdrop` ลดแสงข้างหลัง ~50%) ลบพร้อมกันทุกทาง + แสดงครั้งเดียว + ค้างจนกว่าจะปิด: ✕ / Esc / กดพื้นที่ว่าง (ฉากหลัง) = ปิดครั้งนี้ ไม่จด (refresh กลับมาทุกครั้ง) + คีย์เก่า `sp_announce_dismissed` หลงเหลือไม่บล็อกการแสดง + `ANNOUNCE_RED` แยกเป็น span `.announce-highlight` (ไม่ตรงกับข้อความ → โชว์ธรรมดา ไม่พัง) (รัน: `node test-announce.js` ควรได้ 26/26) |
 | `test-bell.js` | Test 🔔 Notification Badge — extract โค้ดจริง (บล็อก BELL NOTIFICATION + NOTIFICATION CENTER) มา eval พร้อม AudioContext mock (นับ oscillator = นับเสียง) + Date mock (กันขึ้นกับเวลาจริง) ตรวจ `getNewCount`/`updateBell`/`markSeen`/`buildNotifList`: badge ขึ้น/ซ่อน, **เสียงเล่นเฉพาะตอนจำนวนเพิ่ม (กันซ้ำตอน refresh)**, บันทึกของตัวเองไม่แจ้งเตือน (markSeen), ลิสต์เกิน 20 → note "…และอีก N รายการ", ไม่มีใหม่ → "ไม่มีข้อมูลใหม่" (รัน: `node test-bell.js` ควรได้ 20/20) |
 | `toast-enhancements.js` | Enhanced toast UI — โหลด **ท้าย `</body>` หลัง inline script** เพื่อ override `window.toast` |
+| `sw.js` | Service worker — **บังคับ PWA ที่ติดตั้งหน้า Home โหลด HTML ใหม่ทุกครั้งที่เปิด** (network-first เฉพาะ navigation request + `skipWaiting`/`clients.claim`) — `SHELL_CACHE` ต้องตรงกับ `?v=` ทุก deploy |
 | `.clasp.json` | ตั้งค่า clasp (scriptId — อย่าแก้ rootDir ไปจากเดิม) |
 | `appsscript.json` | GAS config (V8, ANYONE, executeAs USER_DEPLOYING) |
 
@@ -38,7 +39,7 @@ node test-auth.js
 # 🔁 ทดสอบ feature ตรวจเลขบัตรซ้ำวันเดียวกัน (unit bkkDay + E2E mock) — ควรได้ 5/5 + 13/13
 node test-duplicate.js
 
-# 🌐 ทดสอบ logic healUrl() (self-heal URL ของ GAS backend) — ควรได้ 15/15
+# 🌐 ทดสอบ logic healUrl() (self-heal URL ของ GAS backend) — ควรได้ 20/20
 node test-healurl.js
 
 # 📢 ทดสอบ initAnnounce() (ประกาศแบนเนอร์, DOM mock) — ควรได้ 26/26
@@ -84,7 +85,7 @@ node --check index.js
 
 ## ⚠️ Gotchas / กติกาที่ห้ามละเมิด
 
-1. **`GAS_URL_DEFAULT`** ใน `index.html` ต้องอัปเดตให้ตรง deployment ใหม่**ทุกครั้ง**ที่ deploy GAS + **ย้าย URL เดิมที่ตายแล้ว (HTTP 404) ไปใส่ใน `DEAD_GAS_URLS`** (ข้างๆ กัน) เพื่อให้ `healUrl()` สลับ URL เก่าให้เครื่องที่เคย Favorite/ติดตั้งไว้หน้า Home ได้อัตโนมัติแบบไม่ต้อง probe — และ**อัปเดต version stamp `?v=YYYYMMDD`** ที่ asset ใน `index.html` + `start_url` ใน `manifest.json` (cache-busting กัน HTML เก่า/แคช PWA) ตรวจ URL ว่าตายจริงด้วย `curl -o /dev/null -w "%{http_code}" <url>?action=getAll` (404 = ใส่ลิสต์, 302 = ยังใช้ได้)
+1. **`GAS_URL_DEFAULT`** ใน `index.html` ต้องอัปเดตให้ตรง deployment ใหม่**ทุกครั้ง**ที่ deploy GAS + **ย้าย URL เดิมที่ตายแล้ว (HTTP 404) ไปใส่ใน `DEAD_GAS_URLS`** (ข้างๆ กัน) เพื่อให้ `healUrl()` สลับ URL เก่าให้เครื่องที่เคย Favorite/ติดตั้งไว้หน้า Home ได้อัตโนมัติแบบไม่ต้อง probe — และ**อัปเดต version stamp `?v=YYYYMMDD`** ที่ asset ใน `index.html` + `start_url` ใน `manifest.json` + **`SHELL_CACHE` ใน `sw.js`** (ตัวเลขเดียวกับ `?v=` ทั้งหมด — cache-busting กัน HTML เก่า/แคช PWA) ตรวจ URL ว่าตายจริงด้วย `curl -o /dev/null -w "%{http_code}" <url>?action=getAll` (404 = ใส่ลิสต์, 302 = ยังใช้ได้). ⚠️ `healUrl()` fallback ถือว่า **401/token error จาก default = default ยังใช้ได้ → heal ต่อ** (บัคเก่าที่ผู้ใช้ไม่ล็อกอิน probe default คืน 401 → สรุปผิดว่า default ตาย → ไม่ heal → POST ไป URL ตาย) — มีเทสต์ `test-healurl.js` T7 ครอบไว้ อย่าลบ behavior นี้
 2. **`healUrl()`** ถือว่า 401 Unauthorized = URL ยังใช้ได้ (แค่ยังไม่ล็อกอิน) — อย่าแก้กลับให้ heal บน 401
 3. `recovery-codes.txt` = 2FA recovery codes — **gitignored แล้ว ห้าม commit** (เช่นเดียวกับ `node.pid`/`server.log`)
 4. เพิ่ม/แก้ฟีเจอร์ auth ต้องทำให้ **3 ที่สอดคล้องกัน**: `gas-code.gs` (จริง) ↔ `index.js` (mock) ↔ `index.html` (frontend)
