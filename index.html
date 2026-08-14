@@ -1056,7 +1056,7 @@ async function post(data, opts){
         console.error('[API] POST Invalid response:', x.responseText)
         const t=(x.responseText||'').trim()
         r({success:false,error:t.startsWith('<')
-          ? 'URL นี้ตอบ HTML ไม่ใช่ API — ตรวจ Web App URL ว่าต้องลงท้ายด้วย /api/ (เช่น http://localhost:3005/api/)'
+          ? 'GAS ตอบกลับเป็นหน้า HTML ไม่ใช่ JSON — ตรวจ Deploy → Who has access ต้องเป็น Anyone (ไม่ใช่ Anyone with Google account) หรือ Web App URL ผิด/deployment เก่าถูกลบ ตรวจใน ⚙️ ตั้งค่า'
           : 'Invalid response'})
       }
     }
