@@ -2,7 +2,7 @@
 // test-bell.js — เทสต์ 🔔 Notification Badge (getNewCount / updateBell / markSeen / buildNotifList)
 // วิธีใช้: node test-bell.js   → ควรได้ 20 ผ่าน / 0 ไม่ผ่าน
 //
-// Extract โค้ดจริงจาก index.html (บล็อก BELL NOTIFICATION + NOTIFICATION CENTER)
+// โหลดโค้ดจริงจาก js/notifications.js (บล็อก BELL NOTIFICATION + NOTIFICATION CENTER)
 // มา eval ใน sandbox พร้อม DOM mock + AudioContext mock (นับ oscillator เพื่อเช็คเสียง) — ตรวจ:
 //   T1  ไม่มี seenAt            → getNewCount = 0
 //   T2  นับเฉพาะ record หลัง seenAt (เท่ากับ/ก่อนไม่นับ)
@@ -19,25 +19,20 @@
 // ===================================================================
 const fs = require('fs');
 
-// ---- Extract โค้ดจริงจาก index.html ----
-const html = fs.readFileSync('index.html', 'utf8');
-// เลือก script block จากเนื้อหา (ไม่ใช่ตัวสุดท้าย) — มี script tag อื่นเพิ่มหลัง main inline script
-// (เช่น service worker register) → กัน .pop() ไปเจอตัวผิด
-const script = (html.match(/<script>([\s\S]*?)<\/script>/g) || [])
-  .map(s => s.replace(/<\/?script>/g, ''))
-  .find(s => s.includes('function getNewCount()'));
-if (!script) {
-  console.error('❌ ไม่พบ script ที่มี getNewCount() ใน index.html — ตรวจ extract อีกที');
+// ---- โหลดโค้ดจริงจาก js/notifications.js ----
+const script = fs.readFileSync('js/notifications.js', 'utf8');
+if (!script.includes('function getNewCount()')) {
+  console.error('❌ ไม่พบ getNewCount() ใน js/notifications.js');
   process.exit(1);
 }
 
-// บล็อก 1: BELL NOTIFICATION — `function getNewCount()` ถึงก่อน `function renderChart()`
+// บล็อก 1: BELL NOTIFICATION — `function getNewCount()` ถึงก่อน NOTIFICATION CENTER
 // ครอบ: getNewCount, _bellN, updateBell, audioCtx, getAudioCtx, initAudioOnInteraction,
 //       ['click','keydown','touchstart'].forEach(...), playNewDataSound, markSeen
 const s1 = script.indexOf('function getNewCount()');
-const e1 = script.indexOf('function renderChart()');
+const e1 = script.indexOf('//  NOTIFICATION CENTER');
 if (s1 < 0 || e1 < 0 || e1 <= s1) {
-  console.error('❌ extract บล็อก BELL ไม่สำเร็จ — ตรวจ index.html อีกที');
+  console.error('❌ extract บล็อก BELL ไม่สำเร็จ — ตรวจ js/notifications.js อีกที');
   process.exit(1);
 }
 const blockBell = script.slice(s1, e1);
@@ -48,7 +43,7 @@ const s2 = script.indexOf('function buildNotifList()');
 const m2 = script.indexOf('function notifMarkAll(){', s2);
 const e2 = script.indexOf('\n}', m2);
 if (s2 < 0 || m2 < 0 || e2 < 0 || e2 <= s2) {
-  console.error('❌ extract บล็อก NOTIF LIST ไม่สำเร็จ — ตรวจ index.html อีกที');
+  console.error('❌ extract บล็อก NOTIF LIST ไม่สำเร็จ — ตรวจ js/notifications.js อีกที');
   process.exit(1);
 }
 const blockNotif = script.slice(s2, e2 + 2);
