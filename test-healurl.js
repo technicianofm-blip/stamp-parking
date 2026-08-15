@@ -2,7 +2,7 @@
 // test-healurl.js — เทสต์ logic healUrl() (self-heal URL ของ GAS backend)
 // วิธีใช้: node test-healurl.js   → ควรได้ 20 ผ่าน / 0 ไม่ผ่าน
 //
-// ดึงโค้ดจริงจาก index.html (บล็อก constants + cfg + gasUrl + healUrl)
+// โหลดโค้ดจริงจาก js/config.js (constants + cfg + gasUrl + healUrl)
 // มา eval ใน sandbox แล้วจำลอง localStorage/fetch — ตรวจว่า:
 //   T1 URL ตาย (ใน DEAD_GAS_URLS) → heal แบบ no-probe ทันที (0 request)
 //   T2 URL = GAS_URL_DEFAULT     → fast-path 0 request (ไม่ช้า)
@@ -15,25 +15,12 @@
 // ===================================================================
 const fs = require('fs');
 
-// ---- Extract โค้ดจริงจาก index.html ----
-// บล็อก: `const GAS_URL_DEFAULT...` ถึง `}` ปิด healUrl() (คอลัมน์ 0)
-// ครอบ: GAS_URL_DEFAULT, DEAD_GAS_URLS, cfg(), _urlOverride, gasUrl(),
-//       _urlHealTried, healUrl() — ไม่ติด DOM อื่น
-const html = fs.readFileSync('index.html', 'utf8');
-// เลือก script block จากเนื้อหา (ไม่ใช่ตัวสุดท้าย) — มี script tag อื่นเพิ่มหลัง main inline script
-// (เช่น service worker register) → กัน .pop() ไปเจอตัวผิด
-const script = (html.match(/<script>([\s\S]*?)<\/script>/g) || [])
-  .map(s => s.replace(/<\/?script>/g, ''))
-  .find(s => s.includes('GAS_URL_DEFAULT') && s.includes('healUrl'));
-if (!script) {
-  console.error('❌ ไม่พบ script ที่มี GAS_URL_DEFAULT/healUrl ใน index.html — ตรวจ extract อีกที');
-  process.exit(1);
-}
-// CFG_KEY นิยามที่บรรทัด 595 (ก่อน GAS_URL_DEFAULT) — cfg() ใน healUrl ใช้มัน
-// แต่อยู่นอกช่วง extract → ต้องเติมเอง ไม่งั้น ReferenceError → cfg() ตก catch → คืน default เสมอ (เทสต์ผิดทั้งก้อน)
-const snippet = "const CFG_KEY = 'sp_config';\n" + script.match(/const GAS_URL_DEFAULT = '.*?'[\s\S]*?^}/m)[0];
+// ---- โหลดโค้ดจริงจาก js/config.js ----
+// ไฟล์นี้มี: CFG_KEY, GAS_URL_DEFAULT, DEAD_GAS_URLS, cfg(), _urlOverride, gasUrl(),
+//           _urlHealTried, healUrl(), isDesktop()/domId()/q() — ไม่ติด DOM อื่น
+const snippet = fs.readFileSync('js/config.js', 'utf8');
 if (!snippet.includes('healUrl')) {
-  console.error('❌ ไม่พบ healUrl() ใน index.html — ตรวจ regex extract อีกที');
+  console.error('❌ ไม่พบ healUrl() ใน js/config.js');
   process.exit(1);
 }
 
