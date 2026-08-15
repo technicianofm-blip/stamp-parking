@@ -6,7 +6,21 @@
 
 ```
 📦 D:\claude code\
- ├── 📄 index.html            # 🌐 Frontend หลัก (รองรับ Desktop + Mobile)
+ ├── 📄 index.html            # 🌐 Frontend หลัก — HTML ล้วน (รองรับ Desktop + Mobile)
+ ├── 📁 js/                   # 🧩 โค้ด JS ของ frontend ทั้งหมด (13 ไฟล์, classic script โหลดจาก index.html)
+ │    ├── config.js           #    CONFIG — GAS URL/localStorage keys, healUrl() self-heal
+ │    ├── utility.js          #    esc/csvField/toast/showLoad/hideLoad
+ │    ├── api.js               #    get()/post() เรียก GAS + cacheR()/setCache() local cache
+ │    ├── auth.js              #    AUTHENTICATION + USER MANAGEMENT + setConn()
+ │    ├── url-setup.js         #    URL/Sheet/Folder ID setup + testConn()
+ │    ├── photo.js             #    Cloudinary upload + client-side compress
+ │    ├── scan.js              #    สแกนบาร์โค้ด/QR ผ่านกล้อง (BarcodeDetector/ZXing)
+ │    ├── form-submit.js       #    FORM validation + saveRec/submitRecord + auto-complete history
+ │    ├── dashboard.js         #    Dashboard — filter/pagination/chart/heatmap/CSV export (ไฟล์ใหญ่สุด)
+ │    ├── notifications.js     #    🔔 Bell notification + notification center
+ │    ├── announcement.js      #    ประกาศแบนเนอร์
+ │    ├── ui-shell.js          #    Navigation/modal/accessibility/theme toggle
+ │    └── main.js              #    Bootstrap — ลำดับ init ตอนโหลดหน้า (โหลดตัวสุดท้าย)
  ├── 📄 style.css             # 🎨 CSS หลัก (design tokens + components)
  ├── 📄 gas-code.gs           # ⚙️ Google Apps Script (Backend API)
  ├── 📄 index.js              # 🧪 Mock server (Node) จำลอง GAS สำหรับทดสอบ auth ในเครื่อง
@@ -96,7 +110,7 @@
    - **Signing Mode:** `Unsigned`
    - **Folder:** `stamp-parking`
    - บันทึก → **Copy Preset name**
-4. เปิด `index.html` → หา 2 ค่านี้แล้วแก้:
+4. เปิด `js/photo.js` → หา 2 ค่านี้แล้วแก้:
    ```javascript
    const CLOUD_NAME = 'your-cloud-name'    // ← เปลี่ยน
    const UPLOAD_PRESET = 'stamp_parking'    // ← เปลี่ยน (ถ้าตั้งชื่ออื่น)
