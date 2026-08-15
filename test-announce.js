@@ -14,13 +14,11 @@
 // ===================================================================
 const fs = require('fs');
 
-// ---- Extract โค้ดจริงจาก index.html ----
-// บล็อก: `const ANNOUNCE_TEXT...` ถึง `}` ปิด initAnnounce() (คอลัมน์ 0)
-// ครอบ: ANNOUNCE_TEXT, initAnnounce() — อ้างอิงแค่ document → mock ได้ครบ ไม่ติด DOM ภายนอก
-const html = fs.readFileSync('index.html', 'utf8');
-const snippet = html.match(/const ANNOUNCE_TEXT = [`'][\s\S]*?^}/m)[0];
+// ---- โหลดโค้ดจริงจาก js/announcement.js ----
+// ไฟล์นี้มี: ANNOUNCE_TEXT, initAnnounce() — อ้างอิงแค่ document → mock ได้ครบ ไม่ติด DOM ภายนอก
+const snippet = fs.readFileSync('js/announcement.js', 'utf8');
 if (!snippet.includes('initAnnounce')) {
-  console.error('❌ ไม่พบ initAnnounce() ใน index.html — ตรวจ regex extract อีกที');
+  console.error('❌ ไม่พบ initAnnounce() ใน js/announcement.js');
   process.exit(1);
 }
 
