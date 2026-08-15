@@ -10,19 +10,15 @@
 // ===================================================================
 const fs = require('fs');
 
-const html = fs.readFileSync('index.html', 'utf8');
-// เลือก script block จากเนื้อหา (ไม่ใช่ตัวสุดท้าย) — มี script tag อื่นเพิ่มหลัง main inline script
-const script = (html.match(/<script>([\s\S]*?)<\/script>/g) || [])
-  .map(s => s.replace(/<\/?script>/g, ''))
-  .find(s => s.includes('function copyTicket('));
-if (!script) {
-  console.error('❌ ไม่พบ script ที่มี copyTicket() ใน index.html — ตรวจ extract อีกที');
+const script = fs.readFileSync('js/dashboard.js', 'utf8');
+if (!script.includes('function copyTicket(')) {
+  console.error('❌ ไม่พบ copyTicket() ใน js/dashboard.js');
   process.exit(1);
 }
 const s0 = script.indexOf('function copyTicket(');
 const e0 = script.indexOf('function exportCSV', s0);
 if (s0 < 0 || e0 < 0 || e0 <= s0) {
-  console.error('❌ extract บล็อก copyTicket ไม่สำเร็จ — ตรวจ index.html อีกที');
+  console.error('❌ extract บล็อก copyTicket ไม่สำเร็จ — ตรวจ js/dashboard.js อีกที');
   process.exit(1);
 }
 const block = script.slice(s0, e0); // copyTicket + legacyCopyText
