@@ -7,7 +7,7 @@
 //   → เพิ่มแถบ .mob-auth ใต้ header (ชื่อผู้ใช้ + ปุ่มออกจากระบบ)
 //   แล้วให้ setConn() อัปเดตทั้ง desk + mob พร้อมกัน
 //
-// ดึง setConn() จริงจาก index.html (จับวงเล็บปีกกาที่สมดุล) มา eval
+// ดึง setConn() จริงจาก js/auth.js (จับวงเล็บปีกกาที่สมดุล) มา eval
 // ใน sandbox พร้อม document mock (getElementById คืน element ตาม id)
 // + inject getToken()/getMe() — ตรวจว่า:
 //   T1 ล็อกอิน (มี token + ชื่อ) → desk+mob โชว์ flex + label ชื่อผู้ใช้
@@ -18,12 +18,9 @@
 // ===================================================================
 const fs = require('fs');
 
-const html = fs.readFileSync('index.html', 'utf8');
-const script = (html.match(/<script>([\s\S]*?)<\/script>/g) || [])
-  .map(s => s.replace(/<\/?script>/g, ''))
-  .find(s => s.includes('function setConn('));
-if (!script) {
-  console.error('❌ ไม่พบ setConn() ใน index.html — ตรวจ extract อีกที');
+const script = fs.readFileSync('js/auth.js', 'utf8');
+if (!script.includes('function setConn(')) {
+  console.error('❌ ไม่พบ setConn() ใน js/auth.js');
   process.exit(1);
 }
 
