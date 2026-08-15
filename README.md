@@ -12,7 +12,7 @@
  │    ├── utility.js          #    esc/csvField/toast/showLoad/hideLoad
  │    ├── api.js               #    get()/post() เรียก GAS + cacheR()/setCache() local cache
  │    ├── auth.js              #    AUTHENTICATION + USER MANAGEMENT + setConn()
- │    ├── url-setup.js         #    URL/Sheet/Folder ID setup + testConn()
+ │    ├── url-setup.js         #    URL/Sheet ID setup + testConn()
  │    ├── photo.js             #    Cloudinary upload + client-side compress
  │    ├── scan.js              #    สแกนบาร์โค้ด/QR ผ่านกล้อง (BarcodeDetector/ZXing)
  │    ├── form-submit.js       #    FORM validation + saveRec/submitRecord + auto-complete history
@@ -35,32 +35,26 @@
 
 ```
 👤 ผู้ใช้ → index.html (GitHub Pages / Local)
-                ↓ fetch() POST / GET
-          🌐 Google Apps Script (Web App)
-                ↓
-          ┌───────┴───────┐
-        📊 Google        📸 Google
-        Sheets           Drive
-        (ข้อมูล)         (รูปภาพ)
+                ├─→ 📸 Cloudinary (อัปโหลดรูปตรงจาก browser ไม่ผ่าน GAS)
+                └─→ 🌐 Google Apps Script (Web App) → 📊 Google Sheets (ข้อมูล)
 ```
 
 ## 💡 วิธีตั้งค่า (แบบไม่ต้องแก้ไข GAS)
 
-ตั้งแต่เวอร์ชันล่าสุด สามารถใส่ **Sheet ID** และ **Folder ID** ได้จากหน้า Setup
+ตั้งแต่เวอร์ชันล่าสุด สามารถใส่ **Sheet ID** ได้จากหน้า Setup
 ในเว็บ โดยไม่ต้องแก้ไขโค้ด GAS ทุกครั้งที่เปลี่ยน:
 
 1. เปิดหน้าเว็บ → ไปที่ **⚙️ ตั้งค่า**
 2. ใส่ **Web App URL** (จำเป็น)
 3. ใส่ **Google Sheet ID** (ไม่บังคับ — ถ้าไม่ใส่จะใช้ค่าที่ hardcode ใน gas-code.gs)
-4. ใส่ **Google Drive Folder ID** (ไม่บังคับ — ถ้าไม่ใส่จะใช้ค่าที่ hardcode ใน gas-code.gs)
-5. กด **💾 บันทึก** → **📡 ทดสอบ**
+4. กด **💾 บันทึก** → **📡 ทดสอบ**
 
-> 💡 **Tip:** ถ้าใส่ Sheet ID / Folder ID ในหน้าเว็บ จะ override ค่า hardcode ใน gas-code.gs
-> ทำให้เปลี่ยน Sheet หรือ Folder ได้ทันที โดยไม่ต้อง deploy GAS ใหม่
+> 💡 **Tip:** ถ้าใส่ Sheet ID ในหน้าเว็บ จะ override ค่า hardcode ใน gas-code.gs
+> ทำให้เปลี่ยน Sheet ได้ทันที โดยไม่ต้อง deploy GAS ใหม่
 
 ---
 
-# ⚙️ วิธีติดตั้ง (6 ขั้นตอน)
+# ⚙️ วิธีติดตั้ง (5 ขั้นตอน)
 
 ## 1️⃣ สร้าง Google Sheet
 1. ไปที่ [sheets.google.com](https://sheets.google.com/create)
@@ -70,16 +64,7 @@
                                                 ↑ ID ตรงนี้
    ```
 
-## 2️⃣ สร้าง Google Drive Folder สำหรับรูป
-1. ไปที่ [drive.google.com](https://drive.google.com)
-2. สร้างโฟลเดอร์ชื่อ `Stamp Parking Photos` (หรือชื่ออื่น)
-3. เข้าไปในโฟลเดอร์ คัดลอก **Folder ID** จาก URL:
-   ```
-   https://drive.google.com/drive/folders/XXXXX
-                                             ↑ ID ตรงนี้
-   ```
-
-## 3️⃣ Deploy Google Apps Script
+## 2️⃣ Deploy Google Apps Script
 1. ไปที่ [script.google.com/create](https://script.google.com/create)
 2. เปิดไฟล์ **`gas-code.gs`** → Copy เนื้อหาทั้งหมด → วางใน Apps Script Editor
 3. **Deploy > New deployment**
@@ -96,14 +81,14 @@
    - หรือเปิด URL นี้ใน browser: `https://script.google.com/macros/s/XXXXX/exec?action=initScriptProperties`
 7. **อ่านรหัสผ่านเริ่มต้นของ admin** จาก console.log / clasp run output
    (รหัสผ่านจะไม่ถูกส่งกลับใน HTTP response เพื่อกันคนนอกแอบเรียกแล้วขโมย — ดูได้ผ่าน log เท่านั้น)
-8. ใส่ **Sheet ID** และ **Folder ID** ใน ⚙️ Project Settings → **Script Properties**
+8. ใส่ **Sheet ID** ใน ⚙️ Project Settings → **Script Properties**
    (หรือปล่อยเป็นค่า default ที่ hardcode อยู่ในโค้ดก็ได้)
 
 > **หมายเหตุ (ถ้า deploy ผ่าน clasp):** access ของ Web App ถูกยึดจาก `appsscript.json` → `webapp.access` ตอน redeploy.
 > - `ANYONE` = ต้องมี Google account (anonymous จะโดน redirect ไปหน้า login)
 > - `ANYONE_ANONYMOUS` = ใครก็ได้ ไม่ต้องล็อกอิน (**ค่าที่ public form ต้องการ** — แก้ใน `appsscript.json` แล้ว `clasp push --force` + `clasp version` + `clasp redeploy`)
 
-## 4️⃣ ตั้งค่า Cloudinary (สำหรับอัปโหลดรูป)
+## 3️⃣ ตั้งค่า Cloudinary (สำหรับอัปโหลดรูป)
 1. ไปที่ [cloudinary.com](https://cloudinary.com) → **Sign Up** (ฟรี)
 2. Dashboard → **Copy Cloud name**
 3. **Settings > Upload > Upload presets > Add preset**
@@ -116,21 +101,21 @@
    const UPLOAD_PRESET = 'stamp_parking'    // ← เปลี่ยน (ถ้าตั้งชื่ออื่น)
    ```
 
-## 5️⃣ เปิด Frontend (2 วิธี)
+## 4️⃣ เปิด Frontend (2 วิธี)
 
 | วิธี | คำอธิบาย |
 |:--|:--|
 | **Local** (ง่ายสุด) | เปิด `index.html` ใน Chrome/Edge โดยตรง |
 | **GitHub Pages** (แนะนำ) | Push ไป GitHub Repo → Settings > Pages → เลือก branch main |
 
-## 6️⃣ ตั้งค่าในหน้าเว็บ
+## 5️⃣ ตั้งค่าในหน้าเว็บ
 1. เปิดหน้าเว็บ → ไปที่ **⚙️ ตั้งค่า**
 2. วาง **Web App URL** → กด **💾 บันทึก**
-3. *(ไม่บังคับ)* ใส่ **Google Sheet ID** และ **Google Drive Folder ID** → กดบันทึก
+3. *(ไม่บังคับ)* ใส่ **Google Sheet ID** → กดบันทึก
 4. กด **📡 ทดสอบ** เพื่อตรวจสอบการเชื่อมต่อ
 5. ถ้าขึ้น ✅ เชื่อมต่อสำเร็จ = พร้อมใช้งาน!
 
-> ⚠️ ถ้าไม่ได้ใส่ Sheet ID / Folder ID ในหน้า Setup ระบบจะใช้ค่าที่ hardcode
+> ⚠️ ถ้าไม่ได้ใส่ Sheet ID ในหน้า Setup ระบบจะใช้ค่าที่ hardcode
 > ใน `gas-code.gs` แทน
 
 ---
@@ -158,7 +143,6 @@
 ## ⚙️ ตั้งค่า
 - **Web App URL:** กำหนด URL ของ Google Apps Script
 - **🔗 Google Sheet ID:** ระบุ Spreadsheet ที่ต้องการใช้ (ไม่บังคับ)
-- **📁 Google Drive Folder ID:** ระบุโฟลเดอร์สำหรับเก็บรูป (ไม่บังคับ)
 - **📡 ทดสอบการเชื่อมต่อ:** ตรวจสอบว่า API ทำงานถูกต้อง
 
 ## ☁️ Cloudinary — รูปภาพ
@@ -271,9 +255,9 @@
 - เปิด Sheet ที่สร้างไว้ → Sheet ชื่อ `Stamp Parking`
 - 12 คอลัมน์: ID, ชื่อ-นามสกุล, ชื่อเล่น, เบอร์ติดต่อ, หน่วยงาน, ประเภทการลงเวลา, ยานพาหนะ, เลขบัตรจอดรถ, รูปภาพ (URL), วันที่บันทึก, **สถานะ**, **ส่วนลด**
 
-## ดูรูปภาพใน Google Drive
-- เปิด Drive → โฟลเดอร์ `Stamp Parking Photos`
-- รูปทั้งหมดถูกเก็บที่นี่ พร้อมคำอธิบาย
+## ดูรูปภาพใน Cloudinary
+- เปิด Cloudinary Dashboard → **Media Library** → โฟลเดอร์ `stamp-parking`
+- รูปทั้งหมดถูกเก็บที่นี่ (ดูรูปรายการเดียวได้จากปุ่ม 📷 ในหน้า Dashboard ของเว็บด้วย)
 
 ---
 
@@ -281,4 +265,4 @@
 - ต้องใช้ **Internet** ตลอดเวลาในการบันทึกและดึงข้อมูล
 - **ไม่มี Internet:** จะแสดงข้อมูลจากแคชในเครื่อง (LocalStorage)
 - GAS Limit: 50MB/response, 6 นาที/timeout — เพียงพอสำหรับการใช้งานทั่วไป
-- **ฟรี 100%** (Google Sheets + Drive + Apps Script)
+- **ฟรี 100%** (Google Sheets + Apps Script + Cloudinary free tier)

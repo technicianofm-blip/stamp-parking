@@ -20,7 +20,7 @@
 | `js/utility.js` | UTILITY — `esc()`/`csvField()`/`toast()` (ถูก override ทีหลังโดย `toast-enhancements.js`)/`showLoad()`/`hideLoad()` |
 | `js/api.js` | API + CACHE — `get()`/`post()` เรียก GAS ผ่าน fetch/XHR + `cacheR()`/`setCache()` (local cache ใน localStorage) |
 | `js/auth.js` | AUTHENTICATION (token lifecycle, login modal, login/logout) + USER MANAGEMENT (admin เพิ่ม/ปิดผู้ใช้/รีเซ็ตรหัส) + `setConn()` (สถานะเชื่อมต่อ+auth บน sidebar/แถบมือถือ) |
-| `js/url-setup.js` | URL SETUP — `isLikelyValidGasUrl()`/`saveUrl()`/`saveSheetId()`/`saveFolderId()`/`resetToDefault()` + `testConn()` (ปุ่มทดสอบเชื่อมต่อ) |
+| `js/url-setup.js` | URL SETUP — `isLikelyValidGasUrl()`/`saveUrl()`/`saveSheetId()`/`resetToDefault()` + `testConn()` (ปุ่มทดสอบเชื่อมต่อ) |
 | `js/photo.js` | PHOTO — Cloudinary upload (`uploadToCloudinary()`) + client-side compress (`compressFile()`) + preview/clear |
 | `js/scan.js` | SCAN TICKET — เฉพาะกล้อง/บาร์โค้ด (BarcodeDetector API + ZXing fallback), `parseTicketCode()`/`fillTicket()` |
 | `js/form-submit.js` | FORM validation + `saveRec()`/`submitRecord()`/`forceSaveDuplicate()` (บันทึกข้อมูล+ตรวจซ้ำ) + AUTO-COMPLETE HISTORY (`getHist()`/`initDatalists()`) |

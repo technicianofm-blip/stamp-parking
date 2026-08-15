@@ -20,7 +20,6 @@ function saveUrl(){
   if(!isLikelyValidGasUrl(url)) return toast('⚠️ URL นี้ไม่ใช่ Web App URL ที่ถูกต้อง — ต้องได้จาก Deploy → New deployment และลงท้ายด้วย /exec (ไม่ใช่ URL หน้า Editor)','e')
   c.url=url
   c.sheetId=document.getElementById(p+'SheetId').value.trim()
-  c.folderId=document.getElementById(p+'FolderId').value.trim()
   localStorage.setItem(CFG_KEY,JSON.stringify(c))
   syncSetupInputs();updateSetupUI()
   toast('✅ บันทึกแล้ว','s')
@@ -35,20 +34,11 @@ function saveSheetId(){
   syncSetupInputs()
   toast('✅ บันทึก Sheet ID แล้ว','s')
 }
-function saveFolderId(){
-  const p=isDesktop()?'desk':'mob'
-  const c=cfg()
-  c.folderId=document.getElementById(p+'FolderId').value.trim()
-  localStorage.setItem(CFG_KEY,JSON.stringify(c))
-  syncSetupInputs()
-  toast('✅ บันทึก Folder ID แล้ว','s')
-}
 function syncSetupInputs(){
   const c=cfg()
   const m=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||''}
   m('deskGasUrl',c.url);m('mobGasUrl',c.url)
   m('deskSheetId',c.sheetId);m('mobSheetId',c.sheetId)
-  m('deskFolderId',c.folderId);m('mobFolderId',c.folderId)
 }
 
 // Force sync default URL on load if no saved config
@@ -76,7 +66,7 @@ syncSetupInputs();updateSetupUI()
 
 // ===================================================================
 //  CONNECTION TEST — testConn() ย้ายจากบล็อก CONNECTION เดิม (ผูกกับ
-//  URL/Sheet/Folder ID input โดยตรง — setConn() อยู่ auth.js)
+//  URL/Sheet ID input โดยตรง — setConn() อยู่ auth.js)
 // ===================================================================
 async function testConn(){
   const p=isDesktop()?'desk':'mob'
@@ -86,7 +76,6 @@ async function testConn(){
   if(!isLikelyValidGasUrl(url)) return toast('⚠️ URL นี้ไม่ใช่ Web App URL ที่ถูกต้อง — ต้องได้จาก Deploy → New deployment และลงท้ายด้วย /exec (ไม่ใช่ URL หน้า Editor)','e')
   c.url=url
   c.sheetId=document.getElementById(p+'SheetId').value.trim()
-  c.folderId=document.getElementById(p+'FolderId').value.trim()
   localStorage.setItem(CFG_KEY,JSON.stringify(c))
   syncSetupInputs()
   showLoad('กำลังทดสอบ...')

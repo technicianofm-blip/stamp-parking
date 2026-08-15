@@ -6,7 +6,6 @@
  * 2. วางโค้ดนี้ทั้งหมด
  * 3. ตั้งค่า Script Properties:
  *    - SHEET_ID: Google Sheet ID
- *    - FOLDER_ID: Google Drive Folder ID
  *    - AUTH_SECRET: (สร้างให้อัตโนมัติ) secret ใช้เซ็น token
  * 4. บันทึก → Deploy > New deployment > Web app
  * 5. ตั้ง Execute as: "Me", Who has access: "Anyone"
@@ -27,8 +26,7 @@
 function getConfig() {
   const props = PropertiesService.getScriptProperties();
   return {
-    sheetId: props.getProperty('SHEET_ID') || '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo',
-    folderId: props.getProperty('FOLDER_ID') || '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK'
+    sheetId: props.getProperty('SHEET_ID') || '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo'
   };
 }
 
@@ -37,10 +35,9 @@ function setConfig(key, value) {
   props.setProperty(key, value);
 }
 
-// Global fallbacks — ใช้เมื่อ request ไม่ได้ส่ง sheetId/folderId มา
+// Global fallback — ใช้เมื่อ request ไม่ได้ส่ง sheetId มา
 // (อ่านจาก Script Properties ก่อน, ถ้าไม่มีใช้ค่า default)
 const SHEET_ID = getConfig().sheetId;
-const FOLDER_ID = getConfig().folderId;
 
 // ============================================================
 // 🛠 Utility: Set Script Properties (call via clasp run)
@@ -48,8 +45,7 @@ const FOLDER_ID = getConfig().folderId;
 function initScriptProperties() {
   const props = PropertiesService.getScriptProperties();
   const updates = {
-    'SHEET_ID': '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo',
-    'FOLDER_ID': '1-Du1btmVyUSGVWq15RftJ_-6PqICxAfK'
+    'SHEET_ID': '1HT9pHVxZ53OCdnFI6tFT_YQTFJZsP9eR6I2lH-gmNMo'
   };
 
   // AUTH_SECRET — สร้างถ้ายังไม่เคยมี (ครั้งเดียว แล้วเก็บถาวร)
@@ -363,7 +359,6 @@ function doGet(e) {
   try {
     const action = e?.parameter?.action || 'getAll';
     const sheetId = (e?.parameter?.sheetId || '').trim();
-    const folderId = (e?.parameter?.folderId || '').trim();
 
     console.log('[doGet] action=' + action + ' sheetId=' + sheetId);
 
@@ -584,7 +579,6 @@ function doPost(e) {
     const timeType = String(data.timeType || '').trim();
     const vehicleType = String(data.vehicleType || '').trim();
     const sheetId = String(data.sheetId || '').trim();
-    const folderId = String(data.folderId || '').trim();
 
     if (!name) return jsonResponse({ success: false, error: 'กรุณากรอกชื่อ-นามสกุล' }, 400);
     if (!ticketNo || ticketNo.length !== 17) return jsonResponse({ success: false, error: 'เลขบัตรจอดรถต้องมี 17 หลัก' }, 400);
@@ -642,63 +636,6 @@ function doPost(e) {
     return jsonResponse({ success: false, error: err.toString() }, 500);
   } finally {
     lock.releaseLock();
-  }
-}
-
-// ============================================================
-// 📸 อัปโหลดรูปไป Google Drive
-// ============================================================
-function uploadPhotoToDrive(base64Data, recordId, name, folderId) {
-  console.log('[upload] 🔥 ENTERED uploadPhotoToDrive base64Type=' + typeof base64Data + ' recordId=' + recordId);
-  try {
-    // Guard — ถ้า base64Data ไม่ใช่ string ให้ log แล้ว skip
-    if (typeof base64Data !== 'string' || !base64Data) {
-      console.error('[upload] SKIP: invalid base64Data type=' + typeof base64Data + ' len=' + (base64Data||'').length);
-      return '';
-    }
-
-    // แยก mime type และ base64 data (รองรับ data URL และ raw base64)
-    let mimeType = 'image/jpeg';
-    let rawData = base64Data;
-
-    if (base64Data.includes(',')) {
-      const parts = base64Data.split(',');
-      const header = parts[0] || '';
-      if (header.includes('png')) mimeType = 'image/png';
-      else if (header.includes('gif')) mimeType = 'image/gif';
-      else if (header.includes('webp')) mimeType = 'image/webp';
-      rawData = parts[1] || '';
-    }
-
-    console.log('[upload] mime=' + mimeType + ' rawData_len=' + rawData.length);
-
-    const decoded = Utilities.base64Decode(rawData);
-    console.log('[upload] decoded bytes=' + decoded.length);
-
-    const blob = Utilities.newBlob(decoded, mimeType, `stamp-${recordId}-${name}.jpg`);
-
-    // หาโฟลเดอร์ — ใช้ folderId จาก request ก่อน, fallback เป็นค่า hardcode
-    let folder;
-    const fid = (folderId && folderId !== '') ? folderId : FOLDER_ID;
-    console.log('[upload] using folderId=' + fid);
-    if (fid && fid !== 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE') {
-      folder = DriveApp.getFolderById(fid);
-    } else {
-      // ถ้าไม่ได้ตั้งค่าโฟลเดอร์ ให้สร้างใน Drive root
-      folder = DriveApp.createFolder('Stamp Parking Photos');
-    }
-
-    const file = folder.createFile(blob);
-    file.setDescription(`Stamp Parking — ${name} (${recordId})`);
-    // เปิดสิทธิ์ให้ Anyone with link อ่านได้ (จำเป็นสำหรับแสดงรูปในหน้าเว็บ)
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-    const url = `https://drive.google.com/uc?export=view&id=${file.getId()}`;
-    console.log('[upload] success url=' + url);
-    return url;
-  } catch (err) {
-    console.error('[upload] FAILED: ' + err.toString() + ' | stack: ' + err.stack);
-    return ''; // ถ้าอัปโหลดรูปไม่สำเร็จ ให้บันทึกข้อมูลส่วนอื่นต่อไป
   }
 }
 

@@ -8,7 +8,6 @@ async function get(action) {
 
   let url = u + '?action=' + action;
   if(c.sheetId) url += '&sheetId=' + encodeURIComponent(c.sheetId)
-  if(c.folderId) url += '&folderId=' + encodeURIComponent(c.folderId)
 
   // token ผ่าน query param (GET ไม่มี body — GAS ไม่รองรับ header preflight)
   const token = getToken();
@@ -56,7 +55,6 @@ async function post(data, opts){
   const c=cfg()
   const body={...data}
   if(c.sheetId) body.sheetId=c.sheetId
-  if(c.folderId) body.folderId=c.folderId
   // token ส่งใน body (POST text/plain ไม่มี preflight — กันหลุด URL)
   const token = getToken();
   if (token) body.token = token;
